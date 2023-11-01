@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"math"
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
@@ -324,6 +325,20 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 			},
 			true,
 			"",
+		},
+		{
+			"panic bug, requiredFee > math.MaxInt64",
+			func() sdk.Tx {
+				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
+				params.MinGasPrice = sdk.NewDec(math.MaxInt64)
+				err := s.app.FeeMarketKeeper.SetParams(s.ctx, params)
+				s.Require().NoError(err)
+
+				msg := s.BuildTestEthTx(from, to, nil, make([]byte, 0), nil, big.NewInt(math.MaxInt64), big.NewInt(100), &emptyAccessList)
+				return s.CreateTestTx(msg, privKey, 1, false)
+			},
+			false,
+			"provided fee < minimum global fee",
 		},
 	}
 
