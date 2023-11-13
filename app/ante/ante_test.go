@@ -100,7 +100,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 				tx := suite.CreateTestTx(signedContractTx, privKey, 1, false)
 				return tx
 			},
-			false, false, true,
+			false, false, false,
 		},
 		{
 			"success - CheckTx (contract)",
@@ -121,7 +121,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 				tx := suite.CreateTestTx(signedContractTx, privKey, 1, false)
 				return tx
 			},
-			true, false, true,
+			true, false, false,
 		},
 		{
 			"success - ReCheckTx (contract)",
@@ -982,7 +982,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 				return tx
 			},
 			true,
-			false, false, true,
+			false, false, false,
 		},
 		{
 			"success - CheckTx (contract)",
@@ -1004,7 +1004,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 				return tx
 			},
 			true,
-			true, false, true,
+			true, false, false,
 		},
 		{
 			"success - ReCheckTx (contract)",
@@ -1270,7 +1270,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithParams() {
 				return tx
 			},
 			true, true,
-			nil,
+			evmtypes.ErrCreateDisabled,
 		},
 		{
 			"fail - EVM Call Disabled",
@@ -1326,7 +1326,16 @@ func (suite AnteTestSuite) TestAnteHandlerWithParams() {
 				params.EnableCall = tc.enableCall
 				params.EnableCreate = tc.enableCreate
 			}
-			suite.SetupTest() // reset
+			if tc.enableCreate {
+				suite.Require().Panics(
+					func() {
+						suite.SetupTest()
+					},
+				)
+				return
+			}
+
+			suite.SetupTest()
 
 			acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr.Bytes())
 			suite.Require().NoError(acc.SetSequence(1))
