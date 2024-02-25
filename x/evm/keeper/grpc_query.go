@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/evmos/ethermint/utils"
 	"math/big"
 	"time"
 
@@ -231,6 +232,7 @@ func (k Keeper) EthCall(c context.Context, req *types.EthCallRequest) (*types.Ms
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	ctx = utils.UseZeroGasConfig(ctx) // avoid Cosmos consumes gas unexpectedly.
 
 	var args types.TransactionArgs
 	err := json.Unmarshal(req.Args, &args)
@@ -273,6 +275,8 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	ctx = utils.UseZeroGasConfig(ctx) // avoid Cosmos consumes gas unexpectedly.
+
 	chainID, err := getChainID(ctx, req.ChainId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -410,6 +414,8 @@ func (k Keeper) TraceTx(c context.Context, req *types.QueryTraceTxRequest) (*typ
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	ctx = utils.UseZeroGasConfig(ctx) // avoid Cosmos consumes gas unexpectedly.
+
 	ctx = ctx.WithBlockHeight(contextHeight)
 	ctx = ctx.WithBlockTime(req.BlockTime)
 	ctx = ctx.WithHeaderHash(common.Hex2Bytes(req.BlockHash))
@@ -487,6 +493,7 @@ func (k Keeper) TraceBlock(c context.Context, req *types.QueryTraceBlockRequest)
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
+	ctx = utils.UseZeroGasConfig(ctx) // avoid Cosmos consumes gas unexpectedly.
 	ctx = ctx.WithBlockHeight(contextHeight)
 	ctx = ctx.WithBlockTime(req.BlockTime)
 	ctx = ctx.WithHeaderHash(common.Hex2Bytes(req.BlockHash))
@@ -540,6 +547,8 @@ func (k *Keeper) traceTx(
 	commitMessage bool,
 	tracerJSONConfig json.RawMessage,
 ) (*interface{}, uint, error) {
+	ctx = utils.UseZeroGasConfig(ctx) // avoid Cosmos consumes gas unexpectedly.
+
 	// Assemble the structured logger or the JavaScript tracer
 	var (
 		tracer    tracers.Tracer
