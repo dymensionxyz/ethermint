@@ -35,6 +35,14 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Dymension changes
+
+### State Machine Breaking
+- (evm) Disabled contract creation.
+
+### Bug Fixes
+- (rpc) [#6](https://github.com/dymensionxyz/ethermint/pull/6) Zero gas config for tracing methods
+
 ## Unreleased
 
 ### State Machine Breaking
