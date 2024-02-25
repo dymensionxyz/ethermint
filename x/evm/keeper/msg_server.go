@@ -41,7 +41,7 @@ var _ types.MsgServer = &Keeper{}
 // so that it can implements and call the StateDB methods without receiving it as a function
 // parameter.
 func (k *Keeper) EthereumTx(goCtx context.Context, msg *types.MsgEthereumTx) (*types.MsgEthereumTxResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx) // this context already has zero gas config, set by AnteHandler
 
 	sender := msg.From
 	tx := msg.AsTransaction()
