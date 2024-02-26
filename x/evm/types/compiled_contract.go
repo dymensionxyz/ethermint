@@ -100,6 +100,12 @@ var (
 
 	// TestMessageCall is the compiled message call benchmark contract
 	TestMessageCall CompiledContract
+
+	//go:embed VFBankContract20.json
+	vfBankContract20JSON []byte
+
+	// VFBankContract20 is the compiled virtual frontier bank contract
+	VFBankContract20 CompiledContract
 )
 
 func init() {
@@ -126,7 +132,16 @@ func init() {
 		panic(err)
 	}
 
-	if len(TestMessageCall.Bin) == 0 {
+	if len(SimpleStorageContract.Bin) == 0 {
+		panic("load contract failed")
+	}
+
+	err = json.Unmarshal(vfBankContract20JSON, &VFBankContract20)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(VFBankContract20.Bin) == 0 {
 		panic("load contract failed")
 	}
 }
