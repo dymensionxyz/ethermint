@@ -9,42 +9,72 @@ import (
 )
 
 func TestParamsValidate(t *testing.T) {
+	newDefaultParamsWithVFContracts := func(vfContracts ...string) Params {
+		params := DefaultParams()
+		params.VirtualFrontierContracts = vfContracts
+		return params
+	}
+
 	extraEips := []int64{2929, 1884, 1344}
 	testCases := []struct {
 		name     string
 		params   Params
 		expError bool
 	}{
-		{"default", DefaultParams(), false},
 		{
-			"valid",
-			NewParams("ara", false, false, true, DefaultChainConfig(), extraEips),
-			false,
+			name:     "default",
+			params:   DefaultParams(),
+			expError: false,
 		},
 		{
-			"empty",
-			Params{},
-			true,
+			name:     "valid",
+			params:   NewParams("ara", false, false, true, DefaultChainConfig(), extraEips),
+			expError: false,
 		},
 		{
-			"invalid evm denom",
-			Params{
+			name:     "empty",
+			params:   Params{},
+			expError: true,
+		},
+		{
+			name: "invalid evm denom",
+			params: Params{
 				EvmDenom: "@!#!@$!@5^32",
 			},
-			true,
+			expError: true,
 		},
 		{
-			"invalid eip",
-			Params{
+			name: "invalid eip",
+			params: Params{
 				EvmDenom:  "stake",
 				ExtraEIPs: []int64{1},
 			},
-			true,
+			expError: true,
 		},
 		{
-			"creation not allowed",
-			NewParams("ara", false, true, true, DefaultChainConfig(), extraEips),
-			true,
+			name:     "creation not allowed",
+			params:   NewParams("ara", false, true, true, DefaultChainConfig(), extraEips),
+			expError: true,
+		},
+		{
+			name:     "valid virtual frontier contracts",
+			params:   newDefaultParamsWithVFContracts("0x405b96e2538ac85ee862e332fa634b158d013ae1", "0x9ede3180fae6322ea4fc946810152170e833ab1f"),
+			expError: false,
+		},
+		{
+			name:     "virtual frontier contracts must have prefix 0x",
+			params:   newDefaultParamsWithVFContracts("405b96e2538ac85ee862e332fa634b158d013ae1", "9ede3180fae6322ea4fc946810152170e833ab1f"),
+			expError: true,
+		},
+		{
+			name:     "virtual frontier contracts must be valid addresses",
+			params:   newDefaultParamsWithVFContracts("0x405b96e2538ac85ee862e332fa634b158d013ae100" /*21 bytes*/),
+			expError: true,
+		},
+		{
+			name:     "virtual frontier contracts must lowercase address",
+			params:   newDefaultParamsWithVFContracts("0xAA5b96e2538ac85ee862e332fa634b158d013aBB"),
+			expError: true,
 		},
 	}
 
