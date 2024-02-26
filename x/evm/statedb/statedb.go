@@ -22,6 +22,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -44,8 +45,9 @@ var _ vm.StateDB = &StateDB{}
 // * Contracts
 // * Accounts
 type StateDB struct {
-	keeper Keeper
-	ctx    sdk.Context
+	keeper                   Keeper
+	ctx                      sdk.Context
+	virtualFrontierContracts map[common.Address]bool
 
 	// Journal of state modifications. This is the backbone of
 	// Snapshot and RevertToSnapshot.
@@ -69,12 +71,18 @@ type StateDB struct {
 
 // New creates a new state from a given trie.
 func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
+	virtualFrontierContracts := make(map[common.Address]bool)
+	for _, vfContractAddr := range keeper.GetParams(ctx).VirtualFrontierContractsAddress() {
+		virtualFrontierContracts[vfContractAddr] = true
+	}
+
 	return &StateDB{
-		keeper:       keeper,
-		ctx:          ctx,
-		stateObjects: make(map[common.Address]*stateObject),
-		journal:      newJournal(),
-		accessList:   newAccessList(),
+		keeper:                   keeper,
+		ctx:                      ctx,
+		virtualFrontierContracts: virtualFrontierContracts,
+		stateObjects:             make(map[common.Address]*stateObject),
+		journal:                  newJournal(),
+		accessList:               newAccessList(),
 
 		txConfig: txConfig,
 	}
@@ -452,6 +460,10 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 // the StateDB object should be discarded after committed.
 func (s *StateDB) Commit() error {
 	for _, addr := range s.journal.sortedDirties() {
+		if _, found := s.virtualFrontierContracts[addr]; found {
+			return errorsmod.Wrapf(sdkerrors.ErrNotSupported, "can not access or make change to frontier contract address %s", addr)
+		}
+
 		obj := s.stateObjects[addr]
 		if obj.suicided {
 			if err := s.keeper.DeleteAccount(s.ctx, obj.Address()); err != nil {
