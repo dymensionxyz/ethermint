@@ -18,6 +18,7 @@ package evm
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -80,6 +81,25 @@ func InitGenesis(
 
 		for _, storage := range account.Storage {
 			k.SetState(ctx, address, common.HexToHash(storage.Key), common.HexToHash(storage.Value).Bytes())
+		}
+	}
+
+	if ctx.ChainID() == "ethermint_9000-1" {
+		// devnet
+		vfBankContractOfNativeAddress := common.HexToAddress("0x0000000000000000000000000000000000001001")
+
+		vfBankContractOfNativeMeta := types.VFBankContractMetadata{
+			MinDenom:    data.Params.EvmDenom,
+			Exponent:    18,
+			DisplayName: strings.ToUpper(data.Params.EvmDenom[1:]),
+		}
+
+		err = k.DeployNewVirtualFrontierBankContract(ctx, vfBankContractOfNativeAddress, &types.VirtualFrontierContract{
+			Address: strings.ToLower(vfBankContractOfNativeAddress.String()),
+			Active:  true,
+		}, &vfBankContractOfNativeMeta)
+		if err != nil {
+			panic(err)
 		}
 	}
 

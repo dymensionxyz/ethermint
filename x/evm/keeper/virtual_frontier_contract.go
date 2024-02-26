@@ -48,6 +48,13 @@ func (k Keeper) SetVirtualFrontierContract(ctx sdk.Context, contractAddress comm
 	return nil
 }
 
+// DeployNewVirtualFrontierBankContract deploys a new virtual frontier bank contract into the store
+func (k Keeper) DeployNewVirtualFrontierBankContract(ctx sdk.Context, contractAddress common.Address, vfContract *types.VirtualFrontierContract, bankMeta *types.VFBankContractMetadata) error {
+	vfContract.Type = uint32(types.VirtualFrontierContractTypeBankContract)
+	vfContract.Metadata = k.cdc.MustMarshal(bankMeta)
+	return k.DeployNewVirtualFrontierContract(ctx, contractAddress, vfContract)
+}
+
 // DeployNewVirtualFrontierContract deploys a new virtual frontier contract into the store
 func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, contractAddress common.Address, vfContract *types.VirtualFrontierContract) error {
 	// TODO VFC: check if the contract has code
