@@ -21,6 +21,9 @@ message Params {
   // allow_unprotected_txs defines if replay-protected (i.e non EIP155
   // signed) transactions can be executed on the state machine.
   bool allow_unprotected_txs = 6;
+  // virtual_frontier_contracts defines the list of address of registered Virtual Frontier Contracts.
+  // It is not prohibited to update this via gov.
+  repeated string virtual_frontier_contracts = 7;
 }
 
 // ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int values
@@ -239,4 +242,28 @@ message TraceConfig {
   bool enable_return_data = 12 [(gogoproto.jsontag) = "enableReturnData"];
   // tracer_json_config configures the tracer using a JSON string
   string tracer_json_config = 13 [(gogoproto.jsontag) = "tracerConfig"];
+}
+
+// VirtualFrontierContract are virtual contracts that able to call directly without actual invoking EVM.
+// Prohibited to call directly from EVM.
+message VirtualFrontierContract {
+  // address is the contract address
+  string address = 1;
+  // active indicate the activation of the contract. If not active, invoking methods is disabled.
+  bool active = 2;
+  // type of the virtual frontier contract
+  uint32 type = 3;
+  // metadata contains marshalled binary of the metadata of the virtual frontier contract
+  bytes metadata = 4;
+}
+
+// VFBankContractMetadata contains metadata of the Bank Contract, which represents ERC-20 contracts as proxy of the user bank assets.
+// Each bank contract is represented as a single asset of user bank.
+message VFBankContractMetadata {
+  // min_denom is the denomination of the asset
+  string min_denom = 3;
+  // exponent is the decimals of the display denom of the asset
+  uint32 exponent = 4;
+  // display_name is the display denom of the asset
+  string display_name = 5;
 }
