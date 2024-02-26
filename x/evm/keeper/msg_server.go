@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"strconv"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -152,8 +153,18 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority, expected %s, got %s", k.authority.String(), req.Authority)
 	}
 
+	if len(req.Params.VirtualFrontierContracts) > 0 {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrNotSupported, "virtual frontier contract list cannot be updated via governance proposal. Leave it empty")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.SetParams(ctx, req.Params); err != nil {
+
+	currentParams := k.GetParams(ctx)
+
+	newParams := req.Params
+	newParams.VirtualFrontierContracts = currentParams.VirtualFrontierContracts // preserve the current virtual frontier contracts
+
+	if err := k.SetParams(ctx, newParams); err != nil {
 		return nil, err
 	}
 
