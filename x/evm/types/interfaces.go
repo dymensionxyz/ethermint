@@ -49,6 +49,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
 // StakingKeeper returns the historical headers kept in store.

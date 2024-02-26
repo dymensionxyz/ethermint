@@ -16,6 +16,11 @@
 package keeper
 
 import (
+	"encoding/hex"
+	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"math/big"
 
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -378,7 +383,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data(), leftoverGas, msg.Value())
 		stateDB.SetNonce(sender.Address(), msg.Nonce()+1)
 	} else {
-		ret, leftoverGas, vmErr = evm.Call(sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
+		ret, leftoverGas, vmErr = k.proxiedEvmCall(ctx, evm, stateDB, sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
 	}
 
 	refundQuotient := params.RefundQuotient
@@ -435,4 +440,272 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		Logs:    types.NewLogsFromEth(stateDB.Logs()),
 		Hash:    txConfig.TxHash.Hex(),
 	}, nil
+}
+
+// proxiedEvmCall is the proxied method of the EVM::Call method.
+// It is used to intercept the call request, make decision before actual invoking call to the EVM::Call.
+// If the target
+func (k *Keeper) proxiedEvmCall(
+	ctx sdk.Context,
+	evm evm.EVM, stateDB vm.StateDB,
+	caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int,
+) (ret []byte, leftOverGas uint64, vmErr error) {
+	params := k.GetParams(ctx)
+	if params.IsVirtualFrontierContractAddress(addr) {
+		vfContract := k.GetVirtualFrontierContract(ctx, addr)
+		if vfContract == nil {
+			return nil, 0, types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr)
+		}
+
+		if !vfContract.Active {
+			return nil, 0, types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr)
+		}
+
+		switch types.VirtualFrontierContractType(vfContract.Type) {
+		case types.VirtualFrontierContractTypeBankContract:
+			return k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
+		default:
+			panic(fmt.Errorf("not implemented handler for VF contract %d", vfContract.Type))
+		}
+	}
+
+	return evm.Call(caller, addr, input, gas, value)
+}
+
+// evmCallVirtualFrontierBankContract handles EVM call to a virtual frontier bank contract.
+func (k *Keeper) evmCallVirtualFrontierBankContract(
+	ctx sdk.Context,
+	stateDB vm.StateDB,
+	sender common.Address, virtualFrontierContract *types.VirtualFrontierContract, calldata []byte, gas uint64, value *big.Int,
+) (ret []byte, leftOverGas uint64, vmErr error) {
+	// TODO VFC: remove hardcode
+
+	if virtualFrontierContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+		vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not a bank contract", virtualFrontierContract.Type)
+		return
+	}
+
+	erc20ContractAbi := types.VFBankContract20.ABI
+
+	defer func() {
+		if vmErr != nil {
+			// consume all gas if an error occurs
+			leftOverGas = 0
+		} else {
+			// don't consume gas
+			leftOverGas = gas
+		}
+	}()
+
+	var bankContractMetadata types.VFBankContractMetadata
+	if err := k.cdc.Unmarshal(virtualFrontierContract.Metadata, &bankContractMetadata); err != nil {
+		vmErr = types.ErrVMExecution.Wrapf("failed to unmarshal bank contract metadata: %v", err)
+		return
+	}
+
+	// prohibit normal transfer to the bank contract
+	if len(calldata) < 1 {
+		vmErr = types.ErrVMExecution.Wrap("can not transfer to virtual frontier bank contract")
+		return
+	}
+
+	if len(calldata) < 4 {
+		vmErr = types.ErrVMExecution.Wrap("invalid call data")
+		return
+	}
+
+	// prohibit transfer native token to the VF contract
+	if value != nil && value.Sign() != 0 {
+		vmErr = types.ErrVMExecution.Wrap("receiver can not be the virtual frontier bank contract")
+		return
+	}
+
+	method, found := bankContractMetadata.GetMethodFromSignature(calldata)
+	if !found {
+		if len(calldata) >= 4 {
+			vmErr = types.ErrVMExecution.Wrapf("unknown method signature 0x%s", hex.EncodeToString(calldata[:4]))
+		} else {
+			vmErr = types.ErrVMExecution.Wrapf("unknown method signature 0x%s", hex.EncodeToString(calldata))
+		}
+		return
+	}
+
+	switch method {
+	case types.VFBCmName:
+		bz, err := erc20ContractAbi.Methods["name"].Outputs.Pack(bankContractMetadata.DisplayName)
+
+		if err != nil {
+			vmErr = sdkerrors.ErrLogic.Wrapf("failed to pack method name() output")
+			k.Logger(ctx).Error("failed to pack method name() output", "error", err)
+		} else {
+			ret = bz
+		}
+
+		return
+	case types.VFBCmSymbol:
+		bz, err := erc20ContractAbi.Methods["symbol"].Outputs.Pack(bankContractMetadata.DisplayName)
+
+		if err != nil {
+			vmErr = sdkerrors.ErrLogic.Wrapf("failed to pack method symbol() output")
+			k.Logger(ctx).Error("failed to pack method symbol() output", "error", err)
+		} else {
+			ret = bz
+		}
+
+		return
+	case types.VFBCmDecimals:
+		bz, err := erc20ContractAbi.Methods["decimals"].Outputs.Pack(uint8(bankContractMetadata.Exponent))
+
+		if err != nil {
+			vmErr = sdkerrors.ErrLogic.Wrapf("failed to pack method decimals() output")
+			k.Logger(ctx).Error("failed to pack method decimals() output", "error", err)
+		} else {
+			ret = bz
+		}
+
+		return
+	case types.VFBCmTotalSupply:
+		totalSupply := k.bankKeeper.GetSupply(ctx, bankContractMetadata.MinDenom)
+
+		bz, err := erc20ContractAbi.Methods["totalSupply"].Outputs.Pack(new(big.Int).SetUint64(totalSupply.Amount.Uint64()))
+
+		if err != nil {
+			vmErr = sdkerrors.ErrLogic.Wrapf("failed to pack method totalSupply() output")
+			k.Logger(ctx).Error("failed to pack method totalSupply() output", "error", err)
+		} else {
+			ret = bz
+		}
+
+		return
+	case types.VFBCmBalanceOf:
+		if len(calldata) < 5 {
+			vmErr = types.ErrVMExecution.Wrap("invalid call data")
+			return
+		}
+
+		methodBalanceOf := erc20ContractAbi.Methods["balanceOf"]
+
+		// unpack the calldata
+		inputs, err := methodBalanceOf.Inputs.Unpack(calldata[4:])
+
+		if err != nil {
+			vmErr = types.ErrExecutionReverted.Wrapf("failed to unpack method input for balanceOf()")
+			k.Logger(ctx).Error("failed to unpack method input for balanceOf()", "error", err)
+			return
+		}
+
+		if len(inputs) != 1 {
+			vmErr = types.ErrExecutionReverted
+			return
+		}
+
+		inputAddress, ok := inputs[0].(common.Address)
+		if !ok {
+			vmErr = types.ErrExecutionReverted
+			return
+		}
+
+		// get the balance of the address
+		balance := k.bankKeeper.GetBalance(ctx, inputAddress.Bytes(), bankContractMetadata.MinDenom)
+
+		// pack the output
+
+		bz, err := methodBalanceOf.Outputs.Pack(balance.Amount.BigInt())
+
+		if err != nil {
+			vmErr = sdkerrors.ErrLogic.Wrapf("failed to pack method balanceOf() output")
+			k.Logger(ctx).Error("failed to pack method balanceOf() output", "error", err)
+			return
+		}
+
+		ret = bz
+
+		return
+	case types.VFBCmTransfer:
+		if len(calldata) < 5 {
+			vmErr = types.ErrVMExecution.Wrap("invalid call data")
+			return
+		}
+
+		methodTransfer := erc20ContractAbi.Methods["transfer"]
+		eventTransfer := erc20ContractAbi.Events["Transfer"]
+
+		// unpack the calldata
+		inputs, err := methodTransfer.Inputs.Unpack(calldata[4:])
+
+		if err != nil {
+			vmErr = types.ErrExecutionReverted.Wrapf("failed to unpack method input for transfer()")
+			k.Logger(ctx).Error("failed to unpack method input for transfer()", "error", err)
+			return
+		}
+
+		if len(inputs) != 2 {
+			vmErr = types.ErrExecutionReverted
+			return
+		}
+
+		to, ok := inputs[0].(common.Address)
+		if !ok {
+			vmErr = types.ErrExecutionReverted
+			return
+		}
+
+		accountI := k.accountKeeper.GetAccount(ctx, to.Bytes())
+		if accountI != nil {
+			_, isModuleAccount := accountI.(authtypes.ModuleAccountI)
+			if isModuleAccount {
+				vmErr = types.ErrVMExecution.Wrap("can not transfer to module account")
+				return
+			}
+		}
+
+		amount, ok := inputs[1].(*big.Int)
+		if !ok {
+			vmErr = types.ErrExecutionReverted
+			return
+		}
+
+		senderBalance := k.bankKeeper.GetBalance(ctx, sender.Bytes(), bankContractMetadata.MinDenom)
+		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, sdk.NewIntFromBigInt(amount))
+
+		if senderBalance.Amount.LT(sendAmount.Amount) {
+			vmErr = types.ErrVMExecution.Wrapf("insufficient balance %s < %s", senderBalance, sendAmount)
+			return
+		}
+
+		// transfer the amount
+
+		if err := k.bankKeeper.SendCoins(ctx, sender.Bytes(), to.Bytes(), sdk.NewCoins(sendAmount)); err != nil {
+			vmErr = types.ErrVMExecution.Wrapf("failed to transfer %s from %s to %s: %v", sendAmount.String(), sender, to, err)
+			return
+		}
+
+		// Fire the Transfer event
+		arguments := abi.Arguments{
+			eventTransfer.Inputs[2],
+		}
+		bzData, err := arguments.Pack(amount)
+		if err != nil {
+			vmErr = types.ErrVMExecution.Wrapf("failed to pack output data")
+			k.Logger(ctx).Error("failed to pack output data", "error", err)
+			return
+		}
+
+		stateDB.AddLog(&ethtypes.Log{
+			Address: virtualFrontierContract.ContractAddress(),
+			Topics: []common.Hash{
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"), // Transfer
+				sender.Hash(),
+				to.Hash(),
+			},
+			Data:        bzData,
+			BlockNumber: uint64(ctx.BlockHeight()),
+		})
+
+		return
+	default:
+		panic("unreachable")
+	}
+
+	return
 }

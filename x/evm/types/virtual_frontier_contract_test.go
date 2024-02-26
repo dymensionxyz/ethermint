@@ -1,9 +1,10 @@
-package types
+package types_test
 
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
+	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -11,14 +12,14 @@ import (
 func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
 
-	validVFBankContractMetadata := VFBankContractMetadata{
+	validVFBankContractMetadata := types.VFBankContractMetadata{
 		MinDenom:    "wei",
 		Exponent:    18,
 		DisplayName: "ETH",
 	}
 	validVFBankContractMetadataBz := encodingConfig.Codec.MustMarshal(&validVFBankContractMetadata)
 
-	invalidVFBankContractMetadata := VFBankContractMetadata{
+	invalidVFBankContractMetadata := types.VFBankContractMetadata{
 		MinDenom:    "",
 		Exponent:    18,
 		DisplayName: "ETH",
@@ -27,16 +28,16 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 
 	tests := []struct {
 		name            string
-		contract        VirtualFrontierContract
+		contract        types.VirtualFrontierContract
 		wantErr         bool
 		wantErrContains string
 	}{
 		{
 			name: "normal",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         false,
@@ -44,10 +45,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "normal, decimals=6",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         false,
@@ -55,10 +56,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "address can not be the nil one",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x0000000000000000000000000000000000000000",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -66,10 +67,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "bad format address",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae100", // 21 bytes
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -77,10 +78,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "address must start with 0x",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -88,10 +89,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "address must be lowercase",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0xAA5b96e2538ac85ee862e332fa634b158d013aBB",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -99,10 +100,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "missing address",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -110,7 +111,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "type must be specified (not set)",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
 				Metadata: validVFBankContractMetadataBz,
@@ -120,10 +121,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "type must be specified (unknown type)",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeUnknown),
+				Type:     uint32(types.VirtualFrontierContractTypeUnknown),
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -131,10 +132,10 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid VF bank contract metadata",
-			contract: VirtualFrontierContract{
+			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(VirtualFrontierContractTypeBankContract),
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata: invalidVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -179,7 +180,7 @@ func TestVirtualFrontierContract_ContractAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &VirtualFrontierContract{
+			m := &types.VirtualFrontierContract{
 				Address: tt.address,
 			}
 			require.Equal(t, tt.want, m.ContractAddress())
