@@ -1,9 +1,14 @@
 package keeper
 
 import (
+	"bytes"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 	"strings"
 )
@@ -31,8 +36,8 @@ func (k Keeper) SetVirtualFrontierContract(ctx sdk.Context, contractAddress comm
 		return err
 	}
 
-	if vfContract.Address != contractAddress.String() {
-		return sdkerrors.ErrUnknownAddress.Wrapf("contract address %s does not match the address in the contract %s", contractAddress, vfContract.Address)
+	if vfContract.Address != strings.ToLower(contractAddress.String()) {
+		return sdkerrors.ErrUnknownAddress.Wrapf("contract address %s does not match the address in the contract %s", strings.ToLower(contractAddress.String()), vfContract.Address)
 	}
 
 	store := ctx.KVStore(k.storeKey)
@@ -49,44 +54,159 @@ func (k Keeper) SetVirtualFrontierContract(ctx sdk.Context, contractAddress comm
 }
 
 // DeployNewVirtualFrontierBankContract deploys a new virtual frontier bank contract into the store
-func (k Keeper) DeployNewVirtualFrontierBankContract(ctx sdk.Context, contractAddress common.Address, vfContract *types.VirtualFrontierContract, bankMeta *types.VFBankContractMetadata) error {
+func (k Keeper) DeployNewVirtualFrontierBankContract(ctx sdk.Context, vfContract *types.VirtualFrontierContract, bankMeta *types.VFBankContractMetadata) (common.Address, error) {
 	vfContract.Type = uint32(types.VirtualFrontierContractTypeBankContract)
 	vfContract.Metadata = k.cdc.MustMarshal(bankMeta)
-	return k.DeployNewVirtualFrontierContract(ctx, contractAddress, vfContract)
+
+	callData, err := PrepareBytecodeForVirtualFrontierBankContractDeployment(bankMeta.DisplayName, uint8(bankMeta.Exponent))
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	return k.DeployNewVirtualFrontierContract(ctx, vfContract, callData)
+}
+
+func PrepareBytecodeForVirtualFrontierBankContractDeployment(displayName string, exponent uint8) ([]byte, error) {
+	// method is exposed to be re-use in test
+	ctorArgs, err := types.VFBankContract20.ABI.Pack(
+		"",
+		displayName,
+		displayName,
+		exponent,
+	)
+
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrPackAny, "failed to pack bytecode %s", err.Error())
+	}
+
+	contractBytecode := types.VFBankContract20.Bin
+
+	var callData []byte
+	callData = append(callData, contractBytecode...)
+	callData = append(callData, ctorArgs...)
+
+	return callData, nil
 }
 
 // DeployNewVirtualFrontierContract deploys a new virtual frontier contract into the store
-func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, contractAddress common.Address, vfContract *types.VirtualFrontierContract) error {
-	// TODO VFC: check if the contract has code
+func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *types.VirtualFrontierContract, callData []byte) (contractAddress common.Address, err error) {
+	defer func() {
+		if err != nil {
+			contractAddress = common.Address{}
+		}
+	}()
+
+	if len(vfContract.Address) > 0 {
+		err = sdkerrors.ErrInvalidRequest.Wrapf("input contract address must be empty")
+		return
+	}
+
+	deployerModuleAccount := k.accountKeeper.GetModuleAccount(ctx, types.ModuleVirtualFrontierContractDeployerName)
+	if deployerModuleAccount == nil {
+		err = sdkerrors.ErrNotFound.Wrapf("module account %s does not exist", types.ModuleVirtualFrontierContractDeployerName)
+		return
+	}
+
+	nonce := deployerModuleAccount.GetSequence()
+	contractAddress = crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, nonce)
+	contractAccount := k.GetAccount(ctx, contractAddress)
+	if contractAccount != nil {
+		if len(contractAccount.CodeHash) > 0 {
+			if bytes.Equal(contractAccount.CodeHash, types.EmptyCodeHash) {
+				err = sdkerrors.ErrInvalidRequest.Wrapf("contract address already exists at %s", contractAddress)
+				return
+			}
+		}
+	}
 
 	params := k.GetParams(ctx)
 	for _, existingAddr := range params.VirtualFrontierContractsAddress() {
 		if existingAddr == contractAddress {
-			return sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s is already registered in params", contractAddress)
+			err = sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s is already registered in params", contractAddress)
+			return
 		}
 	}
 
 	if k.GetVirtualFrontierContract(ctx, contractAddress) != nil {
-		return sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s already exists", contractAddress)
+		err = sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s already exists", contractAddress)
+		return
 	}
 
-	var err error
+	// deploy pseudo bytecode for virtual frontier contract.
+	//
+	// The VF contract is not accessible from the EVM,
+	// can only be accessed by calling it directly via ETH wallets or other means.
+	// But to make the state consistency and prevent as much of the potential issues,
+	// we still need to deploy a pseudo set of bytecode by asking the EVM to deploy it so the contract is actually exists.
+	//
+	// The pseudo bytecode is actual EVM bytecode, compiled from some real solidity contracts,
+	// can read the contracts by checking the corresponding file:
+	//  - VF Bank contract: x/evm/types/VFBankContract20.sol (the code is real ERC-20 interface, but the implementation always returns error upon invoking any function)
+	if ctx.BlockHeight() == 0 {
+		// can not deploy contract code in genesis, so we just store the contract metadata
+		// and increase the sequence number of the deployer account so next deployment will generate different address.
+		deployerModuleAccount.SetSequence(nonce + 1)
+		k.accountKeeper.SetAccount(ctx, deployerModuleAccount)
+	} else {
+		if len(callData) == 0 {
+			err = sdkerrors.ErrInvalidRequest.Wrapf("input call data must not be empty")
+			return
+		}
+
+		msg := ethtypes.NewMessage(
+			types.VirtualFrontierContractDeployerAddress,
+			nil,
+			nonce,
+			common.Big0, // amount
+			3_000_000,   // gasLimit
+			common.Big0, // gasPrice
+			common.Big0, // gasFeeCap
+			common.Big0, // gasTipCap
+			callData,
+			ethtypes.AccessList{},
+			false,
+		)
+
+		cfg, errGetEvmConfig := k.EVMConfig(ctx, ctx.BlockHeader().ProposerAddress, k.eip155ChainID)
+		if errGetEvmConfig != nil {
+			err = errorsmod.Wrapf(types.ErrVMExecution, "failed to load evm config: %v", errGetEvmConfig)
+			return
+		}
+		if !cfg.Params.EnableCreate {
+			// enable contract creation for this run in-case of disabled, this change is not persisted
+			copiedParams := cfg.Params
+			copiedParams.EnableCreate = true
+			cfg.Params = copiedParams
+		}
+
+		txConfig := statedb.NewEmptyTxConfig(common.BytesToHash(ctx.HeaderHash()))
+
+		res, errApplyMsg := k.ApplyMessageWithConfig(ctx, msg, types.NewNoOpTracer(), true, cfg, txConfig)
+		if errApplyMsg != nil {
+			err = errorsmod.Wrap(types.ErrVMExecution, errApplyMsg.Error())
+			return
+		}
+
+		if res.Failed() {
+			err = errorsmod.Wrap(types.ErrVMExecution, res.VmError)
+			return
+		}
+	}
 
 	// register new contract address to params store
 	params.VirtualFrontierContracts = append(params.VirtualFrontierContracts, strings.ToLower(contractAddress.String()))
 
 	err = k.SetParams(ctx, params)
 	if err != nil {
-		return err
+		return
 	}
 
 	// register new contract metadata to store
+	vfContract.Address = strings.ToLower(contractAddress.String())
 	err = k.SetVirtualFrontierContract(ctx, contractAddress, vfContract)
 	if err != nil {
-		return err
+		return
 	}
-
-	// TODO VFC: deploy contract code
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -97,5 +217,5 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, contractAddres
 		),
 	)
 
-	return nil
+	return
 }

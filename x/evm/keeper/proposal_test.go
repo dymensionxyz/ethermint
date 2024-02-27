@@ -2,22 +2,23 @@ package keeper_test
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/x/evm/types"
 	"strings"
 )
 
 func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
-	contractAddr1 := "0x0000000000000000000000000000000000002001"
-	contractAddr2 := "0x0000000000000000000000000000000000002002"
-	contractAddrNonExists := "0x0000000000000000000000000000000000002099"
+	deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
+	suite.Require().NotNil(deployerModuleAccount)
+
+	contractAddr1 := strings.ToLower(crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+0).String())
+	contractAddr2 := strings.ToLower(crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+1).String())
+	contractAddrNonExists := "0x0000000000000000000000000000000000009999"
 
 	registerLegacyVFCs := func() {
-		var err error
-		err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
+		addr, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
-			common.HexToAddress(contractAddr1),
 			&types.VirtualFrontierContract{
-				Address:          contractAddr1,
 				Active:           true,
 				Type:             uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata:         nil,
@@ -30,11 +31,10 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			},
 		)
 		suite.Require().NoError(err)
-		err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
+		suite.Equal(contractAddr1, strings.ToLower(addr.String()))
+		addr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
-			common.HexToAddress(contractAddr2),
 			&types.VirtualFrontierContract{
-				Address:          contractAddr2,
 				Active:           true,
 				Type:             uint32(types.VirtualFrontierContractTypeBankContract),
 				Metadata:         nil,
@@ -47,6 +47,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			},
 		)
 		suite.Require().NoError(err)
+		suite.Equal(contractAddr2, strings.ToLower(addr.String()))
 	}
 
 	tests := []struct {

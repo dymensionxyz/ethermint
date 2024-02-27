@@ -40,6 +40,10 @@ func InitGenesis(
 ) []abci.ValidatorUpdate {
 	k.WithChainID(ctx)
 
+	if len(data.Params.VirtualFrontierContracts) > 0 {
+		panic("not allowed to set virtual frontier contracts in genesis")
+	}
+
 	err := k.SetParams(ctx, data.Params)
 	if err != nil {
 		panic(fmt.Errorf("error setting params %s", err))
@@ -84,23 +88,22 @@ func InitGenesis(
 		}
 	}
 
-	if ctx.ChainID() == "ethermint_9000-1" {
+	if ctx.ChainID() == "ethermint_9000-1" || ctx.ChainID() == "blumbus_111-1" || ctx.ChainID() == "froopyland_100-1" {
 		// devnet
-		vfBankContractOfNativeAddress := common.HexToAddress("0x0000000000000000000000000000000000001001")
-
 		vfBankContractOfNativeMeta := types.VFBankContractMetadata{
 			MinDenom:    data.Params.EvmDenom,
 			Exponent:    18,
 			DisplayName: strings.ToUpper(data.Params.EvmDenom[1:]),
 		}
 
-		err = k.DeployNewVirtualFrontierBankContract(ctx, vfBankContractOfNativeAddress, &types.VirtualFrontierContract{
-			Address: strings.ToLower(vfBankContractOfNativeAddress.String()),
-			Active:  true,
+		contract, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
+			Active: true,
 		}, &vfBankContractOfNativeMeta)
 		if err != nil {
 			panic(err)
 		}
+
+		ctx.Logger().Info("deployed virtual frontier bank contract for native token on devnet", "address", contract.String())
 	}
 
 	return []abci.ValidatorUpdate{}

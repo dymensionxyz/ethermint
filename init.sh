@@ -1,6 +1,8 @@
 #!/bin/bash
 
 KEY="mykey"
+MNEMONIC="curtain hat remain song receive tower stereo hope frog cheap brown plate raccoon post reflect wool sail salmon game salon group glimpse adult shift"
+
 CHAINID="ethermint_9000-1"
 MONIKER="localtestnet"
 KEYRING="test"
@@ -22,7 +24,7 @@ ethermintd config keyring-backend $KEYRING
 ethermintd config chain-id $CHAINID
 
 # if $KEY exists it should be deleted
-ethermintd keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO
+echo "$MNEMONIC" | ethermintd keys add $KEY --recover --keyring-backend $KEYRING --algo $KEYALGO
 
 # Set moniker and chain-id for Ethermint (Moniker can be anything, chain-id must be an integer)
 ethermintd init $MONIKER --chain-id $CHAINID
