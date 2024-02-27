@@ -649,10 +649,12 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			return
 		}
 
+		receiver := sdk.AccAddress(to.Bytes())
+
 		// prohibit transfer to some types of account
 
 		// - module account
-		accountI := k.accountKeeper.GetAccount(ctx, to.Bytes())
+		accountI := k.accountKeeper.GetAccount(ctx, receiver)
 		if accountI != nil {
 			_, isModuleAccount := accountI.(authtypes.ModuleAccountI)
 			if isModuleAccount {
@@ -680,8 +682,18 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			return
 		}
 
+		if err := k.bankKeeper.IsSendEnabledCoins(ctx, sendAmount); err != nil {
+			vmErr = types.ErrVMExecution.Wrap(err.Error())
+			return
+		}
+
+		if k.bankKeeper.BlockedAddr(receiver) {
+			vmErr = types.ErrVMExecution.Wrapf("unauthorized, %s is not allowed to receive funds", receiver)
+			return
+		}
+
 		// transfer the amount
-		if err := k.bankKeeper.SendCoins(ctx, sender.Bytes(), to.Bytes(), sdk.NewCoins(sendAmount)); err != nil {
+		if err := k.bankKeeper.SendCoins(ctx, sender.Bytes(), receiver, sdk.NewCoins(sendAmount)); err != nil {
 			vmErr = types.ErrVMExecution.Wrapf("failed to transfer %s from %s to %s: %v", sendAmount.String(), sender, to, err)
 			return
 		}
