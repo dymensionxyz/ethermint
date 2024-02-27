@@ -42,17 +42,17 @@ func (m *VFBankContractMetadata) GetMethodFromSignature(input []byte) (method VF
 	}
 
 	switch strings.ToLower(hex.EncodeToString(input[:4])) {
-	case "06fdde03":
+	case "06fdde03": // first 4 bytes of the keccak256 hash of "name()"
 		return VFBCmName, true
-	case "95d89b41":
+	case "95d89b41": // first 4 bytes of the keccak256 hash of "symbol()"
 		return VFBCmSymbol, true
-	case "313ce567":
+	case "313ce567": // first 4 bytes of the keccak256 hash of "decimals()"
 		return VFBCmDecimals, true
-	case "18160ddd":
+	case "18160ddd": // first 4 bytes of the keccak256 hash of "totalSupply()"
 		return VFBCmTotalSupply, true
-	case "70a08231":
+	case "70a08231": // first 4 bytes of the keccak256 hash of "balanceOf(address)"
 		return VFBCmBalanceOf, true
-	case "a9059cbb":
+	case "a9059cbb": // first 4 bytes of the keccak256 hash of "transfer(address,uint256)"
 		return VFBCmTransfer, true
 	default:
 		return VFBCmUnknown, false

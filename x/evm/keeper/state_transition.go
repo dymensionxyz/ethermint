@@ -477,12 +477,9 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 	stateDB vm.StateDB,
 	sender common.Address, virtualFrontierContract *types.VirtualFrontierContract, calldata []byte, gas uint64, value *big.Int,
 ) (ret []byte, leftOverGas uint64, vmErr error) {
-	// TODO VFC: remove hardcode
-
 	defer func() {
 		if vmErr != nil {
-			// TODO VFC: change to debug
-			k.Logger(ctx).Error("virtual frontier contract execution failed", "error", vmErr)
+			k.Logger(ctx).Debug("virtual frontier bank contract execution failed", "error", vmErr)
 		}
 	}()
 
@@ -688,7 +685,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		}
 
 		if k.bankKeeper.BlockedAddr(receiver) {
-			vmErr = types.ErrVMExecution.Wrapf("unauthorized, %s is not allowed to receive funds", receiver)
+			vmErr = types.ErrVMExecution.Wrapf("unauthorized, %s is not allowed to receive funds", to)
 			return
 		}
 
@@ -698,7 +695,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			return
 		}
 
-		// Fire the Transfer event
+		// Fire the ERC-20 Transfer event
 		bzData, err := abi.Arguments{
 			eventTransfer.Inputs[2],
 		}.Pack(amount)
@@ -710,7 +707,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		stateDB.AddLog(&ethtypes.Log{
 			Address: virtualFrontierContract.ContractAddress(),
 			Topics: []common.Hash{
-				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"), // Transfer
+				common.HexToHash("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"), // keccak256 of `Transfer(address,address,uint256)`
 				sender.Hash(),
 				to.Hash(),
 			},
