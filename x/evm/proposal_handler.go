@@ -40,7 +40,8 @@ func handleUpdateVirtualFrontierBankContractsProposal(
 	for _, contractAddress := range contractsAddress {
 		ctx.EventManager().EmitEvent(
 			sdk.NewEvent(
-				types.EventTypeUpdateVirtualFrontierContract,
+				types.EventTypeVirtualFrontierContract,
+				sdk.NewAttribute(types.AttributeKeyVFAction, "update"),
 				sdk.NewAttribute(types.AttributeKeyVFType, "bank"),
 				sdk.NewAttribute(types.AttributeKeyVFAddress, strings.ToLower(contractAddress.String())),
 			),

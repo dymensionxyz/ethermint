@@ -88,5 +88,14 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, contractAddres
 
 	// TODO VFC: deploy contract code
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeVirtualFrontierContract,
+			sdk.NewAttribute(types.AttributeKeyVFAction, "deploy"),
+			sdk.NewAttribute(types.AttributeKeyVFType, vfContract.GetTypeName()),
+			sdk.NewAttribute(types.AttributeKeyVFAddress, strings.ToLower(contractAddress.String())),
+		),
+	)
+
 	return nil
 }

@@ -63,3 +63,13 @@ func (m *VirtualFrontierContract) ValidateBasic(cdc codec.BinaryCodec) error {
 func (m *VirtualFrontierContract) ContractAddress() common.Address {
 	return common.HexToAddress(m.Address)
 }
+
+// GetTypeName returns the human-readable type name of the type of the VirtualFrontierContract
+func (m *VirtualFrontierContract) GetTypeName() string {
+	switch VirtualFrontierContractType(m.Type) {
+	case VirtualFrontierContractTypeBankContract:
+		return "bank"
+	default:
+		return ""
+	}
+}
