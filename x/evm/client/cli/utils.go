@@ -17,6 +17,10 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -59,4 +63,20 @@ func formatKeyToHash(key string) string {
 	ethkey := common.HexToHash(key)
 
 	return ethkey.Hex()
+}
+
+// parseUpdateVirtualFrontierBankContractsProposal reads and parses a UpdateVirtualFrontierBankContractsProposal from a file.
+func parseUpdateVirtualFrontierBankContractsProposal(cdc codec.JSONCodec, metadataFile string) (*evmtypes.UpdateVirtualFrontierBankContractsProposal, error) {
+	proposal := evmtypes.UpdateVirtualFrontierBankContractsProposal{}
+
+	contents, err := os.ReadFile(filepath.Clean(metadataFile))
+	if err != nil {
+		return nil, err
+	}
+
+	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal proposal: %w", err)
+	}
+
+	return &proposal, nil
 }
