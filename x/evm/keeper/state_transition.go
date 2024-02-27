@@ -511,7 +511,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 	// prohibit normal transfer to the bank contract
 	if len(calldata) < 1 {
-		vmErr = types.ErrVMExecution.Wrap("can not transfer to virtual frontier bank contract")
+		vmErr = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("can not transfer to virtual frontier bank contract")
 		return
 	}
 
@@ -522,7 +522,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 	// prohibit transfer native token to the VF contract
 	if value != nil && value.Sign() != 0 {
-		vmErr = types.ErrVMExecution.Wrap("receiver can not be the virtual frontier bank contract")
+		vmErr = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("cannot transfer to virtual frontier bank contract")
 		return
 	}
 

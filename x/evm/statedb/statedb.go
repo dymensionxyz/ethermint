@@ -22,11 +22,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 // revision is the identifier of a version of state.
@@ -461,7 +461,7 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 func (s *StateDB) Commit() error {
 	for _, addr := range s.journal.sortedDirties() {
 		if _, found := s.virtualFrontierContracts[addr]; found {
-			return errorsmod.Wrapf(sdkerrors.ErrNotSupported, "can not access or make change to frontier contract address %s", addr)
+			return errorsmod.Wrapf(evmtypes.ErrProhibitedAccessingVirtualFrontierContract, "can not access or make change to frontier contract address %s", addr)
 		}
 
 		obj := s.stateObjects[addr]

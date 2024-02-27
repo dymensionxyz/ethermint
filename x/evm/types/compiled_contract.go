@@ -155,7 +155,7 @@ func (s CompiledContract) PackOutput(methodName string, args ...interface{}) ([]
 
 	bz, err := method.Outputs.Pack(args...)
 	if err != nil {
-		return nil, sdkerrors.ErrLogic.Wrapf("failed to pack output for method %s()", methodName)
+		return nil, sdkerrors.ErrPackAny.Wrapf("failed to pack output for method %s()", methodName)
 	}
 
 	return bz, nil
@@ -164,12 +164,12 @@ func (s CompiledContract) PackOutput(methodName string, args ...interface{}) ([]
 func (s CompiledContract) UnpackInput(methodName string, data []byte) ([]interface{}, error) {
 	method, exist := s.ABI.Methods[methodName]
 	if !exist {
-		return nil, sdkerrors.ErrPackAny.Wrapf("method '%s' not found in ABI", methodName)
+		return nil, sdkerrors.ErrUnpackAny.Wrapf("method '%s' not found in ABI", methodName)
 	}
 
 	inputs, err := method.Inputs.Unpack(data)
 	if err != nil {
-		return nil, sdkerrors.ErrLogic.Wrapf("failed to unpack input for method %s()", methodName)
+		return nil, sdkerrors.ErrUnpackAny.Wrapf("failed to unpack input for method %s()", methodName)
 	}
 
 	return inputs, nil
