@@ -74,6 +74,11 @@ service Query {
   rpc BaseFee(QueryBaseFeeRequest) returns (QueryBaseFeeResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/base_fee";
   }
+
+  // ListVirtualFrontierContracts returns Json array of information of virtual frontier contracts.
+  rpc ListVirtualFrontierContracts(QueryVirtualFrontierContractsRequest) returns (QueryVirtualFrontierContractsResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts";
+  }
 }
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.
@@ -295,4 +300,12 @@ message QueryBaseFeeRequest {}
 message QueryBaseFeeResponse {
   // base_fee is the EIP1559 base fee
   string base_fee = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+}
+
+// QueryVirtualFrontierContractsRequest defines the request for querying virtual frontier contract list
+message QueryVirtualFrontierContractsRequest {}
+
+// QueryVirtualFrontierContractsResponse returns the list of the virtual frontier contract
+message QueryVirtualFrontierContractsResponse {
+  repeated string virtual_frontier_contracts_json = 1;
 }

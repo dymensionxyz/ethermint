@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/evmos/ethermint/utils"
 	"math/big"
 	"time"
@@ -640,6 +641,63 @@ func (k Keeper) BaseFee(c context.Context, _ *types.QueryBaseFeeRequest) (*types
 	}
 
 	return res, nil
+}
+
+// ListVirtualFrontierContracts returns the JSON formatted list of virtual frontier contract from the store
+func (k Keeper) ListVirtualFrontierContracts(ctx context.Context, _ *types.QueryVirtualFrontierContractsRequest) (*types.QueryVirtualFrontierContractsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	params := k.GetParams(sdkCtx)
+
+	var jsonContracts []string
+
+	for _, contractAddress := range params.VirtualFrontierContractsAddress() {
+		contract := k.GetVirtualFrontierContract(sdkCtx, contractAddress)
+		if contract == nil {
+			continue
+		}
+
+		switch contract.Type {
+		case uint32(types.VirtualFrontierContractTypeBankContract):
+			type bankContract struct {
+				Address     string `json:"address"`
+				State       string `json:"state"`
+				MinDenom    string `json:"min_denom"`
+				Exponent    uint32 `json:"exponent"`
+				DisplayName string `json:"display_name"`
+			}
+
+			var bankMeta types.VFBankContractMetadata
+			k.cdc.MustUnmarshal(contract.Metadata, &bankMeta)
+
+			bc := bankContract{
+				Address:     contract.Address,
+				State:       "",
+				MinDenom:    bankMeta.MinDenom,
+				Exponent:    bankMeta.Exponent,
+				DisplayName: bankMeta.DisplayName,
+			}
+			if contract.Active {
+				bc.State = "activated"
+			} else {
+				bc.State = "disabled"
+			}
+
+			bz, err := json.Marshal(bc)
+			if err != nil {
+				return nil, sdkerrors.ErrJSONMarshal.Wrapf("failed to marshal virtual frontier bank contract %s: %v", contract.Address, err)
+			}
+			jsonContracts = append(jsonContracts, string(bz))
+
+			break
+		default:
+			return nil, sdkerrors.ErrNotSupported.Wrapf("not supported JSON content builder for type %d", contract.Type)
+		}
+	}
+
+	return &types.QueryVirtualFrontierContractsResponse{
+		VirtualFrontierContractsJson: jsonContracts,
+	}, nil
 }
 
 // getChainID parse chainID from current context if not provided
