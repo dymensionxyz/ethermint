@@ -382,7 +382,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data(), leftoverGas, msg.Value())
 		stateDB.SetNonce(sender.Address(), msg.Nonce()+1)
 	} else {
-		ret, leftoverGas, vmErr = k.proxiedEvmCall(ctx, evm, stateDB, sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
+		ret, leftoverGas, vmErr = k.proxiedEvmCall(ctx, evm, cfg, stateDB, sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
 	}
 
 	refundQuotient := params.RefundQuotient
@@ -446,11 +446,10 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 // If the target
 func (k *Keeper) proxiedEvmCall(
 	ctx sdk.Context,
-	evm evm.EVM, stateDB vm.StateDB,
+	evm evm.EVM, evmCfg *statedb.EVMConfig, stateDB vm.StateDB,
 	caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int,
 ) (ret []byte, leftOverGas uint64, vmErr error) {
-	params := k.GetParams(ctx)
-	if params.IsVirtualFrontierContractAddress(addr) {
+	if evmCfg.Params.IsVirtualFrontierContractAddress(addr) {
 		vfContract := k.GetVirtualFrontierContract(ctx, addr)
 		if vfContract == nil {
 			return nil, 0, types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr)
@@ -462,7 +461,7 @@ func (k *Keeper) proxiedEvmCall(
 
 		switch types.VirtualFrontierContractType(vfContract.Type) {
 		case types.VirtualFrontierContractTypeBankContract:
-			return k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
+			return k.evmCallVirtualFrontierBankContract(ctx, evmCfg, stateDB, caller.Address(), vfContract, input, gas, value)
 		default:
 			panic(fmt.Errorf("not implemented handler for VF contract %d", vfContract.Type))
 		}
@@ -474,6 +473,7 @@ func (k *Keeper) proxiedEvmCall(
 // evmCallVirtualFrontierBankContract handles EVM call to a virtual frontier bank contract.
 func (k *Keeper) evmCallVirtualFrontierBankContract(
 	ctx sdk.Context,
+	evmCfg *statedb.EVMConfig,
 	stateDB vm.StateDB,
 	sender common.Address, virtualFrontierContract *types.VirtualFrontierContract, calldata []byte, gas uint64, value *big.Int,
 ) (ret []byte, leftOverGas uint64, vmErr error) {
@@ -649,6 +649,9 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			return
 		}
 
+		// prohibit transfer to some types of account
+
+		// - module account
 		accountI := k.accountKeeper.GetAccount(ctx, to.Bytes())
 		if accountI != nil {
 			_, isModuleAccount := accountI.(authtypes.ModuleAccountI)
@@ -656,6 +659,11 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 				vmErr = types.ErrVMExecution.Wrap("can not transfer to module account")
 				return
 			}
+		}
+		// - VF contracts
+		if evmCfg.Params.IsVirtualFrontierContractAddress(to) {
+			vmErr = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("can not transfer to virtual frontier contract")
+			return
 		}
 
 		amount, ok := inputs[1].(*big.Int)

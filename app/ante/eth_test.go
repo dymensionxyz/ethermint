@@ -3,6 +3,7 @@ package ante_test
 import (
 	"math"
 	"math/big"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -485,6 +486,69 @@ func (suite AnteTestSuite) TestEthIncrementSenderSequenceDecorator() {
 
 				nonce := suite.app.EvmKeeper.GetNonce(suite.ctx, addr)
 				suite.Require().Equal(txData.GetNonce()+1, nonce)
+			} else {
+				suite.Require().Error(err)
+			}
+		})
+	}
+}
+
+func (suite AnteTestSuite) TestEthVirtualFrontierContractDecorator() {
+
+	vfcAddr := tests.GenerateAddress()
+
+	notContractAddr := tests.GenerateAddress()
+
+	params := suite.app.EvmKeeper.GetParams(suite.ctx)
+	params.VirtualFrontierContracts = append(params.VirtualFrontierContracts, strings.ToLower(vfcAddr.String()))
+
+	suite.app.EvmKeeper.SetParams(suite.ctx, params)
+
+	dec := ante.NewVirtualFrontierContractDecorator(suite.app.EvmKeeper)
+
+	testCases := []struct {
+		name    string
+		tx      sdk.Tx
+		expPass bool
+	}{
+		{
+			name:    "pass - to is nil",
+			tx:      evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, nil, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil),
+			expPass: true,
+		},
+		{
+			name:    "pass - to is not VFC",
+			tx:      evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, &notContractAddr, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil),
+			expPass: true,
+		},
+		{
+			name:    "fail - to is VFC, no value, but prohibited transfer",
+			tx:      evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, &vfcAddr, big.NewInt(0), 1000, big.NewInt(1), nil, nil, nil, nil),
+			expPass: false,
+		},
+		{
+			name:    "pass - to is VFC, with call data, but no value",
+			tx:      evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, &vfcAddr, big.NewInt(0), 1000, big.NewInt(1), nil, nil, []byte{0x1, 0x2, 0x3, 0x4}, nil),
+			expPass: true,
+		},
+		{
+			name:    "fail - to is VFC, no call data, with value, prohibit transfer",
+			tx:      evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, &vfcAddr, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil),
+			expPass: false,
+		},
+		{
+			name:    "fail - to is VFC, with call data and value, prohibit transfer",
+			tx:      evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, &vfcAddr, big.NewInt(10), 1000, big.NewInt(1), nil, nil, []byte{0x1, 0x2, 0x3, 0x4}, nil),
+			expPass: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			_, err := dec.AnteHandle(suite.ctx, tc.tx, false, NextFn)
+
+			if tc.expPass {
+				suite.Require().NoError(err)
 			} else {
 				suite.Require().Error(err)
 			}
