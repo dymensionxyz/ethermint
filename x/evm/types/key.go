@@ -16,12 +16,15 @@
 package types
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
 	// ModuleName string name of module
 	ModuleName = "evm"
+
+	ModuleVirtualFrontierContractDeployerName = ModuleName + "_vfc_deployer"
 
 	// StoreKey key for ethereum storage data, account code (StateDB) or block
 	// related data for Web3.
@@ -51,6 +54,13 @@ const (
 	prefixTransientLogSize
 	prefixTransientGasUsed
 )
+
+// VirtualFrontierContractDeployerAddress is address for deploying virtual frontier contract
+var VirtualFrontierContractDeployerAddress common.Address
+
+func init() {
+	VirtualFrontierContractDeployerAddress = common.BytesToAddress(authtypes.NewModuleAddress(ModuleVirtualFrontierContractDeployerName).Bytes())
+}
 
 // KVStore key prefixes
 var (
