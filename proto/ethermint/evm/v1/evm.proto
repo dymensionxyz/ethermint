@@ -269,3 +269,29 @@ message VFBankContractMetadata {
   // display_name is the display denom of the asset
   string display_name = 5;
 }
+
+// UpdateVirtualFrontierBankContractsProposal is a gov Content type to update the virtual frontier bank contracts.
+message UpdateVirtualFrontierBankContractsProposal {
+  option (gogoproto.equal) = false;
+  // title of the proposal
+  string title = 1;
+  // description of the proposal
+  string description = 2;
+  // contracts is slice of the update content for each contract
+  repeated VirtualFrontierBankContractProposalContent contracts = 3 [(gogoproto.nullable) = false];
+}
+
+// ProposalMetadata is used to parse a slice of denom metadata and generate
+// the RegisterCoinProposal content.
+//
+// All the fields are required.
+message VirtualFrontierBankContractProposalContent {
+  // contract_address that want to be updated
+  string contract_address = 1;
+  // active indicate the activation of the contract. If not active, invoking methods is disabled.
+  bool active = 2;
+  // display_name is the display symbol of the asset
+  string display_name = 3;
+  // exponent is the decimals of the display denom of the asset
+  uint32 exponent = 4;
+}
