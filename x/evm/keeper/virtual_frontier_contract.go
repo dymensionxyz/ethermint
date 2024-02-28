@@ -13,6 +13,15 @@ import (
 	"strings"
 )
 
+// IsVirtualFrontierContract returns true if the address is a virtual frontier contract address
+func (k Keeper) IsVirtualFrontierContract(ctx sdk.Context, address common.Address) bool {
+	store := ctx.KVStore(k.storeKey)
+
+	key := types.VirtualFrontierContractKey(address)
+
+	return store.Has(key)
+}
+
 // GetVirtualFrontierContract returns the virtual frontier contract from the store, or nil if not found
 func (k Keeper) GetVirtualFrontierContract(ctx sdk.Context, contractAddress common.Address) *types.VirtualFrontierContract {
 	store := ctx.KVStore(k.storeKey)
@@ -171,15 +180,7 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 		}
 	}
 
-	params := k.GetParams(ctx)
-	for _, existingAddr := range params.VirtualFrontierContractsAddress() {
-		if existingAddr == contractAddress {
-			err = sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s is already registered in params", contractAddress)
-			return
-		}
-	}
-
-	if k.GetVirtualFrontierContract(ctx, contractAddress) != nil {
+	if k.IsVirtualFrontierContract(ctx, contractAddress) {
 		err = sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s already exists", contractAddress)
 		return
 	}
@@ -243,14 +244,6 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 			err = errorsmod.Wrap(types.ErrVMExecution, res.VmError)
 			return
 		}
-	}
-
-	// register new contract address to params store
-	params.VirtualFrontierContracts = append(params.VirtualFrontierContracts, strings.ToLower(contractAddress.String()))
-
-	err = k.SetParams(ctx, params)
-	if err != nil {
-		return
 	}
 
 	// register new contract metadata to store

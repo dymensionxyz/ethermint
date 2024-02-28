@@ -45,9 +45,8 @@ var _ vm.StateDB = &StateDB{}
 // * Contracts
 // * Accounts
 type StateDB struct {
-	keeper                   Keeper
-	ctx                      sdk.Context
-	virtualFrontierContracts map[common.Address]bool
+	keeper Keeper
+	ctx    sdk.Context
 
 	// Journal of state modifications. This is the backbone of
 	// Snapshot and RevertToSnapshot.
@@ -71,18 +70,12 @@ type StateDB struct {
 
 // New creates a new state from a given trie.
 func New(ctx sdk.Context, keeper Keeper, txConfig TxConfig) *StateDB {
-	virtualFrontierContracts := make(map[common.Address]bool)
-	for _, vfContractAddr := range keeper.GetParams(ctx).VirtualFrontierContractsAddress() {
-		virtualFrontierContracts[vfContractAddr] = true
-	}
-
 	return &StateDB{
-		keeper:                   keeper,
-		ctx:                      ctx,
-		virtualFrontierContracts: virtualFrontierContracts,
-		stateObjects:             make(map[common.Address]*stateObject),
-		journal:                  newJournal(),
-		accessList:               newAccessList(),
+		keeper:       keeper,
+		ctx:          ctx,
+		stateObjects: make(map[common.Address]*stateObject),
+		journal:      newJournal(),
+		accessList:   newAccessList(),
 
 		txConfig: txConfig,
 	}
@@ -460,7 +453,7 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 // the StateDB object should be discarded after committed.
 func (s *StateDB) Commit() error {
 	for _, addr := range s.journal.sortedDirties() {
-		if _, found := s.virtualFrontierContracts[addr]; found {
+		if s.keeper.IsVirtualFrontierContract(s.ctx, addr) {
 			return errorsmod.Wrapf(evmtypes.ErrProhibitedAccessingVirtualFrontierContract, "can not access or make change to frontier contract address %s", addr)
 		}
 

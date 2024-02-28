@@ -449,7 +449,7 @@ func (k *Keeper) proxiedEvmCall(
 	evm evm.EVM, evmCfg *statedb.EVMConfig, stateDB vm.StateDB,
 	caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int,
 ) (ret []byte, leftOverGas uint64, vmErr error) {
-	if evmCfg.Params.IsVirtualFrontierContractAddress(addr) {
+	if k.IsVirtualFrontierContract(ctx, addr) {
 		vfContract := k.GetVirtualFrontierContract(ctx, addr)
 		if vfContract == nil {
 			return nil, 0, types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr)
@@ -660,7 +660,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			}
 		}
 		// - VF contracts
-		if evmCfg.Params.IsVirtualFrontierContractAddress(to) {
+		if k.IsVirtualFrontierContract(ctx, to) {
 			vmErr = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("can not transfer to virtual frontier contract")
 			return
 		}

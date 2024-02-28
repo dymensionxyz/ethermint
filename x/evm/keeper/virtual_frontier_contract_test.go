@@ -38,7 +38,7 @@ func (m virtualFrontierBankContract) convert(cdc codec.Codec) *types.VirtualFron
 	}
 }
 
-func (suite *KeeperTestSuite) TestGetSetVirtualFrontierContract() {
+func (suite *KeeperTestSuite) TestGetSetIsVirtualFrontierContract() {
 	deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
 	suite.Require().NotNil(deployerModuleAccount)
 
@@ -66,12 +66,15 @@ func (suite *KeeperTestSuite) TestGetSetVirtualFrontierContract() {
 	}.convert(suite.appCodec))
 	suite.Require().NoError(err)
 
+	suite.True(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress1))
 	contract1 := suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, contractAddress1)
 	suite.Require().NotNil(contract1)
 
+	suite.True(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress2))
 	contract2 := suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, contractAddress2)
 	suite.Require().NotNil(contract2)
 
+	suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress3))
 	contract3 := suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, contractAddress3)
 	suite.Require().Nil(contract3)
 
@@ -100,6 +103,7 @@ func (suite *KeeperTestSuite) TestGetSetVirtualFrontierContract() {
 	}.convert(suite.appCodec))
 	suite.Require().Error(err, "should reject contracts those not pass basic validation")
 	suite.Nil(suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, contractAddress3))
+	suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress3))
 
 	err = suite.app.EvmKeeper.SetVirtualFrontierContract(suite.ctx, contractAddress3, virtualFrontierBankContract{
 		Address:     strings.ToLower(contractAddress2.String()), // miss-match
@@ -109,6 +113,7 @@ func (suite *KeeperTestSuite) TestGetSetVirtualFrontierContract() {
 		DisplayName: "AABBCCDD",
 	}.convert(suite.appCodec))
 	suite.Require().Error(err, "should reject contracts those miss-match address")
+	suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress3))
 }
 
 func (suite *KeeperTestSuite) TestGetSetMappingVirtualFrontierBankContractAddressByDenom() {

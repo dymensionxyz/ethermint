@@ -1813,15 +1813,6 @@ paths:
                       EIP155
 
                       signed) transactions can be executed on the state machine.
-                  virtual_frontier_contracts:
-                    type: array
-                    items:
-                      type: string
-                    description: >-
-                      virtual_frontier_contracts defines the list of address of
-                      registered Virtual Frontier Contracts.
-
-                      It is not prohibited to update this via gov.
                 title: Params defines the EVM module parameters
             description: >-
               QueryParamsResponse defines the response type for querying x/evm
@@ -4816,15 +4807,6 @@ definitions:
         description: |-
           allow_unprotected_txs defines if replay-protected (i.e non EIP155
           signed) transactions can be executed on the state machine.
-      virtual_frontier_contracts:
-        type: array
-        items:
-          type: string
-        description: >-
-          virtual_frontier_contracts defines the list of address of registered
-          Virtual Frontier Contracts.
-
-          It is not prohibited to update this via gov.
     title: Params defines the EVM module parameters
   ethermint.evm.v1.QueryAccountResponse:
     type: object
@@ -5022,15 +5004,6 @@ definitions:
             description: |-
               allow_unprotected_txs defines if replay-protected (i.e non EIP155
               signed) transactions can be executed on the state machine.
-          virtual_frontier_contracts:
-            type: array
-            items:
-              type: string
-            description: >-
-              virtual_frontier_contracts defines the list of address of
-              registered Virtual Frontier Contracts.
-
-              It is not prohibited to update this via gov.
         title: Params defines the EVM module parameters
     description: >-
       QueryParamsResponse defines the response type for querying x/evm

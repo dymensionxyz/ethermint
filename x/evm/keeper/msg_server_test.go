@@ -84,12 +84,9 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 
 func (suite *KeeperTestSuite) TestUpdateParams() {
 	testCases := []struct {
-		name                               string
-		malleate                           func()
-		request                            *types.MsgUpdateParams
-		expectErr                          bool
-		expectVirtualFrontierContractCount int
-		postCheck                          func()
+		name      string
+		request   *types.MsgUpdateParams
+		expectErr bool
 	}{
 		{
 			name:      "fail - invalid authority",
@@ -104,82 +101,16 @@ func (suite *KeeperTestSuite) TestUpdateParams() {
 			},
 			expectErr: false,
 		},
-		{
-			name: "pass - valid Update msg without virtual frontier contracts",
-			malleate: func() {
-				params := types.DefaultParams()
-				params.VirtualFrontierContracts = []string{"0x405b96e2538ac85ee862e332fa634b158d013ae1", "0x9ede3180fae6322ea4fc946810152170e833ab1f"}
-				suite.app.EvmKeeper.SetParams(suite.ctx, params)
-				suite.Commit()
-			},
-			request: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Params:    types.DefaultParams(),
-			},
-			expectErr:                          false,
-			expectVirtualFrontierContractCount: 2,
-		},
-		{
-			name: "fail - invalid Update msg with virtual frontier contracts",
-			request: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Params: func() types.Params {
-					params := types.DefaultParams()
-					params.VirtualFrontierContracts = []string{"0x405b96e2538ac85ee862e332fa634b158d013ae1", "0x9ede3180fae6322ea4fc946810152170e833ab1f"}
-					return params
-				}(),
-			},
-			expectErr:                          true,
-			expectVirtualFrontierContractCount: 2,
-		},
-		{
-			name: "pass - (again) valid Update msg without virtual frontier contracts, old virtual frontier contracts are preserved",
-			malleate: func() {
-				// ensure that the virtual frontier contracts are set
-				currentParams := suite.app.EvmKeeper.GetParams(suite.ctx)
-				suite.Require().Equal(
-					[]string{"0x405b96e2538ac85ee862e332fa634b158d013ae1", "0x9ede3180fae6322ea4fc946810152170e833ab1f"},
-					currentParams.VirtualFrontierContracts,
-					"virtual frontier contracts must be set before execution",
-				)
-			},
-			request: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Params:    types.DefaultParams(),
-			},
-			expectErr:                          false,
-			expectVirtualFrontierContractCount: 2,
-			postCheck: func() {
-				// ensure that the virtual frontier contracts are preserved
-				newParams := suite.app.EvmKeeper.GetParams(suite.ctx)
-				suite.Require().Equal(
-					[]string{"0x405b96e2538ac85ee862e332fa634b158d013ae1", "0x9ede3180fae6322ea4fc946810152170e833ab1f"},
-					newParams.VirtualFrontierContracts,
-					"virtual frontier contracts must be kept after execution",
-				)
-			},
-		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run("MsgUpdateParams", func() {
-			if tc.malleate != nil {
-				tc.malleate()
-			}
-
 			_, err := suite.app.EvmKeeper.UpdateParams(suite.ctx, tc.request)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
 				suite.Require().NoError(err)
-
-				params := suite.app.EvmKeeper.GetParams(suite.ctx)
-				suite.Require().Len(params.VirtualFrontierContracts, tc.expectVirtualFrontierContractCount)
-			}
-
-			if tc.postCheck != nil {
-				tc.postCheck()
 			}
 		})
 	}

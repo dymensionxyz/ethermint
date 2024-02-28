@@ -390,8 +390,6 @@ func NewVirtualFrontierContractDecorator(evmKeeper EVMKeeper) VirtualFrontierCon
 
 // AnteHandle checks if the transaction tries to transfer funds to the virtual frontier contract address.
 func (ctd VirtualFrontierContractDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	params := ctd.evmKeeper.GetParams(ctx)
-
 	for _, msg := range tx.GetMsgs() {
 		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
 		if !ok {
@@ -407,7 +405,7 @@ func (ctd VirtualFrontierContractDecorator) AnteHandle(ctx sdk.Context, tx sdk.T
 
 		to := *ethTx.To()
 
-		if !params.IsVirtualFrontierContractAddress(to) {
+		if !ctd.evmKeeper.IsVirtualFrontierContract(ctx, to) {
 			// not a VF contract => none of business
 			continue
 		}

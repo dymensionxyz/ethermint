@@ -17,11 +17,8 @@ package types
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/common"
-	"math/big"
-	"strings"
-
 	"github.com/ethereum/go-ethereum/params"
+	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -96,23 +93,7 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateChainConfig(p.ChainConfig); err != nil {
-		return err
-	}
-
-	for _, vfContractAddr := range p.VirtualFrontierContracts {
-		if !common.IsHexAddress(vfContractAddr) {
-			return fmt.Errorf("invalid virtual frontier contract address: %s", vfContractAddr)
-		}
-		if !strings.HasPrefix(vfContractAddr, "0x") {
-			return fmt.Errorf("virtual frontier contract address must start with 0x: %s", vfContractAddr)
-		}
-		if vfContractAddr != strings.ToLower(vfContractAddr) {
-			return fmt.Errorf("virtual frontier contract address must be in lowercase: %s", vfContractAddr)
-		}
-	}
-
-	return nil
+	return validateChainConfig(p.ChainConfig)
 }
 
 // EIPs returns the ExtraEIPS as a int slice
@@ -122,28 +103,6 @@ func (p Params) EIPs() []int {
 		eips[i] = int(eip)
 	}
 	return eips
-}
-
-// VirtualFrontierContractsAddress returns the list of the virtual frontier contract address
-func (p Params) VirtualFrontierContractsAddress() []common.Address {
-	var virtualFrontierContractsAddress []common.Address
-
-	for _, contract := range p.VirtualFrontierContracts {
-		virtualFrontierContractsAddress = append(virtualFrontierContractsAddress, common.HexToAddress(contract))
-	}
-
-	return virtualFrontierContractsAddress
-}
-
-// IsVirtualFrontierContractAddress take input address and check if it is a virtual frontier contract address,
-// by checking if it is in the list of virtual frontier contracts.
-func (p Params) IsVirtualFrontierContractAddress(address common.Address) bool {
-	for _, contractAddr := range p.VirtualFrontierContracts {
-		if common.HexToAddress(contractAddr) == address {
-			return true
-		}
-	}
-	return false
 }
 
 func validateEVMDenom(i interface{}) error {

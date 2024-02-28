@@ -1,11 +1,10 @@
 package ante_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"math"
 	"math/big"
-	"strings"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/server/config"
@@ -186,7 +185,7 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 	tx3 := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx3GasLimit, gasPrice, nil, nil, nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})
 
 	dynamicFeeTx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx2GasLimit,
-		nil, // gasPrice
+		nil,                                                                                // gasPrice
 		new(big.Int).Add(baseFee, big.NewInt(evmtypes.DefaultPriorityReduction.Int64()*2)), // gasFeeCap
 		evmtypes.DefaultPriorityReduction.BigInt(),                                         // gasTipCap
 		nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})
@@ -494,15 +493,33 @@ func (suite AnteTestSuite) TestEthIncrementSenderSequenceDecorator() {
 }
 
 func (suite AnteTestSuite) TestEthVirtualFrontierContractDecorator() {
+	deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, evmtypes.ModuleVirtualFrontierContractDeployerName)
+	suite.Require().NotNil(deployerModuleAccount)
 
-	vfcAddr := tests.GenerateAddress()
+	var vfcAddr common.Address
+	var err error
+
+	func() {
+		backupHeight := suite.ctx.BlockHeight()
+		defer func() {
+			suite.ctx.WithBlockHeight(backupHeight) // restore it
+		}()
+
+		vfcAddr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
+			suite.ctx.WithBlockHeight(0), // simulate genesis to bypass evm deployment
+			&evmtypes.VirtualFrontierContract{
+				Active: true,
+			},
+			&evmtypes.VFBankContractMetadata{
+				MinDenom:    "aphoton2",
+				Exponent:    6,
+				DisplayName: "PHOTON2",
+			},
+		)
+		suite.Require().NoError(err)
+	}()
 
 	notContractAddr := tests.GenerateAddress()
-
-	params := suite.app.EvmKeeper.GetParams(suite.ctx)
-	params.VirtualFrontierContracts = append(params.VirtualFrontierContracts, strings.ToLower(vfcAddr.String()))
-
-	suite.app.EvmKeeper.SetParams(suite.ctx, params)
 
 	dec := ante.NewVirtualFrontierContractDecorator(suite.app.EvmKeeper)
 

@@ -40,10 +40,6 @@ func InitGenesis(
 ) []abci.ValidatorUpdate {
 	k.WithChainID(ctx)
 
-	if len(data.Params.VirtualFrontierContracts) > 0 {
-		panic("not allowed to set virtual frontier contracts in genesis")
-	}
-
 	err := k.SetParams(ctx, data.Params)
 	if err != nil {
 		panic(fmt.Errorf("error setting params %s", err))
@@ -90,20 +86,26 @@ func InitGenesis(
 
 	if ctx.ChainID() == "ethermint_9000-1" || ctx.ChainID() == "blumbus_111-1" || ctx.ChainID() == "froopyland_100-1" {
 		// devnet
-		vfBankContractOfNativeMeta := types.VFBankContractMetadata{
-			MinDenom:    data.Params.EvmDenom,
-			Exponent:    18,
-			DisplayName: strings.ToUpper(data.Params.EvmDenom[1:]),
-		}
 
-		contract, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
-			Active: true,
-		}, &vfBankContractOfNativeMeta)
-		if err != nil {
-			panic(err)
-		}
+		denom := data.Params.EvmDenom
 
-		ctx.Logger().Info("deployed virtual frontier bank contract for native token on devnet", "address", contract.String())
+		_, found := k.GetVirtualFrontierBankContractAddressByDenom(ctx, denom)
+		if !found {
+			vfBankContractOfNativeMeta := types.VFBankContractMetadata{
+				MinDenom:    denom,
+				Exponent:    18,
+				DisplayName: strings.ToUpper(denom[1:]),
+			}
+
+			contract, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
+				Active: true,
+			}, &vfBankContractOfNativeMeta)
+			if err != nil {
+				panic(err)
+			}
+
+			ctx.Logger().Info("deployed virtual frontier bank contract for native token on devnet", "address", contract.String())
+		}
 	}
 
 	return []abci.ValidatorUpdate{}
