@@ -16,6 +16,9 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 	contractAddrNonExists := "0x0000000000000000000000000000000000009999"
 
 	registerLegacyVFCs := func() {
+		const denom1 = "uosmo"
+		const denom2 = "uatom"
+
 		addr, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
 			&types.VirtualFrontierContract{
@@ -25,13 +28,17 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 				LastUpdateHeight: 0,
 			},
 			&types.VFBankContractMetadata{
-				MinDenom:    "uosmo",
+				MinDenom:    denom1,
 				Exponent:    6,
 				DisplayName: "OSMO",
 			},
 		)
 		suite.Require().NoError(err)
 		suite.Equal(contractAddr1, strings.ToLower(addr.String()))
+		gotAddr, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(suite.ctx, denom1)
+		suite.Require().True(found)
+		suite.Equal(contractAddr1, strings.ToLower(gotAddr.String()))
+
 		addr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
 			&types.VirtualFrontierContract{
@@ -41,13 +48,16 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 				LastUpdateHeight: 0,
 			},
 			&types.VFBankContractMetadata{
-				MinDenom:    "uatom",
+				MinDenom:    denom2,
 				Exponent:    6,
 				DisplayName: "ATOM",
 			},
 		)
 		suite.Require().NoError(err)
 		suite.Equal(contractAddr2, strings.ToLower(addr.String()))
+		gotAddr, found = suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(suite.ctx, denom2)
+		suite.Require().True(found)
+		suite.Equal(contractAddr2, strings.ToLower(gotAddr.String()))
 	}
 
 	tests := []struct {

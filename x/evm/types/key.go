@@ -18,6 +18,7 @@ package types
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
@@ -45,6 +46,7 @@ const (
 	prefixStorage
 	prefixParams
 	prefixVirtualFrontierContract
+	prefixVirtualFrontierBankContractAddressByDenom
 )
 
 // prefix bytes for the EVM transient store
@@ -64,10 +66,11 @@ func init() {
 
 // KVStore key prefixes
 var (
-	KeyPrefixCode                    = []byte{prefixCode}
-	KeyPrefixStorage                 = []byte{prefixStorage}
-	KeyPrefixParams                  = []byte{prefixParams}
-	KeyPrefixVirtualFrontierContract = []byte{prefixVirtualFrontierContract}
+	KeyPrefixCode                                      = []byte{prefixCode}
+	KeyPrefixStorage                                   = []byte{prefixStorage}
+	KeyPrefixParams                                    = []byte{prefixParams}
+	KeyPrefixVirtualFrontierContract                   = []byte{prefixVirtualFrontierContract}
+	KeyPrefixVirtualFrontierBankContractAddressByDenom = []byte{prefixVirtualFrontierBankContractAddressByDenom}
 )
 
 // Transient Store key prefixes
@@ -91,4 +94,9 @@ func StateKey(address common.Address, key []byte) []byte {
 // VirtualFrontierContractKey returns a key for specific virtual frontier contract
 func VirtualFrontierContractKey(contractAddress common.Address) []byte {
 	return append(KeyPrefixVirtualFrontierContract, contractAddress.Bytes()...)
+}
+
+// VirtualFrontierBankContractAddressByDenomKey returns a key for specific virtual frontier bank contract by denom
+func VirtualFrontierBankContractAddressByDenomKey(minDenom string) []byte {
+	return append(KeyPrefixVirtualFrontierBankContractAddressByDenom, crypto.Keccak256Hash([]byte(minDenom)).Bytes()...)
 }

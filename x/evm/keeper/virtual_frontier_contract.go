@@ -53,6 +53,47 @@ func (k Keeper) SetVirtualFrontierContract(ctx sdk.Context, contractAddress comm
 	return nil
 }
 
+// GetVirtualFrontierBankContractAddressByDenom returns the virtual frontier bank contract address by denom or nil if not found.
+func (k Keeper) GetVirtualFrontierBankContractAddressByDenom(ctx sdk.Context, minDenom string) (contractAddress common.Address, found bool) {
+	if minDenom == "" {
+		panic("invalid parameter")
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	key := types.VirtualFrontierBankContractAddressByDenomKey(minDenom)
+
+	bz := store.Get(key)
+	if len(bz) == 0 {
+		found = false
+		return
+	}
+
+	contractAddress = common.BytesToAddress(bz)
+	found = true
+	return
+}
+
+// SetMappingVirtualFrontierBankContractAddressByDenom registers a virtual frontier contract into the store.
+// Override is not allowed and returns error.
+func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Context, minDenom string, contractAddress common.Address) error {
+	if minDenom == "" || contractAddress == (common.Address{}) {
+		panic("invalid parameter")
+	}
+
+	existingContractAddress, found := k.GetVirtualFrontierBankContractAddressByDenom(ctx, minDenom)
+	if found {
+		return sdkerrors.ErrConflict.Wrapf("mapping virtual frontier bank contract for denom %s had been registered before at %s", minDenom, existingContractAddress)
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	key := types.VirtualFrontierBankContractAddressByDenomKey(minDenom)
+
+	store.Set(key, contractAddress.Bytes())
+	return nil
+}
+
 // DeployNewVirtualFrontierBankContract deploys a new virtual frontier bank contract into the store
 func (k Keeper) DeployNewVirtualFrontierBankContract(ctx sdk.Context, vfContract *types.VirtualFrontierContract, bankMeta *types.VFBankContractMetadata) (common.Address, error) {
 	vfContract.Type = uint32(types.VirtualFrontierContractTypeBankContract)
@@ -63,7 +104,18 @@ func (k Keeper) DeployNewVirtualFrontierBankContract(ctx sdk.Context, vfContract
 		return common.Address{}, err
 	}
 
-	return k.DeployNewVirtualFrontierContract(ctx, vfContract, callData)
+	contractAddress, err := k.DeployNewVirtualFrontierContract(ctx, vfContract, callData)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	// register mapping by denom
+	err = k.SetMappingVirtualFrontierBankContractAddressByDenom(ctx, bankMeta.MinDenom, contractAddress)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	return contractAddress, nil
 }
 
 func PrepareBytecodeForVirtualFrontierBankContractDeployment(displayName string, exponent uint8) ([]byte, error) {
@@ -208,6 +260,7 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 		return
 	}
 
+	// fire Tendermint events
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeVirtualFrontierContract,

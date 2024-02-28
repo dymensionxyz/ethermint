@@ -732,8 +732,29 @@ func (k Keeper) ListVirtualFrontierContracts(ctx context.Context, req *types.Que
 }
 
 func (k Keeper) VirtualFrontierBankContractByDenom(ctx context.Context, request *types.QueryVirtualFrontierBankContractByDenomRequest) (*types.QueryVirtualFrontierBankContractByDenomResponse, error) {
-	// TODO VFC: support query bank contract by denom
-	panic("implement me")
+	contractAddress, found := k.GetVirtualFrontierBankContractAddressByDenom(sdk.UnwrapSDKContext(ctx), request.MinDenom)
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "no contract not found for %s", request.MinDenom)
+	}
+
+	vfContract := k.GetVirtualFrontierContract(sdk.UnwrapSDKContext(ctx), contractAddress)
+	if vfContract == nil {
+		return nil, status.Errorf(codes.NotFound, "contract %s not found", contractAddress)
+	}
+
+	if vfContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+		return nil, status.Errorf(codes.Internal, "contract %s is not a bank contract", contractAddress)
+	}
+
+	var bankMeta types.VFBankContractMetadata
+	k.cdc.MustUnmarshal(vfContract.Metadata, &bankMeta)
+
+	vfContract.Metadata = nil // reduce size of response
+
+	return &types.QueryVirtualFrontierBankContractByDenomResponse{
+		Contract: vfContract,
+		Metadata: &bankMeta,
+	}, nil
 }
 
 func (k Keeper) ListVirtualFrontierContractByAddress(ctx context.Context, request *types.QueryVirtualFrontierContractByAddressRequest) (*types.QueryVirtualFrontierContractByAddressResponse, error) {
