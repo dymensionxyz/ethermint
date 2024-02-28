@@ -79,6 +79,16 @@ service Query {
   rpc ListVirtualFrontierContracts(QueryVirtualFrontierContractsRequest) returns (QueryVirtualFrontierContractsResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts";
   }
+
+  // VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
+  rpc VirtualFrontierBankContractByDenom(QueryVirtualFrontierBankContractByDenomRequest) returns (QueryVirtualFrontierBankContractByDenomResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contract/by_denom/{min_denom}";
+  }
+
+  // ListVirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
+  rpc ListVirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest) returns (QueryVirtualFrontierContractByAddressResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts/{address}";
+  }
 }
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.
@@ -303,9 +313,36 @@ message QueryBaseFeeResponse {
 }
 
 // QueryVirtualFrontierContractsRequest defines the request for querying virtual frontier contract list
-message QueryVirtualFrontierContractsRequest {}
+message QueryVirtualFrontierContractsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 // QueryVirtualFrontierContractsResponse returns the list of the virtual frontier contract
 message QueryVirtualFrontierContractsResponse {
   repeated string virtual_frontier_contracts_json = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVirtualFrontierBankContractByDenomRequest defines the request for querying virtual frontier bank contract by it min denom
+message QueryVirtualFrontierBankContractByDenomRequest {
+  string min_denom = 1;
+}
+
+// QueryVirtualFrontierBankContractByDenomResponse returns the bank contract of the corresponding min denom
+message QueryVirtualFrontierBankContractByDenomResponse {
+    VirtualFrontierContract contract = 1;
+    VFBankContractMetadata metadata = 2;
+}
+
+// QueryVirtualFrontierContractByAddressRequest defines the request for querying virtual frontier contract by it address
+message QueryVirtualFrontierContractByAddressRequest {
+  string address = 1;
+}
+
+// QueryVirtualFrontierContractByAddressResponse returns the virtual frontier contract corresponding to the address
+message QueryVirtualFrontierContractByAddressResponse {
+  string virtual_frontier_contract_json = 1;
 }

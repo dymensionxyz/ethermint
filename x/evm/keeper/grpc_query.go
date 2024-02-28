@@ -20,7 +20,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/evmos/ethermint/utils"
 	"math/big"
 	"time"
@@ -643,60 +646,109 @@ func (k Keeper) BaseFee(c context.Context, _ *types.QueryBaseFeeRequest) (*types
 	return res, nil
 }
 
+func generateJsonOfVirtualFrontierContract(cdc codec.BinaryCodec, vfContract *types.VirtualFrontierContract) (jsonContent string, err error) {
+	switch vfContract.Type {
+	case uint32(types.VirtualFrontierContractTypeBankContract):
+		var bankMeta types.VFBankContractMetadata
+		cdc.MustUnmarshal(vfContract.Metadata, &bankMeta)
+
+		bc := newVFBankContractResult(vfContract, &bankMeta)
+
+		bz, errMarshaller := json.Marshal(bc)
+		if errMarshaller != nil {
+			err = sdkerrors.ErrJSONMarshal.Wrapf("failed to marshal virtual frontier bank contract %s: %v", vfContract.Address, errMarshaller)
+			return
+		}
+
+		jsonContent = string(bz)
+		return
+	default:
+		err = sdkerrors.ErrNotSupported.Wrapf("not supported JSON content builder for type %d", vfContract.Type)
+		return
+	}
+}
+
+type vfBankContractResult struct {
+	Address          string `json:"address"`
+	Type             string `json:"type"`
+	State            string `json:"state"`
+	MinDenom         string `json:"min_denom"`
+	Exponent         uint32 `json:"exponent"`
+	DisplayName      string `json:"display_name"`
+	LastUpdateHeight uint64 `json:"last_update_height"`
+}
+
+func newVFBankContractResult(vfContract *types.VirtualFrontierContract, meta *types.VFBankContractMetadata) vfBankContractResult {
+	result := vfBankContractResult{
+		Address:          vfContract.Address,
+		Type:             "bank",
+		State:            "",
+		MinDenom:         meta.MinDenom,
+		Exponent:         meta.Exponent,
+		DisplayName:      meta.DisplayName,
+		LastUpdateHeight: vfContract.LastUpdateHeight,
+	}
+
+	if vfContract.Active {
+		result.State = "activated"
+	} else {
+		result.State = "disabled"
+	}
+
+	return result
+}
+
 // ListVirtualFrontierContracts returns the JSON formatted list of virtual frontier contract from the store
-func (k Keeper) ListVirtualFrontierContracts(ctx context.Context, _ *types.QueryVirtualFrontierContractsRequest) (*types.QueryVirtualFrontierContractsResponse, error) {
+func (k Keeper) ListVirtualFrontierContracts(ctx context.Context, req *types.QueryVirtualFrontierContractsRequest) (*types.QueryVirtualFrontierContractsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	params := k.GetParams(sdkCtx)
+	store := sdkCtx.KVStore(k.storeKey)
+	vfcStore := prefix.NewStore(store, types.KeyPrefixVirtualFrontierContract)
+
+	vfContracts, pageRes, err := query.GenericFilteredPaginate(k.cdc, vfcStore, req.Pagination, func(key []byte, vfc *types.VirtualFrontierContract) (*types.VirtualFrontierContract, error) {
+		return vfc, nil
+	}, func() *types.VirtualFrontierContract {
+		return &types.VirtualFrontierContract{}
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	var jsonContracts []string
 
-	for _, contractAddress := range params.VirtualFrontierContractsAddress() {
-		contract := k.GetVirtualFrontierContract(sdkCtx, contractAddress)
-		if contract == nil {
-			continue
+	for _, contract := range vfContracts {
+		jsonContent, err := generateJsonOfVirtualFrontierContract(k.cdc, contract)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		switch contract.Type {
-		case uint32(types.VirtualFrontierContractTypeBankContract):
-			type bankContract struct {
-				Address     string `json:"address"`
-				State       string `json:"state"`
-				MinDenom    string `json:"min_denom"`
-				Exponent    uint32 `json:"exponent"`
-				DisplayName string `json:"display_name"`
-			}
-
-			var bankMeta types.VFBankContractMetadata
-			k.cdc.MustUnmarshal(contract.Metadata, &bankMeta)
-
-			bc := bankContract{
-				Address:     contract.Address,
-				State:       "",
-				MinDenom:    bankMeta.MinDenom,
-				Exponent:    bankMeta.Exponent,
-				DisplayName: bankMeta.DisplayName,
-			}
-			if contract.Active {
-				bc.State = "activated"
-			} else {
-				bc.State = "disabled"
-			}
-
-			bz, err := json.Marshal(bc)
-			if err != nil {
-				return nil, sdkerrors.ErrJSONMarshal.Wrapf("failed to marshal virtual frontier bank contract %s: %v", contract.Address, err)
-			}
-			jsonContracts = append(jsonContracts, string(bz))
-
-			break
-		default:
-			return nil, sdkerrors.ErrNotSupported.Wrapf("not supported JSON content builder for type %d", contract.Type)
-		}
+		jsonContracts = append(jsonContracts, jsonContent)
 	}
 
 	return &types.QueryVirtualFrontierContractsResponse{
 		VirtualFrontierContractsJson: jsonContracts,
+		Pagination:                   pageRes,
+	}, nil
+}
+
+func (k Keeper) VirtualFrontierBankContractByDenom(ctx context.Context, request *types.QueryVirtualFrontierBankContractByDenomRequest) (*types.QueryVirtualFrontierBankContractByDenomResponse, error) {
+	// TODO VFC: support query bank contract by denom
+	panic("implement me")
+}
+
+func (k Keeper) ListVirtualFrontierContractByAddress(ctx context.Context, request *types.QueryVirtualFrontierContractByAddressRequest) (*types.QueryVirtualFrontierContractByAddressResponse, error) {
+	vfContract := k.GetVirtualFrontierContract(sdk.UnwrapSDKContext(ctx), common.HexToAddress(request.Address))
+	if vfContract == nil {
+		return nil, status.Error(codes.NotFound, "contract not found")
+	}
+
+	jsonContent, err := generateJsonOfVirtualFrontierContract(k.cdc, vfContract)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryVirtualFrontierContractByAddressResponse{
+		VirtualFrontierContractJson: jsonContent,
 	}, nil
 }
 
