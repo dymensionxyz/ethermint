@@ -17,14 +17,31 @@ Sub-types:
 Technical notes:
 - Standing in front of EVM, doing stuffs instead of actually interacting EVM.
 - Prohibit to communicated within EVM.
-- List of contract address is persisted into `x/evm` params (prohibited to be updated via gov. Gov proposal should leave it empty and historical record is preserved).
-- Contract metadata is persisted in `x/evm` store.
 - Should not receive funds. If received, it results lost forever. Currently, when an Ethereum tx, with value != 0 (direct transfer or payable method call), are aborted. Not yet any implementation to prevent from Cosmos side.
+- New module store: Contract and meta corresponds to the sub-type.
 
 # Virtual Frontier Bank Contract
 
 Virtual Frontier Bank Contract is
 - Virtual Frontier Contract.
 - A contract, simulated ERC-20 spec, allowed user to import to MM or other Ethereum wallets and can be used to transfer Cosmos bank assets via the wallets.
-- Automatically register new IBC assets upon the very first incoming transfer into the chain, each denom will have it own contract address.
-- Metadata contains "min denom", "display name" and "exponent". Metadata can be updated via gov: `ethermintd tx gov submit-legacy-proposal update-vfc-bank proposal_file.json`.
+- Automatically deployed when there is a new denom metadata created in bank module.
+
+Technical notes:
+- New module store: Mapping from denom to contract address.
+- Check bank denom metadata in begin block and deploy the valid ones.
+- Can be switch activation state via gov: `ethermintd tx gov submit-legacy-proposal update-vfc-bank proposal_file.json`.
+- ERC-20 compatible:
+  - Support:
+    - `name()`
+    - `symbol()`
+    - `decimals()`
+    - `totalSupply()`
+    - `balanceOf(address)`
+    - `transfer(address, uint256)`
+    - event `Transfer(address, address, uint256)`
+  - Not yet support (due to security concern and not necessary for the purpose of this contract):
+    - `transferFrom(address, address, uint256)`
+    - `approve(address, uint256)`
+    - `allowance(address, address)`
+    - event `Approval(address, address, uint256)`
