@@ -23,6 +23,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"strings"
 
@@ -85,7 +86,7 @@ func InitGenesis(
 		}
 	}
 
-	if ctx.ChainID() == "ethermint_9000-1" || ctx.ChainID() == "blumbus_111-1" || ctx.ChainID() == "froopyland_100-1" {
+	if utils.IsEthermintDevChain(ctx) {
 		// devnet
 
 		denom := data.Params.EvmDenom

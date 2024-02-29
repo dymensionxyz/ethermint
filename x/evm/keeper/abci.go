@@ -17,6 +17,7 @@ package keeper
 
 import (
 	"cosmossdk.io/errors"
+	"github.com/evmos/ethermint/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,8 +29,10 @@ import (
 func (k *Keeper) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	k.WithChainID(ctx)
 
-	if err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx); err != nil {
-		panic(errors.Wrap(err, "failed to deploy virtual frontier bank contract for new bank denom metadata records"))
+	if utils.IsEthermintDevChain(ctx) {
+		if err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx); err != nil {
+			panic(errors.Wrap(err, "failed to deploy virtual frontier bank contract for new bank denom metadata records"))
+		}
 	}
 }
 
