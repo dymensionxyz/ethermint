@@ -3439,10 +3439,6 @@ paths:
                     title: >-
                       metadata contains marshalled binary of the metadata of the
                       virtual frontier contract
-                  last_update_height:
-                    type: string
-                    format: uint64
-                    title: last_update_height is the height of the last update
                 description: >-
                   VirtualFrontierContract are virtual contracts that able to
                   call directly without actual invoking EVM.
@@ -3453,14 +3449,7 @@ paths:
                 properties:
                   min_denom:
                     type: string
-                    title: min_denom is the denomination of the asset
-                  exponent:
-                    type: integer
-                    format: int64
-                    title: exponent is the decimals of the display denom of the asset
-                  display_name:
-                    type: string
-                    title: display_name is the display denom of the asset
+                    title: min_denom is the base denomination of the asset
                 description: >-
                   VFBankContractMetadata contains metadata of the Bank Contract,
                   which represents ERC-20 contracts as proxy of the user bank
@@ -5076,10 +5065,6 @@ definitions:
             title: >-
               metadata contains marshalled binary of the metadata of the virtual
               frontier contract
-          last_update_height:
-            type: string
-            format: uint64
-            title: last_update_height is the height of the last update
         description: >-
           VirtualFrontierContract are virtual contracts that able to call
           directly without actual invoking EVM.
@@ -5090,14 +5075,7 @@ definitions:
         properties:
           min_denom:
             type: string
-            title: min_denom is the denomination of the asset
-          exponent:
-            type: integer
-            format: int64
-            title: exponent is the decimals of the display denom of the asset
-          display_name:
-            type: string
-            title: display_name is the display denom of the asset
+            title: min_denom is the base denomination of the asset
         description: >-
           VFBankContractMetadata contains metadata of the Bank Contract, which
           represents ERC-20 contracts as proxy of the user bank assets.
@@ -5286,14 +5264,7 @@ definitions:
     properties:
       min_denom:
         type: string
-        title: min_denom is the denomination of the asset
-      exponent:
-        type: integer
-        format: int64
-        title: exponent is the decimals of the display denom of the asset
-      display_name:
-        type: string
-        title: display_name is the display denom of the asset
+        title: min_denom is the base denomination of the asset
     description: >-
       VFBankContractMetadata contains metadata of the Bank Contract, which
       represents ERC-20 contracts as proxy of the user bank assets.
@@ -5320,10 +5291,6 @@ definitions:
         title: >-
           metadata contains marshalled binary of the metadata of the virtual
           frontier contract
-      last_update_height:
-        type: string
-        format: uint64
-        title: last_update_height is the height of the last update
     description: >-
       VirtualFrontierContract are virtual contracts that able to call directly
       without actual invoking EVM.
