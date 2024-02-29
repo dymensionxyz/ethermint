@@ -122,13 +122,20 @@ func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Cont
 // for each bank denom metadata record
 func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	ctx sdk.Context,
+	filterDenomOrDefaultIbcOnly func(metadata banktypes.Metadata) bool,
 ) error {
-	type newRecord struct {
-		bankDenomMeta banktypes.Metadata
-		vfbcDenomMeta types.VirtualFrontierBankContractDenomMetadata
+	if filterDenomOrDefaultIbcOnly == nil {
+		filterDenomOrDefaultIbcOnly = func(metadata banktypes.Metadata) bool {
+			return strings.HasPrefix(metadata.Base, "ibc/")
+		}
 	}
-	var newRecords []newRecord
+
+	var newRecords []types.VirtualFrontierBankContractDenomMetadata
 	k.bankKeeper.IterateAllDenomMetaData(ctx, func(bankDenomMetadata banktypes.Metadata) bool {
+		if !filterDenomOrDefaultIbcOnly(bankDenomMetadata) {
+			return false
+		}
+
 		if k.HasVirtualFrontierBankContractByDenom(ctx, bankDenomMetadata.Base) {
 			return false
 		}
@@ -144,10 +151,7 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 			return false
 		}
 
-		newRecords = append(newRecords, newRecord{
-			bankDenomMeta: bankDenomMetadata,
-			vfbcDenomMeta: vfbcDenomMetadata,
-		})
+		newRecords = append(newRecords, vfbcDenomMetadata)
 		return false
 	})
 
@@ -158,13 +162,13 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	params := k.GetParams(ctx)
 
 	for _, record := range newRecords {
-		activate := record.vfbcDenomMeta.MinDenom != params.EvmDenom // contract for native denom should be disabled
+		activate := record.MinDenom != params.EvmDenom // contract for native denom should be disabled
 
 		_, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
 			Active: activate,
 		}, &types.VFBankContractMetadata{
-			MinDenom: record.vfbcDenomMeta.MinDenom,
-		}, &record.vfbcDenomMeta)
+			MinDenom: record.MinDenom,
+		}, &record)
 
 		if err != nil {
 			return err

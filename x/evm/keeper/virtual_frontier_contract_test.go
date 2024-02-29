@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/testutil"
@@ -163,18 +164,24 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 	metaOfValid2 := testutil.NewBankDenomMetadata("ibc/udym", 6)
 	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValid2)
 
+	metaOfValidButNotIbc := testutil.NewBankDenomMetadata("gamm/pool-1", 18)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValidButNotIbc)
+
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base))
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfInvalid.Base))
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base))
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base))
 
-	err := suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(suite.ctx)
+	err := suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(suite.ctx, func(metadata banktypes.Metadata) bool {
+		return strings.HasPrefix(metadata.Base, "ibc/")
+	})
 	suite.Require().NoError(err)
 
 	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base), "virtual frontier bank contract for valid metadata should be created")
 	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfInvalid.Base), "should skip virtual frontier bank contract creation for invalid metadata")
 	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base), "should skip virtual frontier bank contract creation for metadata which exponent overflow of uint8")
 	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base), "virtual frontier bank contract for valid metadata should be created")
+	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValidButNotIbc.Base), "should skip non-IBC tokens")
 }
 
 func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {

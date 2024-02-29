@@ -45,3 +45,20 @@ Technical notes:
     - `approve(address, uint256)`
     - `allowance(address, address)`
     - event `Approval(address, address, uint256)`
+- How to deploy:
+  - New contracts for new bank denom metadata records:
+    ```golang
+    if err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx, nil); err != nil {
+        panic(errors.Wrap(err, "failed to deploy virtual frontier bank contract for new bank denom metadata records"))
+    }
+    ```
+  - New contract for a specific bank denom metadata record:
+    ```golang
+    err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
+        Active: true,
+    }, &types.VFBankContractMetadata{
+        MinDenom: ...,
+    }, &banktypes.Metadata{
+        ...
+    })
+    ```
