@@ -13,16 +13,12 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
 
 	validVFBankContractMetadata := types.VFBankContractMetadata{
-		MinDenom:    "wei",
-		Exponent:    18,
-		DisplayName: "ETH",
+		MinDenom: "wei",
 	}
 	validVFBankContractMetadataBz := encodingConfig.Codec.MustMarshal(&validVFBankContractMetadata)
 
 	invalidVFBankContractMetadata := types.VFBankContractMetadata{
-		MinDenom:    "",
-		Exponent:    18,
-		DisplayName: "ETH",
+		MinDenom: "",
 	}
 	invalidVFBankContractMetadataBz := encodingConfig.Codec.MustMarshal(&invalidVFBankContractMetadata)
 
@@ -34,17 +30,6 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "normal",
-			contract: types.VirtualFrontierContract{
-				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
-				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
-				Metadata: validVFBankContractMetadataBz,
-			},
-			wantErr:         false,
-			wantErrContains: "",
-		},
-		{
-			name: "normal, decimals=6",
 			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
@@ -139,7 +124,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 				Metadata: invalidVFBankContractMetadataBz,
 			},
 			wantErr:         true,
-			wantErrContains: "metadata does not pass validation",
+			wantErrContains: "metadata cannot be empty",
 		},
 	}
 	for _, tt := range tests {

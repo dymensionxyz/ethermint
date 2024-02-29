@@ -403,5 +403,9 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierContract() {
 		suite.NotNil(contractAccount, "contract account should be created")
 		suite.NotEmpty(contractAccount.CodeHash, "contract account should have code hash")
 		suite.NotEmpty(suite.app.EvmKeeper.GetCode(suite.ctx, common.BytesToHash(contractAccount.CodeHash)), "contract account should have code")
+		suite.False(suite.app.EvmKeeper.GetParams(suite.ctx).EnableCreate, "contract creation should still be disabled at this point")
+
+		suite.Commit()
+		suite.False(suite.app.EvmKeeper.GetParams(suite.ctx).EnableCreate, "contract creation should still be disabled at this point")
 	})
 }
