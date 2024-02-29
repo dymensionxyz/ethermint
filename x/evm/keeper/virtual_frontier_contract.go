@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	errorsmod "cosmossdk.io/errors"
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
@@ -104,11 +105,20 @@ func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Cont
 }
 
 // DeployNewVirtualFrontierBankContract deploys a new virtual frontier bank contract into the store
-func (k Keeper) DeployNewVirtualFrontierBankContract(ctx sdk.Context, vfContract *types.VirtualFrontierContract, bankMeta *types.VFBankContractMetadata) (common.Address, error) {
+func (k Keeper) DeployNewVirtualFrontierBankContract(
+	ctx sdk.Context,
+	vfContract *types.VirtualFrontierContract,
+	bankMeta *types.VFBankContractMetadata,
+	denomMetadata *types.VirtualFrontierBankContractDenomMetadata,
+) (common.Address, error) {
+	if !denomMetadata.CanDecimalsUint8() { // TODO VFC: add check upon calling this method.
+		panic(fmt.Sprintf("decimals does not fit uint8: %v", denomMetadata.Decimals))
+	}
+
 	vfContract.Type = uint32(types.VirtualFrontierContractTypeBankContract)
 	vfContract.Metadata = k.cdc.MustMarshal(bankMeta)
 
-	callData, err := PrepareBytecodeForVirtualFrontierBankContractDeployment(bankMeta.DisplayName, uint8(bankMeta.Exponent))
+	callData, err := PrepareBytecodeForVirtualFrontierBankContractDeployment(denomMetadata.Name, uint8(denomMetadata.Decimals))
 	if err != nil {
 		return common.Address{}, err
 	}

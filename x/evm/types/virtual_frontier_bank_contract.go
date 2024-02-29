@@ -23,15 +23,6 @@ func (m *VFBankContractMetadata) ValidateBasic() error {
 	if len(m.MinDenom) == 0 {
 		return fmt.Errorf("min denom cannot be empty")
 	}
-	if m.Exponent > 18 {
-		return fmt.Errorf("exponent cannot be greater than 18")
-	}
-	if len(m.DisplayName) == 0 {
-		return fmt.Errorf("display name cannot be empty")
-	}
-	if strings.EqualFold(m.MinDenom, m.DisplayName) {
-		return fmt.Errorf("min denom and display name cannot be the same")
-	}
 	return nil
 }
 

@@ -16,6 +16,7 @@
 package types
 
 import (
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"math/big"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -53,6 +54,8 @@ type BankKeeper interface {
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
 	BlockedAddr(addr sdk.AccAddress) bool
+	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
 }
 
 // StakingKeeper returns the historical headers kept in store.

@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"math"
 )
 
 // VirtualFrontierBankContractDenomMetadata is a struct that contains the metadata of a contract denom,
@@ -50,4 +51,9 @@ func CollectMetadataForVirtualFrontierBankContract(
 	}
 
 	return
+}
+
+// CanDecimalsUint8 is a function that checks if the decimals fits uint8
+func (m VirtualFrontierBankContractDenomMetadata) CanDecimalsUint8() bool {
+	return m.Decimals <= math.MaxUint8
 }

@@ -15,19 +15,7 @@ func TestVFBankContractMetadata_ValidateBasic(t *testing.T) {
 		{
 			name: "normal",
 			meta: VFBankContractMetadata{
-				MinDenom:    "wei",
-				Exponent:    18,
-				DisplayName: "ETH",
-			},
-			wantErr:         false,
-			wantErrContains: "",
-		},
-		{
-			name: "normal, decimals=6",
-			meta: VFBankContractMetadata{
-				MinDenom:    "wei",
-				Exponent:    6,
-				DisplayName: "ETH",
+				MinDenom: "wei",
 			},
 			wantErr:         false,
 			wantErrContains: "",
@@ -35,42 +23,10 @@ func TestVFBankContractMetadata_ValidateBasic(t *testing.T) {
 		{
 			name: "min denom cannot be empty",
 			meta: VFBankContractMetadata{
-				MinDenom:    "",
-				Exponent:    18,
-				DisplayName: "ETH",
+				MinDenom: "",
 			},
 			wantErr:         true,
 			wantErrContains: "empty",
-		},
-		{
-			name: "display name cannot be empty",
-			meta: VFBankContractMetadata{
-				MinDenom:    "wei",
-				Exponent:    18,
-				DisplayName: "",
-			},
-			wantErr:         true,
-			wantErrContains: "empty",
-		},
-		{
-			name: "bad decimals",
-			meta: VFBankContractMetadata{
-				MinDenom:    "wei",
-				Exponent:    19,
-				DisplayName: "ETH",
-			},
-			wantErr:         true,
-			wantErrContains: "greater than 18",
-		},
-		{
-			name: "min denom and display denom can not be the same, case-insensitive",
-			meta: VFBankContractMetadata{
-				MinDenom:    "wei",
-				Exponent:    18,
-				DisplayName: "WEI",
-			},
-			wantErr:         true,
-			wantErrContains: "cannot be the same",
 		},
 	}
 	for _, tt := range tests {

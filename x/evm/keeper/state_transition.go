@@ -382,7 +382,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data(), leftoverGas, msg.Value())
 		stateDB.SetNonce(sender.Address(), msg.Nonce()+1)
 	} else {
-		ret, leftoverGas, vmErr = k.proxiedEvmCall(ctx, evm, cfg, stateDB, sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
+		ret, leftoverGas, vmErr = k.proxiedEvmCall(ctx, evm, stateDB, sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
 	}
 
 	refundQuotient := params.RefundQuotient
@@ -444,11 +444,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 // proxiedEvmCall is the proxied method of the EVM::Call method.
 // It is used to intercept the call request, make decision before actual invoking call to the EVM::Call.
 // If the target
-func (k *Keeper) proxiedEvmCall(
-	ctx sdk.Context,
-	evm evm.EVM, evmCfg *statedb.EVMConfig, stateDB vm.StateDB,
-	caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int,
-) (ret []byte, leftOverGas uint64, vmErr error) {
+func (k *Keeper) proxiedEvmCall(ctx sdk.Context, evm evm.EVM, stateDB vm.StateDB, caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, vmErr error) {
 	if k.IsVirtualFrontierContract(ctx, addr) {
 		vfContract := k.GetVirtualFrontierContract(ctx, addr)
 		if vfContract == nil {
@@ -461,7 +457,7 @@ func (k *Keeper) proxiedEvmCall(
 
 		switch types.VirtualFrontierContractType(vfContract.Type) {
 		case types.VirtualFrontierContractTypeBankContract:
-			return k.evmCallVirtualFrontierBankContract(ctx, evmCfg, stateDB, caller.Address(), vfContract, input, gas, value)
+			return k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
 		default:
 			panic(fmt.Errorf("not implemented handler for VF contract %d", vfContract.Type))
 		}
@@ -473,7 +469,6 @@ func (k *Keeper) proxiedEvmCall(
 // evmCallVirtualFrontierBankContract handles EVM call to a virtual frontier bank contract.
 func (k *Keeper) evmCallVirtualFrontierBankContract(
 	ctx sdk.Context,
-	evmCfg *statedb.EVMConfig,
 	stateDB vm.StateDB,
 	sender common.Address, virtualFrontierContract *types.VirtualFrontierContract, calldata []byte, gas uint64, value *big.Int,
 ) (ret []byte, leftOverGas uint64, vmErr error) {
@@ -500,12 +495,6 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		}
 	}()
 
-	var bankContractMetadata types.VFBankContractMetadata
-	if err := k.cdc.Unmarshal(virtualFrontierContract.Metadata, &bankContractMetadata); err != nil {
-		vmErr = types.ErrVMExecution.Wrapf("failed to unmarshal virtual frontier bank contract metadata: %v", err)
-		return
-	}
-
 	// prohibit normal transfer to the bank contract
 	if len(calldata) < 1 {
 		vmErr = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("can not transfer to virtual frontier bank contract")
@@ -523,6 +512,12 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		return
 	}
 
+	var bankContractMetadata types.VFBankContractMetadata
+	if err := k.cdc.Unmarshal(virtualFrontierContract.Metadata, &bankContractMetadata); err != nil {
+		vmErr = types.ErrVMExecution.Wrapf("failed to unmarshal virtual frontier bank contract metadata: %v", err)
+		return
+	}
+
 	method, found := bankContractMetadata.GetMethodFromSignature(calldata)
 	if !found {
 		if len(calldata) >= 4 {
@@ -533,9 +528,17 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		return
 	}
 
+	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, bankContractMetadata.MinDenom)
+	if !found {
+		vmErr = types.ErrVMExecution.Wrapf("bank denom metadata not found for %s", bankContractMetadata.MinDenom)
+		return
+	}
+
+	vfbcDenomMetadata, _ /*ignore invalid state of bank denom-metadata*/ := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMetadata)
+
 	switch method {
 	case types.VFBCmName:
-		bz, err := compiledVFContract.PackOutput("name", bankContractMetadata.DisplayName)
+		bz, err := compiledVFContract.PackOutput("name", vfbcDenomMetadata.Name)
 
 		if err != nil {
 			vmErr = err
@@ -545,7 +548,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		ret = bz
 		return
 	case types.VFBCmSymbol:
-		bz, err := compiledVFContract.PackOutput("symbol", bankContractMetadata.DisplayName)
+		bz, err := compiledVFContract.PackOutput("symbol", vfbcDenomMetadata.Symbol)
 
 		if err != nil {
 			vmErr = err
@@ -555,7 +558,12 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		ret = bz
 		return
 	case types.VFBCmDecimals:
-		bz, err := compiledVFContract.PackOutput("decimals", uint8(bankContractMetadata.Exponent))
+		if !vfbcDenomMetadata.CanDecimalsUint8() {
+			vmErr = types.ErrVMExecution.Wrapf("decimals overflow %d", vfbcDenomMetadata.Decimals)
+			return
+		}
+
+		bz, err := compiledVFContract.PackOutput("decimals", uint8(vfbcDenomMetadata.Decimals))
 
 		if err != nil {
 			vmErr = err

@@ -39,10 +39,7 @@ func (k Keeper) UpdateVirtualFrontierBankContracts(
 			return nil, sdkerrors.ErrUnpackAny.Wrapf("failed to unmarshal virtual frontier bank contract metadata for %s", contractAddress.String())
 		}
 
-		vfContract.LastUpdateHeight = uint64(ctx.BlockHeight())
 		vfContract.Active = updateContent.Active
-		bankContractMeta.Exponent = updateContent.Exponent
-		bankContractMeta.DisplayName = updateContent.DisplayName
 
 		bz, err := k.cdc.Marshal(&bankContractMeta)
 		if err != nil {

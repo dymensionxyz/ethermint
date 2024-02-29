@@ -646,13 +646,25 @@ func (k Keeper) BaseFee(c context.Context, _ *types.QueryBaseFeeRequest) (*types
 	return res, nil
 }
 
-func generateJsonOfVirtualFrontierContract(cdc codec.BinaryCodec, vfContract *types.VirtualFrontierContract) (jsonContent string, err error) {
+func (k Keeper) generateJsonOfVirtualFrontierContract(ctx context.Context, cdc codec.BinaryCodec, vfContract *types.VirtualFrontierContract) (jsonContent string, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	switch vfContract.Type {
 	case uint32(types.VirtualFrontierContractTypeBankContract):
 		var bankMeta types.VFBankContractMetadata
 		cdc.MustUnmarshal(vfContract.Metadata, &bankMeta)
 
-		bc := newVFBankContractResult(vfContract, &bankMeta)
+		// get bank denom metadata
+		bankDenomMeta, found := k.bankKeeper.GetDenomMetaData(sdkCtx, bankMeta.MinDenom)
+
+		if !found {
+			err = sdkerrors.ErrNotFound.Wrapf("denom metadata not found for %s of virtual frontier bank contract %s", bankMeta.MinDenom, vfContract.Address)
+			return
+		}
+
+		denomMeta, _ := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMeta)
+
+		bc := newVFBankContractResult(vfContract, &bankMeta, &denomMeta)
 
 		bz, errMarshaller := json.Marshal(bc)
 		if errMarshaller != nil {
@@ -669,24 +681,26 @@ func generateJsonOfVirtualFrontierContract(cdc codec.BinaryCodec, vfContract *ty
 }
 
 type vfBankContractResult struct {
-	Address          string `json:"address"`
-	Type             string `json:"type"`
-	State            string `json:"state"`
-	MinDenom         string `json:"min_denom"`
-	Exponent         uint32 `json:"exponent"`
-	DisplayName      string `json:"display_name"`
-	LastUpdateHeight uint64 `json:"last_update_height"`
+	Address  string `json:"address"`
+	Type     string `json:"type"`
+	State    string `json:"state"`
+	MinDenom string `json:"min_denom"`
+	Decimals uint32 `json:"decimals"`
+	Name     string `json:"name"`
 }
 
-func newVFBankContractResult(vfContract *types.VirtualFrontierContract, meta *types.VFBankContractMetadata) vfBankContractResult {
+func newVFBankContractResult(
+	vfContract *types.VirtualFrontierContract,
+	vfcBankMeta *types.VFBankContractMetadata,
+	vfcBankDenomMeta *types.VirtualFrontierBankContractDenomMetadata,
+) vfBankContractResult {
 	result := vfBankContractResult{
-		Address:          vfContract.Address,
-		Type:             "bank",
-		State:            "",
-		MinDenom:         meta.MinDenom,
-		Exponent:         meta.Exponent,
-		DisplayName:      meta.DisplayName,
-		LastUpdateHeight: vfContract.LastUpdateHeight,
+		Address:  vfContract.Address,
+		Type:     "bank",
+		State:    "",
+		MinDenom: vfcBankMeta.MinDenom,
+		Decimals: vfcBankDenomMeta.Decimals,
+		Name:     vfcBankDenomMeta.Name,
 	}
 
 	if vfContract.Active {
@@ -717,7 +731,7 @@ func (k Keeper) ListVirtualFrontierContracts(ctx context.Context, req *types.Que
 	var jsonContracts []string
 
 	for _, contract := range vfContracts {
-		jsonContent, err := generateJsonOfVirtualFrontierContract(k.cdc, contract)
+		jsonContent, err := k.generateJsonOfVirtualFrontierContract(ctx, k.cdc, contract)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -763,7 +777,7 @@ func (k Keeper) ListVirtualFrontierContractByAddress(ctx context.Context, reques
 		return nil, status.Error(codes.NotFound, "contract not found")
 	}
 
-	jsonContent, err := generateJsonOfVirtualFrontierContract(k.cdc, vfContract)
+	jsonContent, err := k.generateJsonOfVirtualFrontierContract(ctx, k.cdc, vfContract)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

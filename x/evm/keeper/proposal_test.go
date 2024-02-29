@@ -22,15 +22,12 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 		addr, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
 			&types.VirtualFrontierContract{
-				Active:           true,
-				Type:             uint32(types.VirtualFrontierContractTypeBankContract),
-				Metadata:         nil,
-				LastUpdateHeight: 0,
+				Active:   true,
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Metadata: nil,
 			},
 			&types.VFBankContractMetadata{
-				MinDenom:    denom1,
-				Exponent:    6,
-				DisplayName: "OSMO",
+				MinDenom: denom1,
 			},
 		)
 		suite.Require().NoError(err)
@@ -42,15 +39,12 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 		addr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
 			&types.VirtualFrontierContract{
-				Active:           true,
-				Type:             uint32(types.VirtualFrontierContractTypeBankContract),
-				Metadata:         nil,
-				LastUpdateHeight: 0,
+				Active:   true,
+				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Metadata: nil,
 			},
 			&types.VFBankContractMetadata{
-				MinDenom:    denom2,
-				Exponent:    6,
-				DisplayName: "ATOM",
+				MinDenom: denom2,
 			},
 		)
 		suite.Require().NoError(err)
@@ -144,7 +138,6 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			registerLegacyVFCs()
 			suite.Commit()
 
-			blockNumber := suite.ctx.BlockHeight()
 			contractsAddr, err := suite.app.EvmKeeper.UpdateVirtualFrontierBankContracts(suite.ctx, tt.contracts...)
 			if tt.wantErr {
 				suite.Require().Error(err)
@@ -166,10 +159,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 				if suite.NotEmpty(vfContract.Metadata) {
 					var bankContractMeta types.VFBankContractMetadata
 					suite.NoError(suite.appCodec.Unmarshal(vfContract.Metadata, &bankContractMeta))
-					suite.Equal(updateContent.DisplayName, bankContractMeta.DisplayName)
-					suite.Equal(updateContent.Exponent, bankContractMeta.Exponent)
 				}
-				suite.Equal(uint64(blockNumber), vfContract.LastUpdateHeight)
 			}
 		})
 	}
