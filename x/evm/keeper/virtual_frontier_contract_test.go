@@ -8,6 +8,7 @@ import (
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/types"
+	"math"
 	"strings"
 )
 
@@ -115,7 +116,7 @@ func (suite *KeeperTestSuite) TestGetSetIsVirtualFrontierContract() {
 	suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress3))
 }
 
-func (suite *KeeperTestSuite) TestGetSetMappingVirtualFrontierBankContractAddressByDenom() {
+func (suite *KeeperTestSuite) TestGetSetHasMappingVirtualFrontierBankContractAddressByDenom() {
 	const denom1 = "uosmo"
 	keccak1 := crypto.Keccak256Hash([]byte(denom1))
 	contractAddress1 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, 1)
@@ -124,20 +125,56 @@ func (suite *KeeperTestSuite) TestGetSetMappingVirtualFrontierBankContractAddres
 	keccak2 := crypto.Keccak256Hash([]byte(denom2))
 	contractAddress2 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, 2)
 
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, denom1))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, denom2))
+
 	suite.Equal(append(types.KeyPrefixVirtualFrontierBankContractAddressByDenom, keccak1.Bytes()...), types.VirtualFrontierBankContractAddressByDenomKey(denom1))
 	suite.Equal(append(types.KeyPrefixVirtualFrontierBankContractAddressByDenom, keccak2.Bytes()...), types.VirtualFrontierBankContractAddressByDenomKey(denom2))
 
 	err := suite.app.EvmKeeper.SetMappingVirtualFrontierBankContractAddressByDenom(suite.ctx, denom1, contractAddress1)
 	suite.Require().NoError(err)
+	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, denom1))
 	addr, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(suite.ctx, denom1)
 	suite.Require().True(found)
 	suite.Equal(contractAddress1, addr)
 
 	err = suite.app.EvmKeeper.SetMappingVirtualFrontierBankContractAddressByDenom(suite.ctx, denom2, contractAddress2)
 	suite.Require().NoError(err)
+	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, denom2))
 	addr, found = suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(suite.ctx, denom2)
 	suite.Require().True(found)
 	suite.Equal(contractAddress2, addr)
+}
+
+func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDenomMetadataRecords() {
+	metaOfValid1 := testutil.NewBankDenomMetadata("ibc/uatom", 6)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValid1)
+
+	metaOfInvalid := testutil.NewBankDenomMetadata("ibc/uosmo", 6)
+	metaOfInvalid.Display = ""
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfInvalid)
+	suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(suite.ctx, metaOfInvalid.Base)) // ensure invalid metadata is set
+
+	metaOfOverflowDecimals := testutil.NewBankDenomMetadata("ibc/uosmo", 0)
+	metaOfOverflowDecimals.DenomUnits[1].Exponent = math.MaxUint8 + 1 // overflow uint8
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfOverflowDecimals)
+	suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(suite.ctx, metaOfOverflowDecimals.Base)) // ensure invalid metadata is set
+
+	metaOfValid2 := testutil.NewBankDenomMetadata("ibc/udym", 6)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValid2)
+
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfInvalid.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base))
+
+	err := suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(suite.ctx)
+	suite.Require().NoError(err)
+
+	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base), "virtual frontier bank contract for valid metadata should be created")
+	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfInvalid.Base), "should skip virtual frontier bank contract creation for invalid metadata")
+	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base), "should skip virtual frontier bank contract creation for metadata which exponent overflow of uint8")
+	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base), "virtual frontier bank contract for valid metadata should be created")
 }
 
 func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {

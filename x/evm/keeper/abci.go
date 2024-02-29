@@ -16,6 +16,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +27,10 @@ import (
 // BeginBlock sets the sdk Context and EIP155 chain id to the Keeper.
 func (k *Keeper) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	k.WithChainID(ctx)
+
+	if err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx); err != nil {
+		panic(errors.Wrap(err, "failed to deploy virtual frontier bank contract for new bank denom metadata records"))
+	}
 }
 
 // EndBlock also retrieves the bloom filter value from the transient store and commits it to the

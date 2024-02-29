@@ -56,6 +56,7 @@ type BankKeeper interface {
 	BlockedAddr(addr sdk.AccAddress) bool
 	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
 	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+	IterateAllDenomMetaData(ctx sdk.Context, cb func(banktypes.Metadata) bool)
 }
 
 // StakingKeeper returns the historical headers kept in store.

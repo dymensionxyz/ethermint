@@ -6,6 +6,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -63,6 +64,19 @@ func (k Keeper) SetVirtualFrontierContract(ctx sdk.Context, contractAddress comm
 	return nil
 }
 
+// HasVirtualFrontierBankContractByDenom returns true if there is a virtual frontier bank contract address for the denom exists
+func (k Keeper) HasVirtualFrontierBankContractByDenom(ctx sdk.Context, minDenom string) bool {
+	if minDenom == "" {
+		panic("invalid parameter")
+	}
+
+	store := ctx.KVStore(k.storeKey)
+
+	key := types.VirtualFrontierBankContractAddressByDenomKey(minDenom)
+
+	return store.Has(key)
+}
+
 // GetVirtualFrontierBankContractAddressByDenom returns the virtual frontier bank contract address by denom or nil if not found.
 func (k Keeper) GetVirtualFrontierBankContractAddressByDenom(ctx sdk.Context, minDenom string) (contractAddress common.Address, found bool) {
 	if minDenom == "" {
@@ -101,6 +115,62 @@ func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Cont
 	key := types.VirtualFrontierBankContractAddressByDenomKey(minDenom)
 
 	store.Set(key, contractAddress.Bytes())
+	return nil
+}
+
+// DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords deploys a new virtual frontier bank contract
+// for each bank denom metadata record
+func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
+	ctx sdk.Context,
+) error {
+	type newRecord struct {
+		bankDenomMeta banktypes.Metadata
+		vfbcDenomMeta types.VirtualFrontierBankContractDenomMetadata
+	}
+	var newRecords []newRecord
+	k.bankKeeper.IterateAllDenomMetaData(ctx, func(bankDenomMetadata banktypes.Metadata) bool {
+		if k.HasVirtualFrontierBankContractByDenom(ctx, bankDenomMetadata.Base) {
+			return false
+		}
+
+		vfbcDenomMetadata, isInputPassValidation := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMetadata)
+		if !isInputPassValidation {
+			// ignore invalid records
+			return false
+		}
+
+		if !vfbcDenomMetadata.CanDecimalsUint8() {
+			// ignore records which exponent can not fit uint8 (for return decimals())
+			return false
+		}
+
+		newRecords = append(newRecords, newRecord{
+			bankDenomMeta: bankDenomMetadata,
+			vfbcDenomMeta: vfbcDenomMetadata,
+		})
+		return false
+	})
+
+	if len(newRecords) < 1 {
+		return nil
+	}
+
+	params := k.GetParams(ctx)
+
+	for _, record := range newRecords {
+		activate := record.vfbcDenomMeta.MinDenom != params.EvmDenom // contract for native denom should be disabled
+
+		_, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
+			Active: activate,
+		}, &types.VFBankContractMetadata{
+			MinDenom: record.vfbcDenomMeta.MinDenom,
+		}, &record.vfbcDenomMeta)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -252,6 +322,12 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 
 		if res.Failed() {
 			err = errorsmod.Wrap(types.ErrVMExecution, res.VmError)
+			return
+		}
+
+		contractAccount = k.GetAccount(ctx, contractAddress)
+		if contractAccount == nil {
+			err = errorsmod.Wrap(types.ErrVMExecution, "contract account not found")
 			return
 		}
 	}
