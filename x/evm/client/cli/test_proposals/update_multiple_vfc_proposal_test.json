@@ -2,21 +2,15 @@
   "contracts": [
     {
       "contract_address": "0x0000000000000000000000000000000000001001",
-      "active": true,
-      "display_name": "OSMO",
-      "exponent": 6
+      "active": true
     },
     {
       "contract_address": "0x0000000000000000000000000000000000001002",
-      "active": false,
-      "display_name": "Legacy - ATOM",
-      "exponent": 6
+      "active": false
     },
     {
       "contract_address": "0x0000000000000000000000000000000000001003",
-      "active": true,
-      "display_name": "ATOM",
-      "exponent": 6
+      "active": true
     }
   ]
 }

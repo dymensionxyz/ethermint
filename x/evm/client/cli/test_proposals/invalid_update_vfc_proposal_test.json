@@ -2,9 +2,7 @@
   "contracts": [
     {
       "contract_address": 1,
-      "active": true,
-      "display_name": "OSMO",
-      "exponent": 6
+      "active": true
     }
   ]
 }

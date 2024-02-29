@@ -4,6 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/testutil"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/types"
@@ -20,9 +21,7 @@ type virtualFrontierBankContract struct {
 
 func (m virtualFrontierBankContract) convert(cdc codec.Codec) *types.VirtualFrontierContract {
 	meta := types.VFBankContractMetadata{
-		MinDenom:    m.MinDenom,
-		Exponent:    m.Exponent,
-		DisplayName: m.DisplayName,
+		MinDenom: m.MinDenom,
 	}
 
 	bz, err := cdc.Marshal(&meta)
@@ -149,6 +148,15 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 	contractAddress2 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+1)
 	contractAddress3 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+2)
 
+	meta1 := testutil.NewBankDenomMetadata("ibc/uatomAABBCC", 6)
+	meta2 := testutil.NewBankDenomMetadata("ibc/uosmoXXYYZZ", 6)
+
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta1)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta2)
+
+	vfbcMeta1, _ := types.CollectMetadataForVirtualFrontierBankContract(meta1)
+	vfbcMeta2, _ := types.CollectMetadataForVirtualFrontierBankContract(meta2)
+
 	bytecode, err := keeper.PrepareBytecodeForVirtualFrontierBankContractDeployment("TEST", 1)
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(bytecode)
@@ -156,10 +164,8 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 	addr, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
 		Active: false,
 	}, &types.VFBankContractMetadata{
-		MinDenom:    "ibc/uatomAABBCC",
-		Exponent:    6,
-		DisplayName: "ATOM",
-	})
+		MinDenom: "ibc/uatomAABBCC",
+	}, &vfbcMeta1)
 	suite.Require().NoError(err)
 	suite.Equal(contractAddress1, addr)
 
@@ -174,10 +180,8 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 	addr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
 		Active: true,
 	}, &types.VFBankContractMetadata{
-		MinDenom:    "ibc/uosmoXXYYZZ",
-		Exponent:    6,
-		DisplayName: "OSMO",
-	})
+		MinDenom: "ibc/uosmoXXYYZZ",
+	}, &vfbcMeta2)
 	suite.Require().NoError(err)
 	suite.Equal(contractAddress2, addr)
 
@@ -233,13 +237,15 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 
 		suite.Require().False(suite.app.EvmKeeper.GetParams(suite.ctx).EnableCreate, "contract creation should be disabled at this point")
 
+		meta3 := testutil.NewBankDenomMetadata("ibc/aphotonMMNNOO", 18)
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta3)
+		vfbcMeta3, _ := types.CollectMetadataForVirtualFrontierBankContract(meta3)
+
 		addr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
 			Active: true,
 		}, &types.VFBankContractMetadata{
-			MinDenom:    "ibc/aphotonMMNNOO",
-			Exponent:    18,
-			DisplayName: "PHOTON",
-		})
+			MinDenom: "ibc/aphotonMMNNOO",
+		}, &vfbcMeta3)
 		suite.Require().NoError(err)
 		suite.NotEqual(common.Address{}, addr)
 		suite.NotNil(suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, addr), "contract should be created")

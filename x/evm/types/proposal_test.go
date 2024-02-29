@@ -22,8 +22,6 @@ func TestUpdateVirtualFrontierBankContractsProposal_ValidateBasic(t *testing.T) 
 					{
 						ContractAddress: contractAddr1,
 						Active:          true,
-						DisplayName:     "OSMO",
-						Exponent:        6,
 					},
 				},
 			},
@@ -36,14 +34,10 @@ func TestUpdateVirtualFrontierBankContractsProposal_ValidateBasic(t *testing.T) 
 					{
 						ContractAddress: contractAddr1,
 						Active:          true,
-						DisplayName:     "OSMO",
-						Exponent:        6,
 					},
 					{
 						ContractAddress: contractAddr2,
 						Active:          false,
-						DisplayName:     "ATOM",
-						Exponent:        6,
 					},
 				},
 			},
@@ -56,28 +50,10 @@ func TestUpdateVirtualFrontierBankContractsProposal_ValidateBasic(t *testing.T) 
 					{
 						ContractAddress: contractAddr1,
 						Active:          true,
-						DisplayName:     "OSMO1",
-						Exponent:        6,
 					},
 					{
 						ContractAddress: contractAddr1,
 						Active:          false,
-						DisplayName:     "OSMO2",
-						Exponent:        6,
-					},
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "inner content is not valid",
-			proposal: UpdateVirtualFrontierBankContractsProposal{
-				Contracts: []VirtualFrontierBankContractProposalContent{
-					{
-						ContractAddress: contractAddr1,
-						Active:          true,
-						DisplayName:     "OSMO",
-						Exponent:        20, // wrong
 					},
 				},
 			},
@@ -119,8 +95,6 @@ func TestVirtualFrontierBankContractProposalContent_ValidateBasic(t *testing.T) 
 			content: VirtualFrontierBankContractProposalContent{
 				ContractAddress: contractAddr1,
 				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        6,
 			},
 			wantErr: false,
 		},
@@ -129,8 +103,6 @@ func TestVirtualFrontierBankContractProposalContent_ValidateBasic(t *testing.T) 
 			content: VirtualFrontierBankContractProposalContent{
 				ContractAddress: "0xzzzzzzz",
 				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        6,
 			},
 			wantErr: true,
 		},
@@ -139,8 +111,6 @@ func TestVirtualFrontierBankContractProposalContent_ValidateBasic(t *testing.T) 
 			content: VirtualFrontierBankContractProposalContent{
 				ContractAddress: contractAddr1[:20],
 				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        6,
 			},
 			wantErr: true,
 		},
@@ -149,8 +119,6 @@ func TestVirtualFrontierBankContractProposalContent_ValidateBasic(t *testing.T) 
 			content: VirtualFrontierBankContractProposalContent{
 				ContractAddress: contractAddr1 + "00",
 				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        6,
 			},
 			wantErr: true,
 		},
@@ -159,8 +127,6 @@ func TestVirtualFrontierBankContractProposalContent_ValidateBasic(t *testing.T) 
 			content: VirtualFrontierBankContractProposalContent{
 				ContractAddress: contractAddr1[2:],
 				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        6,
 			},
 			wantErr: true,
 		},
@@ -169,48 +135,6 @@ func TestVirtualFrontierBankContractProposalContent_ValidateBasic(t *testing.T) 
 			content: VirtualFrontierBankContractProposalContent{
 				ContractAddress: strings.ToUpper(contractAddr1),
 				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        6,
-			},
-			wantErr: true,
-		},
-		{
-			name: "display name is required",
-			content: VirtualFrontierBankContractProposalContent{
-				ContractAddress: contractAddr1,
-				Active:          true,
-				DisplayName:     "",
-				Exponent:        6,
-			},
-			wantErr: true,
-		},
-		{
-			name: "exponent must <= 18",
-			content: VirtualFrontierBankContractProposalContent{
-				ContractAddress: contractAddr1,
-				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        18,
-			},
-			wantErr: false,
-		},
-		{
-			name: "reject exponent > 18",
-			content: VirtualFrontierBankContractProposalContent{
-				ContractAddress: contractAddr1,
-				Active:          true,
-				DisplayName:     "OSMO",
-				Exponent:        19,
-			},
-			wantErr: true,
-		},
-		{
-			name: "reject bad display name",
-			content: VirtualFrontierBankContractProposalContent{
-				ContractAddress: contractAddr1,
-				Active:          true,
-				DisplayName:     "<script>alert('xss')</script>",
-				Exponent:        6,
 			},
 			wantErr: true,
 		},

@@ -3,6 +3,7 @@ package ante_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/evmos/ethermint/testutil"
 	"math"
 	"math/big"
 
@@ -505,16 +506,20 @@ func (suite AnteTestSuite) TestEthVirtualFrontierContractDecorator() {
 			suite.ctx.WithBlockHeight(backupHeight) // restore it
 		}()
 
+		meta := testutil.NewBankDenomMetadata("aphoton2", 18)
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta)
+
+		denomMeta, _ := evmtypes.CollectMetadataForVirtualFrontierBankContract(meta)
+
 		vfcAddr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx.WithBlockHeight(0), // simulate genesis to bypass evm deployment
 			&evmtypes.VirtualFrontierContract{
 				Active: true,
 			},
 			&evmtypes.VFBankContractMetadata{
-				MinDenom:    "aphoton2",
-				Exponent:    6,
-				DisplayName: "PHOTON2",
+				MinDenom: "aphoton2",
 			},
+			&denomMeta,
 		)
 		suite.Require().NoError(err)
 	}()

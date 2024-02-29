@@ -4,7 +4,6 @@ import (
 	"fmt"
 	v1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/ethereum/go-ethereum/common"
-	"regexp"
 	"strings"
 )
 
@@ -77,17 +76,6 @@ func (m *VirtualFrontierBankContractProposalContent) ValidateBasic() error {
 	}
 	if !strings.HasPrefix(m.ContractAddress, "0x") {
 		return fmt.Errorf("contract address must start with 0x")
-	}
-
-	if m.DisplayName == "" {
-		return fmt.Errorf("missing display name")
-	}
-	if !regexp.MustCompile(`^[a-zA-Z\d\-_/]+$`).MatchString(m.DisplayName) {
-		return fmt.Errorf("accepted characters in display name are: a-z, A-Z, 0-9, -, _ and /")
-	}
-
-	if m.Exponent > 18 {
-		return fmt.Errorf("exponent must be less than or equal to 18")
 	}
 
 	return nil

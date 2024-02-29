@@ -272,17 +272,11 @@ message UpdateVirtualFrontierBankContractsProposal {
   repeated VirtualFrontierBankContractProposalContent contracts = 3 [(gogoproto.nullable) = false];
 }
 
-// ProposalMetadata is used to parse a slice of denom metadata and generate
-// the RegisterCoinProposal content.
-//
-// All the fields are required.
+// VirtualFrontierBankContractProposalContent contains the adjustment to the virtual frontier bank contract.
+// Currently only used to toggle activation of the contract.
 message VirtualFrontierBankContractProposalContent {
   // contract_address that want to be updated
   string contract_address = 1;
   // active indicate the activation of the contract. If not active, invoking methods is disabled.
   bool active = 2;
-  // display_name is the display symbol of the asset
-  string display_name = 3;
-  // exponent is the decimals of the display denom of the asset
-  uint32 exponent = 4;
 }

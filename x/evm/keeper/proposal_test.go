@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/testutil"
 	"github.com/evmos/ethermint/x/evm/types"
 	"strings"
 )
@@ -19,6 +20,15 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 		const denom1 = "uosmo"
 		const denom2 = "uatom"
 
+		meta1 := testutil.NewBankDenomMetadata(denom1, 6)
+		meta2 := testutil.NewBankDenomMetadata(denom2, 6)
+
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta1)
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta2)
+
+		vfbcMeta1, _ := types.CollectMetadataForVirtualFrontierBankContract(meta1)
+		vfbcMeta2, _ := types.CollectMetadataForVirtualFrontierBankContract(meta2)
+
 		addr, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
 			suite.ctx,
 			&types.VirtualFrontierContract{
@@ -29,6 +39,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			&types.VFBankContractMetadata{
 				MinDenom: denom1,
 			},
+			&vfbcMeta1,
 		)
 		suite.Require().NoError(err)
 		suite.Equal(contractAddr1, strings.ToLower(addr.String()))
@@ -46,6 +57,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			&types.VFBankContractMetadata{
 				MinDenom: denom2,
 			},
+			&vfbcMeta2,
 		)
 		suite.Require().NoError(err)
 		suite.Equal(contractAddr2, strings.ToLower(addr.String()))
@@ -60,34 +72,56 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 		wantErr   bool
 	}{
 		{
-			name: "normal",
+			name: "disable contract",
 			contracts: []types.VirtualFrontierBankContractProposalContent{
 				{
 					ContractAddress: contractAddr1,
 					Active:          false,
-					DisplayName:     "CHANGED",
-					Exponent:        16,
 				},
 			},
 			wantErr: false,
 		},
 		{
-			name: "normal, multiple",
+			name: "active contract",
+			contracts: []types.VirtualFrontierBankContractProposalContent{
+				{
+					ContractAddress: contractAddr1,
+					Active:          true,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "multiple contracts",
 			contracts: []types.VirtualFrontierBankContractProposalContent{
 				{
 					ContractAddress: contractAddr1,
 					Active:          false,
-					DisplayName:     "CHANGED",
-					Exponent:        18,
 				},
 				{
 					ContractAddress: contractAddr2,
 					Active:          true,
-					DisplayName:     "CHANGED",
-					Exponent:        12,
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name: "multiple contracts but duplicated",
+			contracts: []types.VirtualFrontierBankContractProposalContent{
+				{
+					ContractAddress: contractAddr1,
+					Active:          false,
+				},
+				{
+					ContractAddress: contractAddr2,
+					Active:          true,
+				},
+				{
+					ContractAddress: contractAddr1,
+					Active:          true,
+				},
+			},
+			wantErr: true,
 		},
 		{
 			name:      "not allow empty list",
@@ -95,25 +129,11 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			wantErr:   true,
 		},
 		{
-			name: "invalid contract content",
+			name: "missing contract address",
 			contracts: []types.VirtualFrontierBankContractProposalContent{
 				{
-					ContractAddress: contractAddr1,
+					ContractAddress: "",
 					Active:          false,
-					DisplayName:     "^^",
-					Exponent:        16,
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "can not be the same as min denom",
-			contracts: []types.VirtualFrontierBankContractProposalContent{
-				{
-					ContractAddress: contractAddr1,
-					Active:          false,
-					DisplayName:     "uosmo",
-					Exponent:        16,
 				},
 			},
 			wantErr: true,
@@ -124,8 +144,6 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 				{
 					ContractAddress: contractAddrNonExists,
 					Active:          true,
-					DisplayName:     "OSMO",
-					Exponent:        6,
 				},
 			},
 			wantErr: true,

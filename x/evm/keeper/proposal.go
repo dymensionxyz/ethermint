@@ -16,14 +16,20 @@ func (k Keeper) UpdateVirtualFrontierBankContracts(
 		return nil, sdkerrors.ErrInvalidRequest.Wrapf("no contracts to update")
 	}
 
-	var updatedAddressList []common.Address
+	var uniqueTracker = make(map[common.Address]bool)
 
 	for _, updateContent := range contracts {
+
 		if err := updateContent.ValidateBasic(); err != nil {
 			return nil, err
 		}
 
 		contractAddress := common.HexToAddress(updateContent.ContractAddress)
+
+		if _, found := uniqueTracker[common.HexToAddress(updateContent.ContractAddress)]; found {
+			return nil, sdkerrors.ErrInvalidRequest.Wrapf("duplicate update for contract address: %s", updateContent.ContractAddress)
+		}
+		uniqueTracker[contractAddress] = true
 
 		vfContract := k.GetVirtualFrontierContract(ctx, contractAddress)
 		if vfContract == nil {
@@ -50,8 +56,12 @@ func (k Keeper) UpdateVirtualFrontierBankContracts(
 		if err := k.SetVirtualFrontierContract(ctx, contractAddress, vfContract); err != nil {
 			return nil, err
 		}
+	}
 
-		updatedAddressList = append(updatedAddressList, contractAddress)
+	var updatedAddressList []common.Address
+
+	for address, _ := range uniqueTracker {
+		updatedAddressList = append(updatedAddressList, address)
 	}
 
 	return updatedAddressList, nil

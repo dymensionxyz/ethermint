@@ -128,8 +128,6 @@ func TestParseUpdateVirtualFrontierBankContractsProposal(t *testing.T) {
 				{
 					ContractAddress: "0x0000000000000000000000000000000000001001",
 					Active:          true,
-					DisplayName:     "OSMO",
-					Exponent:        6,
 				},
 			},
 		},
@@ -141,20 +139,14 @@ func TestParseUpdateVirtualFrontierBankContractsProposal(t *testing.T) {
 				{
 					ContractAddress: "0x0000000000000000000000000000000000001001",
 					Active:          true,
-					DisplayName:     "OSMO",
-					Exponent:        6,
 				},
 				{
 					ContractAddress: "0x0000000000000000000000000000000000001002",
 					Active:          false,
-					DisplayName:     "Legacy - ATOM",
-					Exponent:        6,
 				},
 				{
 					ContractAddress: "0x0000000000000000000000000000000000001003",
 					Active:          true,
-					DisplayName:     "ATOM",
-					Exponent:        6,
 				},
 			},
 		},
