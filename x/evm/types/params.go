@@ -31,7 +31,7 @@ var (
 	// DefaultAllowUnprotectedTxs rejects all unprotected txs (i.e false)
 	DefaultAllowUnprotectedTxs = false
 	// DefaultEnableCreate enables contract creation (i.e true)
-	DefaultEnableCreate = false
+	DefaultEnableCreate = true
 	// DefaultEnableCall enables contract calls (i.e true)
 	DefaultEnableCall = true
 )
@@ -84,9 +84,6 @@ func (p Params) Validate() error {
 
 	if err := validateBool(p.EnableCreate); err != nil {
 		return err
-	}
-	if p.EnableCreate {
-		return fmt.Errorf("contract creation is disabled")
 	}
 
 	if err := validateBool(p.AllowUnprotectedTxs); err != nil {
