@@ -17,3 +17,21 @@ func UseZeroGasConfig(ctx sdk.Context) sdk.Context {
 func IsEthermintDevChain(ctx sdk.Context) bool {
 	return strings.HasPrefix(ctx.ChainID(), "ethermint_")
 }
+
+// IsOneOfDymensionChains returns true if the chain-id is one of the dymension chains:
+//   - Mainnet
+//   - Testnet Blumbus
+//   - Devnet Froopyland
+func IsOneOfDymensionChains(ctx sdk.Context) bool {
+	chainId := ctx.ChainID()
+	if strings.HasPrefix(chainId, "dymension_") {
+		return true
+	}
+	if strings.HasPrefix(chainId, "blumbus_") {
+		return true
+	}
+	if strings.HasPrefix(chainId, "froopyland_") {
+		return true
+	}
+	return false
+}
