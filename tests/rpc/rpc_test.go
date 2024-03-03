@@ -280,8 +280,6 @@ func sendTestTransaction(t *testing.T) hexutil.Bytes {
 
 // deployTestContract deploys a contract that emits an event in the constructor
 func deployTestContract(t *testing.T) (hexutil.Bytes, map[string]interface{}) {
-	t.SkipNow()
-
 	gasPrice := GetGasPrice(t)
 	param := make([]map[string]string, 1)
 	param[0] = make(map[string]string)
@@ -387,8 +385,6 @@ var helloTopic = "0x775a94827b8fd9b519d36cd827093c664f93347070a554f65e4a6f56cd73
 var worldTopic = "0x0000000000000000000000000000000000000000000000000000000000000011"
 
 func deployTestContractWithFunction(t *testing.T) hexutil.Bytes {
-	t.SkipNow()
-
 	// pragma solidity ^0.5.1;
 
 	// contract Test {

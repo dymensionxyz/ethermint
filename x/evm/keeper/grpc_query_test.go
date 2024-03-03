@@ -490,8 +490,6 @@ func (suite *KeeperTestSuite) TestQueryValidatorAccount() {
 }
 
 func (suite *KeeperTestSuite) TestEstimateGas() {
-	suite.T().SkipNow()
-
 	gasHelper := hexutil.Uint64(20000)
 	higherGas := hexutil.Uint64(25000)
 	hexBigInt := hexutil.Big(*big.NewInt(1))

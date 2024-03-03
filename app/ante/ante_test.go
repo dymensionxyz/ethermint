@@ -100,7 +100,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 				tx := suite.CreateTestTx(signedContractTx, privKey, 1, false)
 				return tx
 			},
-			false, false, false,
+			false, false, true,
 		},
 		{
 			"success - CheckTx (contract)",
@@ -121,7 +121,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 				tx := suite.CreateTestTx(signedContractTx, privKey, 1, false)
 				return tx
 			},
-			true, false, false,
+			true, false, true,
 		},
 		{
 			"success - ReCheckTx (contract)",
@@ -982,7 +982,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 				return tx
 			},
 			true,
-			false, false, false,
+			false, false, true,
 		},
 		{
 			"success - CheckTx (contract)",
@@ -1004,7 +1004,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 				return tx
 			},
 			true,
-			true, false, false,
+			true, false, true,
 		},
 		{
 			"success - ReCheckTx (contract)",
@@ -1270,7 +1270,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithParams() {
 				return tx
 			},
 			true, true,
-			evmtypes.ErrCreateDisabled,
+			nil,
 		},
 		{
 			"fail - EVM Call Disabled",
@@ -1325,14 +1325,6 @@ func (suite AnteTestSuite) TestAnteHandlerWithParams() {
 			suite.evmParamsOption = func(params *evmtypes.Params) {
 				params.EnableCall = tc.enableCall
 				params.EnableCreate = tc.enableCreate
-			}
-			if tc.enableCreate {
-				suite.Require().Panics(
-					func() {
-						suite.SetupTest()
-					},
-				)
-				return
 			}
 
 			suite.SetupTest()
