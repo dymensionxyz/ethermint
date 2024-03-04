@@ -20,6 +20,7 @@ import (
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common/math"
 	"math/big"
 
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -478,22 +479,34 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		}
 	}()
 
-	if virtualFrontierContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
-		vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not a bank contract", virtualFrontierContract.Type)
-		return
-	}
-
 	compiledVFContract := types.VFBankContract20
+
+	/*
+		For all the call to the virtual frontier bank contract, we charge flattened this gas amount,
+		intrinsic gas cost (21k) are excluded.
+	*/
+	const flattenedGasCost uint64 = 59000
 
 	defer func() {
 		if vmErr != nil {
 			// consume all gas if an error occurs
 			leftOverGas = 0
 		} else {
-			// don't consume gas
-			leftOverGas = gas
+			// consume the flattened gas cost
+			tmpLeftOver, overflow := math.SafeSub(gas, flattenedGasCost)
+			if overflow {
+				// if we can not sub, we consume all gas
+				leftOverGas = 0
+			} else {
+				leftOverGas = tmpLeftOver
+			}
 		}
 	}()
+
+	if virtualFrontierContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+		vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not a bank contract", virtualFrontierContract.Type)
+		return
+	}
 
 	// prohibit normal transfer to the bank contract
 	if len(calldata) < 1 {
@@ -531,6 +544,11 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, bankContractMetadata.MinDenom)
 	if !found {
 		vmErr = types.ErrVMExecution.Wrapf("bank denom metadata not found for %s", bankContractMetadata.MinDenom)
+		return
+	}
+
+	if flattenedGasCost > gas {
+		vmErr = vm.ErrOutOfGas
 		return
 	}
 
