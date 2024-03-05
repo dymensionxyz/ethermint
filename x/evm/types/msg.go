@@ -107,30 +107,23 @@ func newMsgEthereumTx(
 	}
 
 	switch {
-	case accesses == nil:
-		txData = &LegacyTx{
-			Nonce:    nonce,
-			To:       toAddr,
-			Amount:   amt,
-			GasLimit: gasLimit,
-			GasPrice: gp,
-			Data:     input,
-		}
-	case accesses != nil && gasFeeCap != nil && gasTipCap != nil:
-		gtc := sdkmath.NewIntFromBigInt(gasTipCap)
-		gfc := sdkmath.NewIntFromBigInt(gasFeeCap)
+	case gasTipCap != nil && gasFeeCap != nil:
+		gasTipCap := sdkmath.NewIntFromBigInt(gasTipCap)
+		gasFeeCap := sdkmath.NewIntFromBigInt(gasFeeCap)
 
 		txData = &DynamicFeeTx{
 			ChainID:   cid,
-			Nonce:     nonce,
-			To:        toAddr,
 			Amount:    amt,
+			To:        toAddr,
+			GasTipCap: &gasTipCap,
+			GasFeeCap: &gasFeeCap,
+			Nonce:     nonce,
 			GasLimit:  gasLimit,
-			GasTipCap: &gtc,
-			GasFeeCap: &gfc,
 			Data:      input,
 			Accesses:  NewAccessList(accesses),
 		}
+
+		break
 	case accesses != nil:
 		txData = &AccessListTx{
 			ChainID:  cid,
@@ -142,7 +135,17 @@ func newMsgEthereumTx(
 			Data:     input,
 			Accesses: NewAccessList(accesses),
 		}
+
+		break
 	default:
+		txData = &LegacyTx{
+			To:       toAddr,
+			Amount:   amt,
+			GasPrice: gp,
+			Nonce:    nonce,
+			GasLimit: gasLimit,
+			Data:     input,
+		}
 	}
 
 	dataAny, err := PackTxData(txData)
@@ -197,9 +200,16 @@ func (msg MsgEthereumTx) ValidateBasic() error {
 		return errorsmod.Wrap(err, "failed to unpack tx data")
 	}
 
+	gas := txData.GetGas()
+
 	// prevent txs with 0 gas to fill up the mempool
-	if txData.GetGas() == 0 {
+	if gas == 0 {
 		return errorsmod.Wrap(ErrInvalidGasLimit, "gas limit must not be zero")
+	}
+
+	// prevent gas limit from overflow
+	if g := new(big.Int).SetUint64(gas); !g.IsInt64() {
+		return errorsmod.Wrap(ErrGasOverflow, "gas limit must be less than math.MaxInt64")
 	}
 
 	if err := txData.Validate(); err != nil {
