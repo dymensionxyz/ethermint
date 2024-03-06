@@ -618,8 +618,6 @@ func (suite *EthRpcTestSuite) Test_GetTransactionByBlockNumberAndHashAndIndex() 
 }
 
 func (suite *EthRpcTestSuite) Test_SendRawTransaction() {
-	suite.T().Skip("This test failed due to incorrect implementation of evmtypes.NewTx")
-
 	receiver := integration_test_util.NewTestAccount(suite.T(), nil)
 
 	// define
