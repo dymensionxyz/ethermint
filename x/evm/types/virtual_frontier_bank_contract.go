@@ -8,6 +8,7 @@ import (
 
 type VFBankContractMethod uint8
 
+//goland:noinspection GoSnakeCaseUsage
 const (
 	VFBCmUnknown VFBankContractMethod = iota
 	VFBCmName
@@ -16,6 +17,9 @@ const (
 	VFBCmTotalSupply
 	VFBCmBalanceOf
 	VFBCmTransfer
+	VFBCmApprove_NotSupported
+	VFBCmTransferFrom_NotSupported
+	VFBCmAllowance_NotSupported
 )
 
 // ValidateBasic performs basic validation of the VFBankContractMetadata fields
@@ -45,6 +49,12 @@ func (m *VFBankContractMetadata) GetMethodFromSignature(input []byte) (method VF
 		return VFBCmBalanceOf, true
 	case "a9059cbb": // first 4 bytes of the keccak256 hash of "transfer(address,uint256)"
 		return VFBCmTransfer, true
+	case "095ea7b3": // first 4 bytes of the keccak256 hash of "approve(address,uint256)"
+		return VFBCmApprove_NotSupported, true
+	case "23b872dd": // first 4 bytes of the keccak256 hash of "transferFrom(address,address,uint256)"
+		return VFBCmTransferFrom_NotSupported, true
+	case "dd62ed3e": // first 4 bytes of the keccak256 hash of "allowance(address,address)"
+		return VFBCmAllowance_NotSupported, true
 	default:
 		return VFBCmUnknown, false
 	}

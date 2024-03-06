@@ -16,7 +16,6 @@
 package keeper
 
 import (
-	"encoding/hex"
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -531,16 +530,6 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		return
 	}
 
-	method, found := bankContractMetadata.GetMethodFromSignature(calldata)
-	if !found {
-		if len(calldata) >= 4 {
-			vmErr = types.ErrVMExecution.Wrapf("unknown method signature 0x%s", hex.EncodeToString(calldata[:4]))
-		} else {
-			vmErr = types.ErrVMExecution.Wrapf("unknown method signature 0x%s", hex.EncodeToString(calldata))
-		}
-		return
-	}
-
 	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, bankContractMetadata.MinDenom)
 	if !found {
 		vmErr = types.ErrVMExecution.Wrapf("bank denom metadata not found for %s", bankContractMetadata.MinDenom)
@@ -549,6 +538,12 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 	if flattenedGasCost > gas {
 		vmErr = vm.ErrOutOfGas
+		return
+	}
+
+	method, found := bankContractMetadata.GetMethodFromSignature(calldata)
+	if !found {
+		// treat as fallback function that does nothing
 		return
 	}
 
@@ -740,6 +735,18 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			Data:        bzData,
 			BlockNumber: uint64(ctx.BlockHeight()),
 		})
+
+		return
+	case types.VFBCmApprove_NotSupported:
+		vmErr = types.ErrVMExecution.Wrap("not supported method")
+
+		return
+	case types.VFBCmTransferFrom_NotSupported:
+		vmErr = types.ErrVMExecution.Wrap("not supported method")
+
+		return
+	case types.VFBCmAllowance_NotSupported:
+		vmErr = types.ErrVMExecution.Wrap("not supported method")
 
 		return
 	default:

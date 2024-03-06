@@ -103,6 +103,27 @@ func TestVFBankContractMetadata_GetMethodFromSignature(t *testing.T) {
 			wantFound:  true,
 		},
 		{
+			name:       "approve",
+			meta:       defaultMetadata,
+			input:      []byte{0x09, 0x5e, 0xa7, 0xb3},
+			wantMethod: VFBCmApprove_NotSupported,
+			wantFound:  true,
+		},
+		{
+			name:       "transfer from",
+			meta:       defaultMetadata,
+			input:      []byte{0x23, 0xb8, 0x72, 0xdd},
+			wantMethod: VFBCmTransferFrom_NotSupported,
+			wantFound:  true,
+		},
+		{
+			name:       "allowance",
+			meta:       defaultMetadata,
+			input:      []byte{0xdd, 0x62, 0xed, 0x3e},
+			wantMethod: VFBCmAllowance_NotSupported,
+			wantFound:  true,
+		},
+		{
 			name:       "empty returns unknown",
 			meta:       defaultMetadata,
 			input:      []byte{},
@@ -112,7 +133,8 @@ func TestVFBankContractMetadata_GetMethodFromSignature(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotMethod, gotFound := tt.meta.GetMethodFromSignature(tt.input)
+			meta := VFBankContractMetadata{}
+			gotMethod, gotFound := meta.GetMethodFromSignature(tt.input)
 			require.Equal(t, tt.wantFound, gotFound)
 			require.Equal(t, tt.wantMethod, gotMethod)
 		})
