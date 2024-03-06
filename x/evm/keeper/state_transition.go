@@ -16,13 +16,11 @@
 package keeper
 
 import (
-	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common/math"
-	"math/big"
-
 	tmtypes "github.com/tendermint/tendermint/types"
+	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -447,20 +445,28 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 func (k *Keeper) proxiedEvmCall(ctx sdk.Context, evm evm.EVM, stateDB vm.StateDB, caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, vmErr error) {
 	if k.IsVirtualFrontierContract(ctx, addr) {
 		vfContract := k.GetVirtualFrontierContract(ctx, addr)
+
 		if vfContract == nil {
-			return nil, 0, types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr)
+			leftOverGas = 0
+			vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr)
+		} else if !vfContract.Active {
+			leftOverGas = 0
+			vmErr = types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr)
+		} else {
+			switch types.VirtualFrontierContractType(vfContract.Type) {
+			case types.VirtualFrontierContractTypeBankContract:
+				ret, leftOverGas, vmErr = k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
+
+				break
+			default:
+				leftOverGas = 0
+				vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not supported", vfContract.Type)
+
+				break
+			}
 		}
 
-		if !vfContract.Active {
-			return nil, 0, types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr)
-		}
-
-		switch types.VirtualFrontierContractType(vfContract.Type) {
-		case types.VirtualFrontierContractTypeBankContract:
-			return k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
-		default:
-			panic(fmt.Errorf("not implemented handler for VF contract %d", vfContract.Type))
-		}
+		return
 	}
 
 	return evm.Call(caller, addr, input, gas, value)
