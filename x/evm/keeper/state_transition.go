@@ -593,7 +593,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 	case types.VFBCmTotalSupply:
 		totalSupply := k.bankKeeper.GetSupply(ctx, bankContractMetadata.MinDenom)
 
-		bz, err := compiledVFContract.PackOutput("totalSupply", new(big.Int).SetUint64(totalSupply.Amount.Uint64()))
+		bz, err := compiledVFContract.PackOutput("totalSupply", totalSupply.Amount.BigInt())
 
 		if err != nil {
 			vmErr = err
