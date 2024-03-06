@@ -19,8 +19,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common/math"
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/evmos/ethermint/x/evm/vm/geth"
 	"math/big"
+	"time"
+
+	tmtypes "github.com/tendermint/tendermint/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -445,6 +448,14 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 func (k *Keeper) proxiedEvmCall(ctx sdk.Context, evm evm.EVM, stateDB vm.StateDB, caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, vmErr error) {
 	if k.IsVirtualFrontierContract(ctx, addr) {
 		vfContract := k.GetVirtualFrontierContract(ctx, addr)
+
+		vmCfg := evm.Config()
+		if vmCfg.Debug {
+			vmCfg.Tracer.CaptureStart(evm.(*geth.EVM).EVM, caller.Address(), addr, false, input, gas, value)
+			defer func(startGas uint64, startTime time.Time) {
+				vmCfg.Tracer.CaptureEnd(ret, startGas-leftOverGas, time.Since(startTime), vmErr)
+			}(gas, time.Now())
+		}
 
 		if vfContract == nil {
 			leftOverGas = 0
