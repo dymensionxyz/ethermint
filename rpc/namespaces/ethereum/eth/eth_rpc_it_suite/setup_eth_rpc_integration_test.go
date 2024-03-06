@@ -14,7 +14,6 @@ import (
 	"testing"
 )
 
-//goland:noinspection GoSnakeCaseUsage,SpellCheckingInspection
 type EthRpcTestSuite struct {
 	suite.Suite
 	CITS *integration_test_util.ChainIntegrationTestSuite
@@ -52,7 +51,7 @@ func (suite *EthRpcTestSuite) TearDownSuite() {
 }
 
 func (suite *EthRpcTestSuite) GetEthPublicAPI() *eth.PublicAPI {
-	return eth.NewPublicAPI(log.NewNopLogger(), suite.CITS.RpcBackendAt(0))
+	return suite.GetEthPublicAPIAt(0)
 }
 
 func (suite *EthRpcTestSuite) GetEthPublicAPIAt(height int64) *eth.PublicAPI {
