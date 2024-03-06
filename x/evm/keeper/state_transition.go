@@ -654,6 +654,14 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		ret = bz
 		return
 	case types.VFBCmTransfer:
+		defer func() {
+			// simulate the return boolean value
+			ret = make([]byte, 32)
+			if vmErr == nil {
+				ret[31] = 1 // true
+			}
+		}()
+
 		if len(calldata) < 5 {
 			vmErr = types.ErrVMExecution.Wrap("invalid call data")
 			return
