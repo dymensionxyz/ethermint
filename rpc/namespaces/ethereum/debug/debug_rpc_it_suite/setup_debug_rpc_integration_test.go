@@ -3,62 +3,62 @@ package demo
 //goland:noinspection SpellCheckingInspection
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/integration_test_util"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth"
+	"github.com/evmos/ethermint/rpc/namespaces/ethereum/debug"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 	"testing"
 )
 
-type EthRpcTestSuite struct {
+type DebugRpcTestSuite struct {
 	suite.Suite
 	CITS *integration_test_util.ChainIntegrationTestSuite
 }
 
-func (suite *EthRpcTestSuite) App() itutiltypes.ChainApp {
+func (suite *DebugRpcTestSuite) App() itutiltypes.ChainApp {
 	return suite.CITS.ChainApp
 }
 
-func (suite *EthRpcTestSuite) Ctx() sdk.Context {
+func (suite *DebugRpcTestSuite) Ctx() sdk.Context {
 	return suite.CITS.CurrentContext
 }
 
-func (suite *EthRpcTestSuite) Commit() {
+func (suite *DebugRpcTestSuite) Commit() {
 	suite.CITS.Commit()
 }
 
 func TestEthRpcTestSuite(t *testing.T) {
-	suite.Run(t, new(EthRpcTestSuite))
+	suite.Run(t, new(DebugRpcTestSuite))
 }
 
-func (suite *EthRpcTestSuite) SetupSuite() {
+func (suite *DebugRpcTestSuite) SetupSuite() {
 }
 
-func (suite *EthRpcTestSuite) SetupTest() {
+func (suite *DebugRpcTestSuite) SetupTest() {
 	suite.CITS = integration_test_util.CreateChainIntegrationTestSuite(suite.T(), suite.Require())
 	suite.CITS.EnsureTendermint() // RPC requires Tendermint
 }
 
-func (suite *EthRpcTestSuite) TearDownTest() {
+func (suite *DebugRpcTestSuite) TearDownTest() {
 	suite.CITS.Cleanup()
 }
 
-func (suite *EthRpcTestSuite) TearDownSuite() {
+func (suite *DebugRpcTestSuite) TearDownSuite() {
 }
 
-func (suite *EthRpcTestSuite) GetEthPublicAPI() *eth.PublicAPI {
-	return suite.GetEthPublicAPIAt(0)
+func (suite *DebugRpcTestSuite) GetDebugAPI() *debug.API {
+	return suite.GetDebugAPIAt(0)
 }
 
-func (suite *EthRpcTestSuite) GetEthPublicAPIAt(height int64) *eth.PublicAPI {
-	return eth.NewPublicAPI(log.NewNopLogger(), suite.CITS.RpcBackendAt(height))
+func (suite *DebugRpcTestSuite) GetDebugAPIAt(height int64) *debug.API {
+	return debug.NewAPI(server.NewDefaultContext(), suite.CITS.RpcBackendAt(height))
 }
 
-func (suite *EthRpcTestSuite) GetTxReceipt(txHash common.Hash) *ethtypes.Receipt {
+func (suite *DebugRpcTestSuite) GetTxReceipt(txHash common.Hash) *ethtypes.Receipt {
 	mapReceipt, err := suite.CITS.RpcBackend.GetTransactionReceipt(txHash)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(mapReceipt)
@@ -71,8 +71,4 @@ func (suite *EthRpcTestSuite) GetTxReceipt(txHash common.Hash) *ethtypes.Receipt
 	suite.Require().NoError(err)
 
 	return &receipt
-}
-
-func ptrInt64(num int64) *int64 {
-	return &num
 }

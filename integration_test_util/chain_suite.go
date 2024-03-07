@@ -511,6 +511,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 func (suite *ChainIntegrationTestSuite) RpcBackendAt(height int64) *rpcbackend.Backend {
 	queryClients := suite.QueryClientsAt(height)
 	rpcServerCtx := server.NewDefaultContext()
+	rpcServerCtx.Viper.Set("json-rpc.gas-cap", 999_999_999)
 
 	rpcBackend := rpcbackend.NewBackend(rpcServerCtx, rpcServerCtx.Logger, queryClients.ClientQueryCtx, false, suite.EvmTxIndexer)
 

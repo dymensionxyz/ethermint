@@ -1,4 +1,4 @@
-package demo
+package vfc_it_suite_test
 
 //goland:noinspection SpellCheckingInspection
 import (
@@ -8,57 +8,47 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/integration_test_util"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
-	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 	"testing"
 )
 
-type EthRpcTestSuite struct {
+//goland:noinspection GoSnakeCaseUsage,SpellCheckingInspection
+type VfcITSuite struct {
 	suite.Suite
 	CITS *integration_test_util.ChainIntegrationTestSuite
 }
 
-func (suite *EthRpcTestSuite) App() itutiltypes.ChainApp {
+func (suite *VfcITSuite) App() itutiltypes.ChainApp {
 	return suite.CITS.ChainApp
 }
 
-func (suite *EthRpcTestSuite) Ctx() sdk.Context {
+func (suite *VfcITSuite) Ctx() sdk.Context {
 	return suite.CITS.CurrentContext
 }
 
-func (suite *EthRpcTestSuite) Commit() {
+func (suite *VfcITSuite) Commit() {
 	suite.CITS.Commit()
 }
 
-func TestEthRpcTestSuite(t *testing.T) {
-	suite.Run(t, new(EthRpcTestSuite))
+func TestVfcITSuite(t *testing.T) {
+	suite.Run(t, new(VfcITSuite))
 }
 
-func (suite *EthRpcTestSuite) SetupSuite() {
+func (suite *VfcITSuite) SetupSuite() {
 }
 
-func (suite *EthRpcTestSuite) SetupTest() {
+func (suite *VfcITSuite) SetupTest() {
 	suite.CITS = integration_test_util.CreateChainIntegrationTestSuite(suite.T(), suite.Require())
-	suite.CITS.EnsureTendermint() // RPC requires Tendermint
 }
 
-func (suite *EthRpcTestSuite) TearDownTest() {
+func (suite *VfcITSuite) TearDownTest() {
 	suite.CITS.Cleanup()
 }
 
-func (suite *EthRpcTestSuite) TearDownSuite() {
+func (suite *VfcITSuite) TearDownSuite() {
 }
 
-func (suite *EthRpcTestSuite) GetEthPublicAPI() *eth.PublicAPI {
-	return suite.GetEthPublicAPIAt(0)
-}
-
-func (suite *EthRpcTestSuite) GetEthPublicAPIAt(height int64) *eth.PublicAPI {
-	return eth.NewPublicAPI(log.NewNopLogger(), suite.CITS.RpcBackendAt(height))
-}
-
-func (suite *EthRpcTestSuite) GetTxReceipt(txHash common.Hash) *ethtypes.Receipt {
+func (suite *VfcITSuite) GetTxReceipt(txHash common.Hash) *ethtypes.Receipt {
 	mapReceipt, err := suite.CITS.RpcBackend.GetTransactionReceipt(txHash)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(mapReceipt)
@@ -71,8 +61,4 @@ func (suite *EthRpcTestSuite) GetTxReceipt(txHash common.Hash) *ethtypes.Receipt
 	suite.Require().NoError(err)
 
 	return &receipt
-}
-
-func ptrInt64(num int64) *int64 {
-	return &num
 }
