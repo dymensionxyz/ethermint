@@ -521,10 +521,6 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		)
 	}
 
-	if len(calldata) < 4 {
-		return types.NewExecVFCError(fmt.Errorf("invalid call data"))
-	}
-
 	// prohibit transfer native token to the VF contract
 	if value != nil && value.Sign() != 0 {
 		return types.NewExecVFCRevert(
@@ -536,6 +532,12 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 	if err := k.cdc.Unmarshal(virtualFrontierContract.Metadata, &bankContractMetadata); err != nil {
 		return types.NewExecVFCError(
 			fmt.Errorf("failed to unmarshal virtual frontier bank contract metadata: %v", err),
+		)
+	}
+
+	if len(bankContractMetadata.MinDenom) == 0 {
+		return types.NewExecVFCError(
+			fmt.Errorf("virtual frontier bank contract metadata, denom is empty"),
 		)
 	}
 
@@ -556,9 +558,14 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 	switch method {
 	case types.VFBCmName:
-		const opGasCost uint64 = 3400
+		const opGasCost = types.VFBCopgName
+		const opGasCostOnRevert = types.VFBCopgName_Revert
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
+		}
+
+		if len(calldata) != 4 {
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
 		bz, err := compiledVFContract.PackOutput("name", vfbcDenomMetadata.Name)
@@ -569,9 +576,14 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmSymbol:
-		const opGasCost uint64 = 3400
+		const opGasCost = types.VFBCopgSymbol
+		const opGasCostOnRevert = types.VFBCopgSymbol_Revert
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
+		}
+
+		if len(calldata) != 4 {
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
 		bz, err := compiledVFContract.PackOutput("symbol", vfbcDenomMetadata.Symbol)
@@ -582,10 +594,14 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmDecimals:
-		const opGasCost uint64 = 338
-		const opGasCostOnRevert = opGasCost / 4
+		const opGasCost = types.VFBCopgDecimals
+		const opGasCostOnRevert = types.VFBCopgDecimals_Revert
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
+		}
+
+		if len(calldata) != 4 {
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
 		if !vfbcDenomMetadata.CanDecimalsUint8() {
@@ -600,9 +616,14 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmTotalSupply:
-		const opGasCost uint64 = 2400
+		const opGasCost = types.VFBCopgTotalSupply
+		const opGasCostOnRevert = types.VFBCopgTotalSupply_Revert
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
+		}
+
+		if len(calldata) != 4 {
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
 		totalSupply := k.bankKeeper.GetSupply(ctx, bankContractMetadata.MinDenom)
@@ -615,13 +636,13 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmBalanceOf:
-		const opGasCost uint64 = 2800
-		const opGasCostOnRevert = opGasCost / 4
+		const opGasCost = types.VFBCopgBalanceOf
+		const opGasCostOnRevert = types.VFBCopgBalanceOf_Revert
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
 		}
 
-		if len(calldata) < 5 {
+		if len(calldata) != 4 /*4bytes sig*/ +32 /*address*/ {
 			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
@@ -654,13 +675,13 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmTransfer:
-		const opGasCost uint64 = 13700
-		const opGasCostOnRevert = opGasCost / 4
+		const opGasCost = types.VFBCopgTransfer
+		const opGasCostOnRevert = types.VFBCopgTransfer_Revert
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
 		}
 
-		if len(calldata) < 5 {
+		if len(calldata) != 4 /*4bytes sig*/ +32 /*address*/ +32 /*amount*/ {
 			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
@@ -753,7 +774,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		return types.NewExecVFCSuccessWithRetBool(true, opGasCost)
 	case types.VFBCmApprove_NotSupported, types.VFBCmTransferFrom_NotSupported, types.VFBCmAllowance_NotSupported:
-		const opGasCost uint64 = 100
+		const opGasCost = types.VFBCopgOtherNotSupported
 		if gas < opGasCost {
 			return types.NewExecVFCOutOfGas()
 		}

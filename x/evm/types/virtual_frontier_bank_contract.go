@@ -22,6 +22,23 @@ const (
 	VFBCmAllowance_NotSupported
 )
 
+//goland:noinspection GoSnakeCaseUsage,SpellCheckingInspection
+const (
+	VFBCopgName               uint64 = 3400
+	VFBCopgName_Revert               = VFBCopgName / 4
+	VFBCopgSymbol             uint64 = 3400
+	VFBCopgSymbol_Revert             = VFBCopgSymbol / 4
+	VFBCopgDecimals           uint64 = 340
+	VFBCopgDecimals_Revert           = VFBCopgDecimals / 4
+	VFBCopgTotalSupply        uint64 = 2400
+	VFBCopgTotalSupply_Revert        = VFBCopgTotalSupply / 4
+	VFBCopgBalanceOf          uint64 = 2800
+	VFBCopgBalanceOf_Revert          = VFBCopgBalanceOf / 4
+	VFBCopgTransfer           uint64 = 13700
+	VFBCopgTransfer_Revert           = VFBCopgTransfer / 4
+	VFBCopgOtherNotSupported  uint64 = 100
+)
+
 // ValidateBasic performs basic validation of the VFBankContractMetadata fields
 func (m *VFBankContractMetadata) ValidateBasic() error {
 	if len(m.MinDenom) == 0 {
