@@ -19,8 +19,8 @@ import (
 	"fmt"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
+	"github.com/pkg/errors"
 	"math/big"
 	"time"
 
@@ -445,40 +445,58 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 
 // proxiedEvmCall is the proxied method of the EVM::Call method.
 // It is used to intercept the call request, make decision before actual invoking call to the EVM::Call.
-// If the target
+// If the target is a Virtual Frontier Contract, the call will be redirected to corresponding handler,
+// instead of invoking actual EVM execution.
 func (k *Keeper) proxiedEvmCall(ctx sdk.Context, evm evm.EVM, stateDB vm.StateDB, caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, vmErr error) {
+	var vfcExecResult *types.VFCExecutionResult
+
+	defer func(startGas uint64, startTime time.Time) {
+		// when having VFC exec result, we build the result based on the VFC exec result
+		if vfcExecResult != nil {
+			// CONTRACT: all the named return value must not be set before this
+			// and can only be set by the following statement
+			_, ret, _, leftOverGas, vmErr = vfcExecResult.GetDetailedResult(startGas)
+
+			// capture end tracing if debugging is enabled
+			vmCfg := evm.Config()
+			if vmCfg.Debug {
+				vmCfg.Tracer.CaptureEnd(ret, startGas-leftOverGas, time.Since(startTime), vmErr)
+				// Note: calls to CaptureStart had been added bellow.
+			}
+		}
+	}(gas, time.Now())
+
 	if k.IsVirtualFrontierContract(ctx, addr) {
 		vfContract := k.GetVirtualFrontierContract(ctx, addr)
 
+		// simulate the top call frame when tracing a VFC call
 		vmCfg := evm.Config()
 		if vmCfg.Debug {
 			vmCfg.Tracer.CaptureStart(evm.(*geth.EVM).EVM, caller.Address(), addr, false, input, gas, value)
-			defer func(startGas uint64, startTime time.Time) {
-				vmCfg.Tracer.CaptureEnd(ret, startGas-leftOverGas, time.Since(startTime), vmErr)
-			}(gas, time.Now())
 		}
 
 		if vfContract == nil {
-			leftOverGas = 0
-			vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr)
+			vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr.String()))
 		} else if !vfContract.Active {
-			leftOverGas = 0
-			vmErr = types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr)
+			vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr.String()))
 		} else {
 			switch types.VirtualFrontierContractType(vfContract.Type) {
 			case types.VirtualFrontierContractTypeBankContract:
-				ret, leftOverGas, vmErr = k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
+				vfcExecResult = k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
 
 				break
 			default:
-				leftOverGas = 0
-				vmErr = types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not supported", vfContract.Type)
+				vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not supported", vfContract.Type))
 
 				break
 			}
 		}
 
 		return
+	}
+
+	if vfcExecResult != nil {
+		panic("invalid state: falling to EVM call from Virtual Frontier Contract call")
 	}
 
 	return evm.Call(caller, addr, input, gas, value)
@@ -489,97 +507,49 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 	ctx sdk.Context,
 	stateDB vm.StateDB,
 	sender common.Address, virtualFrontierContract *types.VirtualFrontierContract, calldata []byte, gas uint64, value *big.Int,
-) (ret []byte, leftOverGas uint64, vmErr error) {
-	var errorMessage error
-	defer func() {
-		if vmErr != nil {
-			k.Logger(ctx).Debug("virtual frontier bank contract execution failed", "error", vmErr, "message", errorMessage)
-		}
-	}()
-
+) *types.VFCExecutionResult {
 	compiledVFContract := types.VFBankContract20
 
-	var consumeGas uint64
-
-	defer func() {
-		if vmErr != nil {
-			if vmErr == vm.ErrExecutionReverted {
-				// consume the specified amount
-			} else if vmErr == vm.ErrOutOfGas {
-				consumeGas = gas
-			} else {
-				consumeGas = gas // consume all gas on other errors
-			}
-
-			if errorMessage == nil {
-				errorMessage = vmErr
-			}
-
-			bzRet, err := abiErrorString.Pack(errorMessage.Error())
-			if err != nil {
-				panic(err)
-			}
-			ret = append([]byte{0x08, 0xc3, 0x79, 0xa0}, bzRet...)
-		} else {
-			if errorMessage != nil {
-				panic(errorMessage) // should not happen
-			}
-		}
-
-		// consume the specified gas cost
-		tmpLeftOver, overflow := math.SafeSub(gas, consumeGas)
-		if overflow {
-			// if we can not sub, we consume all gas
-			leftOverGas = 0
-		} else {
-			leftOverGas = tmpLeftOver
-		}
-	}()
-
 	if virtualFrontierContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
-		errorMessage = types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not a bank contract", virtualFrontierContract.Type)
-		vmErr = errorMessage // consume all remaining gas
-		return
+		return types.NewExecVFCError(fmt.Errorf("not a bank contract"))
 	}
 
 	// prohibit normal transfer to the bank contract
 	if len(calldata) < 1 {
-		errorMessage = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("can not transfer to virtual frontier bank contract")
-		vmErr = vm.ErrExecutionReverted
-		return
+		return types.NewExecVFCRevert(
+			0, types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("not allowed to receive"),
+		)
 	}
 
 	if len(calldata) < 4 {
-		errorMessage = types.ErrVMExecution.Wrap("invalid call data")
-		vmErr = vm.ErrExecutionReverted
-		return
+		return types.NewExecVFCError(fmt.Errorf("invalid call data"))
 	}
 
 	// prohibit transfer native token to the VF contract
 	if value != nil && value.Sign() != 0 {
-		errorMessage = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("cannot transfer to virtual frontier bank contract")
-		vmErr = vm.ErrExecutionReverted
-		return
+		return types.NewExecVFCRevert(
+			0, types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("not allowed to receive"),
+		)
 	}
 
 	var bankContractMetadata types.VFBankContractMetadata
 	if err := k.cdc.Unmarshal(virtualFrontierContract.Metadata, &bankContractMetadata); err != nil {
-		errorMessage = types.ErrVMExecution.Wrapf("failed to unmarshal virtual frontier bank contract metadata: %v", err)
-		vmErr = errorMessage // un-expected error, consume all remaining gas
-		return
+		return types.NewExecVFCError(
+			fmt.Errorf("failed to unmarshal virtual frontier bank contract metadata: %v", err),
+		)
 	}
 
 	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, bankContractMetadata.MinDenom)
 	if !found {
-		errorMessage = types.ErrVMExecution.Wrapf("bank denom metadata not found for %s", bankContractMetadata.MinDenom)
-		vmErr = errorMessage // un-expected error, consume all remaining gas
-		return
+		return types.NewExecVFCError(
+			fmt.Errorf("bank denom metadata not found for %s", bankContractMetadata.MinDenom),
+		)
 	}
 
 	method, found := bankContractMetadata.GetMethodFromSignature(calldata)
 	if !found {
 		// treat as fallback function that does nothing
-		return
+		return types.NewExecVFCSuccess([]byte{}, 0)
 	}
 
 	vfbcDenomMetadata, _ /*ignore invalid state of bank denom-metadata*/ := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMetadata)
@@ -588,117 +558,87 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 	case types.VFBCmName:
 		const opGasCost uint64 = 3400
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
 
 		bz, err := compiledVFContract.PackOutput("name", vfbcDenomMetadata.Name)
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
-		ret = bz
-		return
+		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmSymbol:
 		const opGasCost uint64 = 3400
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
 
 		bz, err := compiledVFContract.PackOutput("symbol", vfbcDenomMetadata.Symbol)
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
-		ret = bz
-		return
+		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmDecimals:
 		const opGasCost uint64 = 338
+		const opGasCostOnRevert = opGasCost / 4
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
 
 		if !vfbcDenomMetadata.CanDecimalsUint8() {
-			errorMessage = types.ErrVMExecution.Wrapf("decimals overflow %d", vfbcDenomMetadata.Decimals)
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, fmt.Errorf("decimals overflow %d", vfbcDenomMetadata.Decimals))
 		}
 
 		bz, err := compiledVFContract.PackOutput("decimals", uint8(vfbcDenomMetadata.Decimals))
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
-		ret = bz
-		return
+		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmTotalSupply:
 		const opGasCost uint64 = 2400
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
 
 		totalSupply := k.bankKeeper.GetSupply(ctx, bankContractMetadata.MinDenom)
 
 		bz, err := compiledVFContract.PackOutput("totalSupply", totalSupply.Amount.BigInt())
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
-		ret = bz
-		return
+		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmBalanceOf:
 		const opGasCost uint64 = 2800
+		const opGasCostOnRevert = opGasCost / 4
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
 
 		if len(calldata) < 5 {
-			errorMessage = types.ErrVMExecution.Wrap("invalid call data")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
 		// unpack the calldata
 		inputs, err := compiledVFContract.UnpackInput("balanceOf", calldata[4:])
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
 		if len(inputs) != 1 {
-			errorMessage = types.ErrVMExecution.Wrap("invalid input")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid input"))
 		}
 
 		receiverAddress, ok := inputs[0].(common.Address)
 		if !ok {
-			errorMessage = types.ErrExecutionReverted.Wrap("first input is not an address")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("first input is not an address"))
 		}
 
 		// get the balance of the address
@@ -709,76 +649,45 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		bz, err := compiledVFContract.PackOutput("balanceOf", balance.Amount.BigInt())
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
-		ret = bz
-		return
+		return types.NewExecVFCSuccess(bz, opGasCost)
 	case types.VFBCmTransfer:
 		const opGasCost uint64 = 13700
+		const opGasCostOnRevert = opGasCost / 4
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
-
-		defer func() {
-			if vmErr != nil {
-				// consume less gas if the transfer failed
-				consumeGas /= 4
-			}
-		}()
-
-		defer func() {
-			// simulate the return boolean value
-			ret = make([]byte, 32)
-			if vmErr == nil {
-				ret[31] = 1 // true
-			}
-		}()
 
 		if len(calldata) < 5 {
-			errorMessage = types.ErrVMExecution.Wrap("invalid call data")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid call data"))
 		}
 
 		eventTransfer, foundEvent := compiledVFContract.ABI.Events["Transfer"]
 		if !foundEvent {
-			errorMessage = types.ErrVMExecution.Wrap("event Transfer could not be found")
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(errors.New("event Transfer could not be found"))
 		}
 
-		// unpack the calldata
+		// unpack the call-data
 		inputs, err := compiledVFContract.UnpackInput("transfer", calldata[4:])
 
 		if err != nil {
-			errorMessage = err
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			return types.NewExecVFCError(err)
 		}
 
 		if len(inputs) != 2 {
-			errorMessage = types.ErrVMExecution.Wrap("invalid input")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("invalid input"))
 		}
 
 		to, ok := inputs[0].(common.Address)
 		if !ok {
-			errorMessage = types.ErrExecutionReverted.Wrap("first input is not an address")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("first input is not an address"))
 		}
 
 		amount, ok := inputs[1].(*big.Int)
 		if !ok {
-			errorMessage = types.ErrExecutionReverted.Wrap("second input is not a number")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("second input is not a number"))
 		}
 
 		receiver := sdk.AccAddress(to.Bytes())
@@ -790,56 +699,47 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		if accountI != nil {
 			_, isModuleAccount := accountI.(authtypes.ModuleAccountI)
 			if isModuleAccount {
-				errorMessage = types.ErrVMExecution.Wrap("can not transfer to module account")
-				vmErr = vm.ErrExecutionReverted
-				return
+				return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("can not transfer to module account"))
 			}
 		}
 		// - VF contracts
 		if k.IsVirtualFrontierContract(ctx, to) {
-			errorMessage = types.ErrProhibitedAccessingVirtualFrontierContract.Wrap("can not transfer to virtual frontier contract")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("not allowed to receive"))
 		}
 
 		senderBalance := k.bankKeeper.GetBalance(ctx, sender.Bytes(), bankContractMetadata.MinDenom)
 		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, sdk.NewIntFromBigInt(amount))
 
 		if senderBalance.Amount.LT(sendAmount.Amount) {
-			errorMessage = fmt.Errorf("ERC20: transfer amount exceeds balance")
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("ERC20: transfer amount exceeds balance"))
 		}
 
 		if err := k.bankKeeper.IsSendEnabledCoins(ctx, sendAmount); err != nil {
-			errorMessage = types.ErrVMExecution.Wrap(err.Error())
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New(err.Error()))
 		}
 
 		if k.bankKeeper.BlockedAddr(receiver) {
-			errorMessage = types.ErrVMExecution.Wrapf("unauthorized, %s is not allowed to receive funds", to)
-			vmErr = vm.ErrExecutionReverted
-			return
+			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New(fmt.Sprintf("unauthorized, %s is not allowed to receive funds", to)))
 		}
 
-		// transfer the amount
-		if err := k.bankKeeper.SendCoins(ctx, sender.Bytes(), receiver, sdk.NewCoins(sendAmount)); err != nil {
-			errorMessage = types.ErrVMExecution.Wrapf("failed to transfer %s from %s to %s: %v", sendAmount.String(), sender, to, err)
-			vmErr = vm.ErrExecutionReverted
-			return
-		}
-
-		// Fire the ERC-20 Transfer event
+		// Prepare to fire the ERC-20 Transfer event
 		bzData, err := abi.Arguments{
 			eventTransfer.Inputs[2],
 		}.Pack(amount)
 		if err != nil {
-			errorMessage = types.ErrVMExecution.Wrapf("failed to pack output data")
-			vmErr = errorMessage // un-expected error, consume all remaining gas
-			return
+			if err != nil {
+				return types.NewExecVFCError(err)
+			}
 		}
 
+		// The rest code are state changed, can not be reverted
+
+		// transfer the amount
+		if err := k.bankKeeper.SendCoins(ctx, sender.Bytes(), receiver, sdk.NewCoins(sendAmount)); err != nil {
+			return types.NewExecVFCRevert(opGasCost, errors.Wrap(err, "failed to transfer"))
+		}
+
+		// Fire the ERC-20 Transfer event
 		stateDB.AddLog(&ethtypes.Log{
 			Address: virtualFrontierContract.ContractAddress(),
 			Topics: []common.Hash{
@@ -851,40 +751,15 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 			BlockNumber: uint64(ctx.BlockHeight()),
 		})
 
-		return
+		return types.NewExecVFCSuccessWithRetBool(true, opGasCost)
 	case types.VFBCmApprove_NotSupported, types.VFBCmTransferFrom_NotSupported, types.VFBCmAllowance_NotSupported:
 		const opGasCost uint64 = 100
 		if gas < opGasCost {
-			vmErr = vm.ErrOutOfGas
-			return
+			return types.NewExecVFCOutOfGas()
 		}
-		consumeGas = opGasCost
 
-		errorMessage = types.ErrVMExecution.Wrap("not supported method")
-		vmErr = vm.ErrExecutionReverted
-
-		return
+		return types.NewExecVFCRevert(opGasCost, errors.New("not supported method"))
 	default:
 		panic("unreachable")
-	}
-
-	return
-}
-
-var abiTypeString abi.Type
-var abiErrorString abi.Arguments
-
-func init() {
-	var err error
-	abiTypeString, err = abi.NewType("string", "string", nil)
-	if err != nil {
-		panic(err)
-	}
-
-	abiErrorString = abi.Arguments{
-		abi.Argument{
-			Name: "content",
-			Type: abiTypeString,
-		},
 	}
 }

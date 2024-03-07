@@ -4,7 +4,9 @@ import (
 	"cosmossdk.io/errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"strings"
 )
 
@@ -71,5 +73,126 @@ func (m *VirtualFrontierContract) GetTypeName() string {
 		return "bank"
 	default:
 		return ""
+	}
+}
+
+type VFCExecutionResult struct {
+	ret             []byte // return, only be set in success. If not, it is ABI-encoded Error(string) value
+	opConsumeGas    uint64 // is amount of gas consume before execution revert
+	optionalDescErr error
+	vmErr           error
+}
+
+func NewExecVFCOutOfGas() *VFCExecutionResult {
+	return &VFCExecutionResult{
+		vmErr: vm.ErrOutOfGas,
+	}
+}
+
+func NewExecVFCRevert(opConsumeGas uint64, optionalDescErr error) *VFCExecutionResult {
+	if optionalDescErr == nil {
+		optionalDescErr = vm.ErrExecutionReverted
+	}
+	return &VFCExecutionResult{
+		opConsumeGas:    opConsumeGas,
+		optionalDescErr: optionalDescErr,
+		vmErr:           vm.ErrExecutionReverted,
+	}
+}
+
+// NewExecVFCError creates a new VFCExecutionResult with a result error.
+// The operation will consume all gas.
+func NewExecVFCError(descErr error) *VFCExecutionResult {
+	if descErr == nil {
+		panic("descErr cannot be nil")
+	}
+	if descErr == vm.ErrExecutionReverted {
+		panic("descErr cannot be 'execution reverted' error, use NewExecVFCRevert instead'")
+	}
+	return &VFCExecutionResult{
+		optionalDescErr: descErr,
+		vmErr:           descErr,
+	}
+}
+
+// NewExecVFCSuccess creates a new VFCExecutionResult, represent for a success execution, with a result return value.
+// The operation will consume exactly the amount of gas provided.
+func NewExecVFCSuccess(ret []byte, opConsumeGas uint64) *VFCExecutionResult {
+	return &VFCExecutionResult{
+		ret:          ret,
+		opConsumeGas: opConsumeGas,
+	}
+}
+
+// NewExecVFCSuccessWithRetBool is the same as NewExecVFCSuccess.
+// The operation will consume exactly the amount of gas provided.
+func NewExecVFCSuccessWithRetBool(val bool, opConsumeGas uint64) *VFCExecutionResult {
+	ret := make([]byte, 32)
+	if val {
+		ret[31] = 1
+	}
+	return NewExecVFCSuccess(ret, opConsumeGas)
+}
+
+func (m VFCExecutionResult) GetDetailedResult(startGas uint64) (success bool, ret []byte, isExecutionRevertedOnFalse bool, leftOverGas uint64, vmErr error) {
+	success = m.vmErr == nil
+	isExecutionRevertedOnFalse = m.vmErr == vm.ErrExecutionReverted
+	vmErr = m.vmErr
+
+	var gasToConsume uint64
+
+	if success {
+		// logic
+		ret = m.ret
+
+		gasToConsume = m.opConsumeGas // consume exactly as provided
+	} else {
+		if m.vmErr == vm.ErrOutOfGas {
+			gasToConsume = startGas // consume all gas
+		} else if m.vmErr == vm.ErrExecutionReverted {
+			gasToConsume = m.opConsumeGas
+		} else {
+			gasToConsume = startGas // consume all gas on non-execution reverted error
+		}
+
+		// building ret, based on the error
+		var retErrorContent string
+		if m.optionalDescErr != nil {
+			retErrorContent = m.optionalDescErr.Error()
+		} else {
+			retErrorContent = m.vmErr.Error()
+		}
+
+		bzRet, err := abiErrorString.Pack(retErrorContent)
+		if err != nil {
+			panic(err)
+		}
+		ret = append([]byte{0x08, 0xc3, 0x79, 0xa0}, bzRet...)
+	}
+
+	if gasToConsume > startGas {
+		panic(fmt.Sprintf("gas overflow: consume %d, limit %d", gasToConsume, startGas))
+	}
+
+	leftOverGas = startGas - gasToConsume // overflow had been checked just above
+
+	return
+}
+
+var abiTypeString abi.Type
+var abiErrorString abi.Arguments
+
+func init() {
+	var err error
+	abiTypeString, err = abi.NewType("string", "string", nil)
+	if err != nil {
+		panic(err)
+	}
+
+	abiErrorString = abi.Arguments{
+		abi.Argument{
+			Name: "content",
+			Type: abiTypeString,
+		},
 	}
 }
