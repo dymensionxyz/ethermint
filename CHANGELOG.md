@@ -39,7 +39,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### State Machine Breaking
 - (evm) [#3](https://github.com/dymensionxyz/ethermint/pull/3) Disabled contract creation
-- (evm) Disabled contract creation for Dymension chains only (adjust the absolute logic in [#3](https://github.com/dymensionxyz/ethermint/pull/3))
+- (evm) [#11](https://github.com/dymensionxyz/ethermint/pull/11) Disabled contract creation for Dymension chains only (adjust the absolute logic in [#3](https://github.com/dymensionxyz/ethermint/pull/3))
+- (evm) [#11](https://github.com/dymensionxyz/ethermint/pull/11) Virtual Frontier Contract
 
 ### Bug Fixes
 - (rpc) [#6](https://github.com/dymensionxyz/ethermint/pull/6) Zero gas config for tracing methods
