@@ -761,17 +761,21 @@ func (k Keeper) VirtualFrontierBankContractByDenom(ctx context.Context, request 
 	}
 
 	var bankMeta types.VFBankContractMetadata
-	k.cdc.MustUnmarshal(vfContract.Metadata, &bankMeta)
-
-	vfContract.Metadata = nil // reduce size of response
+	err := k.cdc.Unmarshal(vfContract.Metadata, &bankMeta)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 
 	return &types.QueryVirtualFrontierBankContractByDenomResponse{
-		Contract: vfContract,
-		Metadata: &bankMeta,
+		Pair: &types.VFBCPair{
+			ContractAddress: vfContract.Address,
+			MinDenom:        bankMeta.MinDenom,
+			Enabled:         vfContract.Active,
+		},
 	}, nil
 }
 
-func (k Keeper) ListVirtualFrontierContractByAddress(ctx context.Context, request *types.QueryVirtualFrontierContractByAddressRequest) (*types.QueryVirtualFrontierContractByAddressResponse, error) {
+func (k Keeper) VirtualFrontierContractByAddress(ctx context.Context, request *types.QueryVirtualFrontierContractByAddressRequest) (*types.QueryVirtualFrontierContractByAddressResponse, error) {
 	vfContract := k.GetVirtualFrontierContract(sdk.UnwrapSDKContext(ctx), common.HexToAddress(request.Address))
 	if vfContract == nil {
 		return nil, status.Error(codes.NotFound, "contract not found")
@@ -784,6 +788,47 @@ func (k Keeper) ListVirtualFrontierContractByAddress(ctx context.Context, reques
 
 	return &types.QueryVirtualFrontierContractByAddressResponse{
 		VirtualFrontierContractJson: jsonContent,
+	}, nil
+}
+
+func (k Keeper) ListVirtualFrontierBankContracts(ctx context.Context, req *types.QueryVirtualFrontierBankContractsRequest) (*types.QueryVirtualFrontierBankContractsResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	store := sdkCtx.KVStore(k.storeKey)
+	vfcStore := prefix.NewStore(store, types.KeyPrefixVirtualFrontierContract)
+
+	vfContracts, pageRes, err := query.GenericFilteredPaginate(k.cdc, vfcStore, req.Pagination, func(key []byte, vfc *types.VirtualFrontierContract) (*types.VirtualFrontierContract, error) {
+		if vfc.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+			return nil, nil // exclude non-bank contracts
+		}
+
+		return vfc, nil
+	}, func() *types.VirtualFrontierContract {
+		return &types.VirtualFrontierContract{}
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	var pairs []*types.VFBCPair
+
+	for _, contract := range vfContracts {
+		var bankMeta types.VFBankContractMetadata
+		err := k.cdc.Unmarshal(contract.Metadata, &bankMeta)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		pairs = append(pairs, &types.VFBCPair{
+			ContractAddress: contract.Address,
+			MinDenom:        bankMeta.MinDenom,
+			Enabled:         contract.Active,
+		})
+	}
+
+	return &types.QueryVirtualFrontierBankContractsResponse{
+		Pairs:      pairs,
+		Pagination: pageRes,
 	}, nil
 }
 

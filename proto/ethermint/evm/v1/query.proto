@@ -80,14 +80,19 @@ service Query {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts";
   }
 
+  // VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
+  rpc VirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest) returns (QueryVirtualFrontierContractByAddressResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts/{address}";
+  }
+
   // VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
   rpc VirtualFrontierBankContractByDenom(QueryVirtualFrontierBankContractByDenomRequest) returns (QueryVirtualFrontierBankContractByDenomResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contract/by_denom/{min_denom}";
   }
 
-  // ListVirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
-  rpc ListVirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest) returns (QueryVirtualFrontierContractByAddressResponse) {
-    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts/{address}";
+  // ListVirtualFrontierBankContracts returns the list of bank contract
+  rpc ListVirtualFrontierBankContracts(QueryVirtualFrontierBankContractsRequest) returns (QueryVirtualFrontierBankContractsResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contracts";
   }
 }
 
@@ -333,8 +338,7 @@ message QueryVirtualFrontierBankContractByDenomRequest {
 
 // QueryVirtualFrontierBankContractByDenomResponse returns the bank contract of the corresponding min denom
 message QueryVirtualFrontierBankContractByDenomResponse {
-    VirtualFrontierContract contract = 1;
-    VFBankContractMetadata metadata = 2;
+  VFBCPair pair = 1;
 }
 
 // QueryVirtualFrontierContractByAddressRequest defines the request for querying virtual frontier contract by it address
@@ -345,4 +349,29 @@ message QueryVirtualFrontierContractByAddressRequest {
 // QueryVirtualFrontierContractByAddressResponse returns the virtual frontier contract corresponding to the address
 message QueryVirtualFrontierContractByAddressResponse {
   string virtual_frontier_contract_json = 1;
+}
+
+// QueryVirtualFrontierBankContractsRequest defines the request for querying all virtual frontier bank contracts
+message QueryVirtualFrontierBankContractsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryVirtualFrontierBankContractsResponse returns all virtual frontier bank contracts
+message QueryVirtualFrontierBankContractsResponse {
+  // pairs is list of available virtual frontier bank contracts
+  repeated VFBCPair pairs = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// VFBCPair is a pair of a native Cosmos token (base) with an ERC20 virtual frontier bank contract address.
+message VFBCPair {
+  option (gogoproto.equal) = true;
+  // contract_address is the hex address of the contract
+  string contract_address = 1;
+  // min_denom defines the cosmos base denomination
+  string min_denom = 2;
+  // enabled is status of the contract, whether it is enabled or not
+  bool enabled = 3;
 }
