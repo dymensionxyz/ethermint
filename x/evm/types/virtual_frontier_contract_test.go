@@ -3,11 +3,11 @@ package types_test
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
+	"github.com/evmos/ethermint/utils"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -473,31 +473,9 @@ func TestVFCExecutionResult(t *testing.T) {
 				require.NotEmpty(t, tt.wantEvmErrorContains, "bad setup test-case")
 				require.Contains(t, gotVmErr.Error(), tt.wantEvmErrorContains)
 
-				data, err := abiErrorString.Unpack(gotRet[4:] /*skip 4bytes sig*/)
-				require.NoError(t, err)
-				require.Len(t, data, 1)
-				errMsg, ok := data[0].(string)
-				require.True(t, ok)
+				errMsg := utils.MustAbiDecodeString(gotRet[4:] /*skip 4bytes sig*/)
 				require.Contains(t, errMsg, tt.wantRetErrorContains)
 			}
 		})
-	}
-}
-
-var abiTypeString abi.Type
-var abiErrorString abi.Arguments
-
-func init() {
-	var err error
-	abiTypeString, err = abi.NewType("string", "string", nil)
-	if err != nil {
-		panic(err)
-	}
-
-	abiErrorString = abi.Arguments{
-		abi.Argument{
-			Name: "content",
-			Type: abiTypeString,
-		},
 	}
 }

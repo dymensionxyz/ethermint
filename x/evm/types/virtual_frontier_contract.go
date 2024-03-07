@@ -4,9 +4,9 @@ import (
 	"cosmossdk.io/errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/evmos/ethermint/utils"
 	"strings"
 )
 
@@ -163,11 +163,10 @@ func (m VFCExecutionResult) GetDetailedResult(startGas uint64) (success bool, re
 			retErrorContent = m.vmErr.Error()
 		}
 
-		bzRet, err := abiErrorString.Pack(retErrorContent)
-		if err != nil {
-			panic(err)
-		}
-		ret = append([]byte{0x08, 0xc3, 0x79, 0xa0}, bzRet...)
+		ret = append(
+			[]byte{0x08, 0xc3, 0x79, 0xa0}, // signature
+			utils.MustAbiEncodeString(retErrorContent)...,
+		)
 	}
 
 	if gasToConsume > startGas {
@@ -177,22 +176,4 @@ func (m VFCExecutionResult) GetDetailedResult(startGas uint64) (success bool, re
 	leftOverGas = startGas - gasToConsume // overflow had been checked just above
 
 	return
-}
-
-var abiTypeString abi.Type
-var abiErrorString abi.Arguments
-
-func init() {
-	var err error
-	abiTypeString, err = abi.NewType("string", "string", nil)
-	if err != nil {
-		panic(err)
-	}
-
-	abiErrorString = abi.Arguments{
-		abi.Argument{
-			Name: "content",
-			Type: abiTypeString,
-		},
-	}
 }
