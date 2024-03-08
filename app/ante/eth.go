@@ -399,7 +399,7 @@ func (ctd VirtualFrontierContractDecorator) AnteHandle(ctx sdk.Context, tx sdk.T
 		ethTx := msgEthTx.AsTransaction()
 
 		if ethTx.To() == nil {
-			// nothing to do
+			// contract creation tx => none of business
 			continue
 		}
 
@@ -419,14 +419,14 @@ func (ctd VirtualFrontierContractDecorator) AnteHandle(ctx sdk.Context, tx sdk.T
 		}
 
 		// can only call to VF contract
-		if len(ethTx.Data()) < 1 {
+		if len(ethTx.Data()) < 4 /*at least 4 bytes sig*/ {
 			return ctx, errorsmod.Wrapf(
 				evmtypes.ErrProhibitedAccessingVirtualFrontierContract,
 				"can not transfer directly to virtual frontier contract address %s", to,
 			)
 		}
 
-		// seems ok now
+		// all check passed, it is safe to call the contract
 	}
 
 	return next(ctx, tx, simulate)
