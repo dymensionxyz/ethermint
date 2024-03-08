@@ -276,8 +276,8 @@ func (_m *EVMQueryClient) EthCall(ctx context.Context, in *types.EthCallRequest,
 	return r0, r1
 }
 
-// ListVirtualFrontierContractByAddress provides a mock function with given fields: ctx, in, opts
-func (_m *EVMQueryClient) ListVirtualFrontierContractByAddress(ctx context.Context, in *types.QueryVirtualFrontierContractByAddressRequest, opts ...grpc.CallOption) (*types.QueryVirtualFrontierContractByAddressResponse, error) {
+// ListVirtualFrontierBankContracts provides a mock function with given fields: ctx, in, opts
+func (_m *EVMQueryClient) ListVirtualFrontierBankContracts(ctx context.Context, in *types.QueryVirtualFrontierBankContractsRequest, opts ...grpc.CallOption) (*types.QueryVirtualFrontierBankContractsResponse, error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -288,23 +288,23 @@ func (_m *EVMQueryClient) ListVirtualFrontierContractByAddress(ctx context.Conte
 	ret := _m.Called(_ca...)
 
 	if len(ret) == 0 {
-		panic("no return value specified for ListVirtualFrontierContractByAddress")
+		panic("no return value specified for ListVirtualFrontierBankContracts")
 	}
 
-	var r0 *types.QueryVirtualFrontierContractByAddressResponse
+	var r0 *types.QueryVirtualFrontierBankContractsResponse
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVirtualFrontierContractByAddressRequest, ...grpc.CallOption) (*types.QueryVirtualFrontierContractByAddressResponse, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVirtualFrontierBankContractsRequest, ...grpc.CallOption) (*types.QueryVirtualFrontierBankContractsResponse, error)); ok {
 		return rf(ctx, in, opts...)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVirtualFrontierContractByAddressRequest, ...grpc.CallOption) *types.QueryVirtualFrontierContractByAddressResponse); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVirtualFrontierBankContractsRequest, ...grpc.CallOption) *types.QueryVirtualFrontierBankContractsResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.QueryVirtualFrontierContractByAddressResponse)
+			r0 = ret.Get(0).(*types.QueryVirtualFrontierBankContractsResponse)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, *types.QueryVirtualFrontierContractByAddressRequest, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *types.QueryVirtualFrontierBankContractsRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -572,6 +572,42 @@ func (_m *EVMQueryClient) VirtualFrontierBankContractByDenom(ctx context.Context
 	return r0, r1
 }
 
+// VirtualFrontierContractByAddress provides a mock function with given fields: ctx, in, opts
+func (_m *EVMQueryClient) VirtualFrontierContractByAddress(ctx context.Context, in *types.QueryVirtualFrontierContractByAddressRequest, opts ...grpc.CallOption) (*types.QueryVirtualFrontierContractByAddressResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VirtualFrontierContractByAddress")
+	}
+
+	var r0 *types.QueryVirtualFrontierContractByAddressResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVirtualFrontierContractByAddressRequest, ...grpc.CallOption) (*types.QueryVirtualFrontierContractByAddressResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *types.QueryVirtualFrontierContractByAddressRequest, ...grpc.CallOption) *types.QueryVirtualFrontierContractByAddressResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.QueryVirtualFrontierContractByAddressResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *types.QueryVirtualFrontierContractByAddressRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
 type mockConstructorTestingTNewEVMQueryClient interface {
 	mock.TestingT
 	Cleanup(func())
