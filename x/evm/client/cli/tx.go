@@ -141,23 +141,19 @@ func NewUpdateVirtualFrontierBankContractCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   fmt.Sprintf("%s PROPOSAL_FILE", cmdCode),
 		Args:  cobra.ExactArgs(1),
-		Short: "Submit a proposal that make change to the virtual frontier bank contract",
-		Long:  `Submit a proposal that make change to the virtual frontier bank contract. The proposal details must be provided via a JSON file.`,
+		Short: "Submit a proposal that toggle enable/disable of the virtual frontier bank contract",
+		Long:  `Submit a proposal that toggle enable/disable of the virtual frontier bank contract. The proposal details must be provided via a JSON file.`,
 		Example: fmt.Sprintf(`$ %s tx gov submit-legacy-proposal %s proposal_file.json --from=<key_or_address>
 
 Sample proposal file content:
-// all fields are required, eg: "exponent" if absent, is zero
+// all fields are required
 {
   "contracts": [{
-      "contract_address": "0x...2",
-      "active": true,
-      "display_name": "OSMO",
-      "exponent": 6
+      "contract_address": "0x1...1",
+      "active": true
   },{
-      "contract_address": "0x...1",
-      "active": false,
-      "display_name": "Suspended-OSMO",
-      "exponent": 6
+      "contract_address": "0x2...2",
+      "active": false
   }]
 }`,
 			version.AppName,
