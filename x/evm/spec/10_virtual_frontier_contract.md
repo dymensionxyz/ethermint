@@ -8,7 +8,6 @@ Author: [Victor Pham](https://github.com/VictorTrustyDev)
 Virtual Frontier Contract is
 - A new type of smart contract in Ethermint fork version of Dymension.
 - A contract that can be interacted directly via Metamask or other Ethereum wallets.
-- A contract that is virtualized and does not exist on the blockchain.
 - Open ways to interact with Cosmos blockchain business logic via MM or other Ethereum wallets.
 
 Sub-types:
@@ -19,17 +18,21 @@ Technical notes:
 - Prohibit to communicated within EVM.
 - Should not receive funds. If received, it results lost forever. Currently, when an Ethereum tx, with value != 0 (direct transfer or payable method call), are aborted. Not yet any implementation to prevent from Cosmos side.
 - New module store: Contract and meta corresponds to the sub-type.
+- Still a smart contract with its own _address, account state, nonce, code hash, code and deployed bytecode_. Except that the deployed bytecode is not used during execution.
 
 # Virtual Frontier Bank Contract
 
 Virtual Frontier Bank Contract is
 - Virtual Frontier Contract.
 - A contract, simulated ERC-20 spec, allowed user to import to MM or other Ethereum wallets and can be used to transfer Cosmos bank assets via the wallets.
-- Automatically deployed when there is a new denom metadata created in bank module.
+- Deployed follow denom metadata created in bank module.
+  - On Dymension, new contracts deployment will be triggered daily via epoch module.
+  - On Ethermint dev chain, new contracts deployment will be done automatically in next block, right after new bank denom metadata records are created.
 
 Technical notes:
-- New module store: Mapping from denom to contract address.
-- Check bank denom metadata in begin block and deploy the valid ones.
+- New module stores:
+  - Holding the contract information, mapped by address.
+  - Mapping from denom to contract address.
 - Can be switch activation state via gov: `ethermintd tx gov submit-legacy-proposal update-vfc-bank proposal_file.json`.
 - ERC-20 compatible:
   - Support:
