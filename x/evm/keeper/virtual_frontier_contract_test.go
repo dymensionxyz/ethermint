@@ -298,6 +298,22 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 		suite.NotEmpty(contractAccount.CodeHash, "contract account should have code hash")
 		suite.NotEmpty(suite.app.EvmKeeper.GetCode(suite.ctx, common.BytesToHash(contractAccount.CodeHash)), "contract account should have code")
 	})
+
+	suite.Run("do not accept denom that exponent overflow of uint8", func() {
+		meta3 := testutil.NewBankDenomMetadata("ibc/prohibited", 1)
+		meta3.DenomUnits[1].Exponent = math.MaxUint8 + 1
+
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta3)
+
+		vfbcMeta3, _ := types.CollectMetadataForVirtualFrontierBankContract(meta3)
+		suite.Panics(func() {
+			_, _ = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
+				Active: true,
+			}, &types.VFBankContractMetadata{
+				MinDenom: vfbcMeta3.MinDenom,
+			}, &vfbcMeta3)
+		})
+	})
 }
 
 func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierContract() {

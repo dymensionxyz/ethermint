@@ -185,7 +185,7 @@ func (k Keeper) DeployNewVirtualFrontierBankContract(
 	bankMeta *types.VFBankContractMetadata,
 	denomMetadata *types.VirtualFrontierBankContractDenomMetadata,
 ) (common.Address, error) {
-	if !denomMetadata.CanDecimalsUint8() { // TODO VFC: add check upon calling this method.
+	if !denomMetadata.CanDecimalsUint8() {
 		panic(fmt.Sprintf("decimals does not fit uint8: %v", denomMetadata.Decimals))
 	}
 
