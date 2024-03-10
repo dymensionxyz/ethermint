@@ -36,7 +36,7 @@ func (k Keeper) UpdateVirtualFrontierBankContracts(
 			return nil, sdkerrors.ErrUnknownAddress.Wrapf("virtual frontier contract %s not found", contractAddress.String())
 		}
 
-		if vfContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+		if vfContract.Type != types.VFC_TYPE_BANK {
 			return nil, sdkerrors.ErrInvalidRequest.Wrapf("%s is not a virtual frontier bank contract", contractAddress.String())
 		}
 
@@ -60,7 +60,7 @@ func (k Keeper) UpdateVirtualFrontierBankContracts(
 
 	var updatedAddressList []common.Address
 
-	for address, _ := range uniqueTracker {
+	for address := range uniqueTracker {
 		updatedAddressList = append(updatedAddressList, address)
 	}
 

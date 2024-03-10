@@ -189,7 +189,7 @@ func (k Keeper) DeployNewVirtualFrontierBankContract(
 		panic(fmt.Sprintf("decimals does not fit uint8: %v", denomMetadata.Decimals))
 	}
 
-	vfContract.Type = uint32(types.VirtualFrontierContractTypeBankContract)
+	vfContract.Type = types.VFC_TYPE_BANK
 	vfContract.Metadata = k.cdc.MustMarshal(bankMeta)
 
 	callData, err := PrepareBytecodeForVirtualFrontierBankContractDeployment(denomMetadata.Name, uint8(denomMetadata.Decimals))

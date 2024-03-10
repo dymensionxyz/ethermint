@@ -37,7 +37,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         false,
@@ -48,7 +48,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "0x0000000000000000000000000000000000000000",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -59,7 +59,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae100", // 21 bytes
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -70,7 +70,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -81,7 +81,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "0xAA5b96e2538ac85ee862e332fa634b158d013aBB",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -92,7 +92,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -109,11 +109,11 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			wantErrContains: "type must be specified",
 		},
 		{
-			name: "type must be specified (unknown type)",
+			name: "type must be specified",
 			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeUnknown),
+				Type:     types.VFC_TYPE_UNSPECIFIED,
 				Metadata: validVFBankContractMetadataBz,
 			},
 			wantErr:         true,
@@ -124,7 +124,7 @@ func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
 			contract: types.VirtualFrontierContract{
 				Address:  "0x405b96e2538ac85ee862e332fa634b158d013ae1",
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: invalidVFBankContractMetadataBz,
 			},
 			wantErr:         true,

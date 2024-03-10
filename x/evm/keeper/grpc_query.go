@@ -650,7 +650,7 @@ func (k Keeper) generateJsonOfVirtualFrontierContract(ctx context.Context, cdc c
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	switch vfContract.Type {
-	case uint32(types.VirtualFrontierContractTypeBankContract):
+	case types.VFC_TYPE_BANK:
 		var bankMeta types.VFBankContractMetadata
 		cdc.MustUnmarshal(vfContract.Metadata, &bankMeta)
 
@@ -756,7 +756,7 @@ func (k Keeper) VirtualFrontierBankContractByDenom(ctx context.Context, request 
 		return nil, status.Errorf(codes.NotFound, "contract %s not found", contractAddress)
 	}
 
-	if vfContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+	if vfContract.Type != types.VFC_TYPE_BANK {
 		return nil, status.Errorf(codes.Internal, "contract %s is not a bank contract", contractAddress)
 	}
 
@@ -798,7 +798,7 @@ func (k Keeper) ListVirtualFrontierBankContracts(ctx context.Context, req *types
 	vfcStore := prefix.NewStore(store, types.KeyPrefixVirtualFrontierContract)
 
 	vfContracts, pageRes, err := query.GenericFilteredPaginate(k.cdc, vfcStore, req.Pagination, func(key []byte, vfc *types.VirtualFrontierContract) (*types.VirtualFrontierContract, error) {
-		if vfc.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+		if vfc.Type != types.VFC_TYPE_BANK {
 			return nil, nil // exclude non-bank contracts
 		}
 

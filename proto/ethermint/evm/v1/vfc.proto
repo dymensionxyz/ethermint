@@ -1,0 +1,57 @@
+syntax = "proto3";
+package ethermint.evm.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/evmos/ethermint/x/evm/types";
+
+// VFContractType is the type of the virtual frontier contract
+enum VFContractType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  VFC_TYPE_UNSPECIFIED = 0;
+
+  // VFC_TYPE_BANK indicates the VFC is a Virtual Frontier Bank Contract
+  VFC_TYPE_BANK = 1;
+}
+
+
+// VirtualFrontierContract are virtual contracts that able to call directly without actual invoking EVM.
+// Prohibited to call directly from EVM.
+message VirtualFrontierContract {
+  // address is the contract address
+  string address = 1;
+  // active indicate the activation of the contract. If not active, invoking methods is disabled.
+  bool active = 2;
+  // type of the virtual frontier contract
+  VFContractType type = 3;
+  // metadata contains marshalled binary of the metadata of the virtual frontier contract
+  bytes metadata = 4;
+}
+
+// VFBankContractMetadata contains metadata of the Bank Contract, which represents ERC-20 contracts as proxy of the user bank assets.
+// Each bank contract is represented as a single asset of user bank.
+message VFBankContractMetadata {
+  // min_denom is the base denomination of the asset
+  string min_denom = 1;
+}
+
+// UpdateVirtualFrontierBankContractsProposal is a gov Content type to update the virtual frontier bank contracts.
+message UpdateVirtualFrontierBankContractsProposal {
+  option (gogoproto.equal) = false;
+  // title of the proposal
+  string title = 1;
+  // description of the proposal
+  string description = 2;
+  // contracts is slice of the update content for each contract
+  repeated VirtualFrontierBankContractProposalContent contracts = 3 [(gogoproto.nullable) = false];
+}
+
+// VirtualFrontierBankContractProposalContent contains the adjustment to the virtual frontier bank contract.
+// Currently only used to toggle activation of the contract.
+message VirtualFrontierBankContractProposalContent {
+  // contract_address that want to be updated
+  string contract_address = 1;
+  // active indicate the activation of the contract. If not active, invoking methods is disabled.
+  bool active = 2;
+}

@@ -33,7 +33,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			suite.ctx,
 			&types.VirtualFrontierContract{
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: nil,
 			},
 			&types.VFBankContractMetadata{
@@ -51,7 +51,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 			suite.ctx,
 			&types.VirtualFrontierContract{
 				Active:   true,
-				Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+				Type:     types.VFC_TYPE_BANK,
 				Metadata: nil,
 			},
 			&types.VFBankContractMetadata{
@@ -173,7 +173,7 @@ func (suite KeeperTestSuite) TestUpdateVirtualFrontierBankContracts() {
 
 				suite.Equal(strings.ToLower(updateContent.ContractAddress), vfContract.Address)
 				suite.Equal(updateContent.Active, vfContract.Active)
-				suite.Equal(uint32(types.VirtualFrontierContractTypeBankContract), vfContract.Type)
+				suite.Equal(types.VFC_TYPE_BANK, vfContract.Type)
 				if suite.NotEmpty(vfContract.Metadata) {
 					var bankContractMeta types.VFBankContractMetadata
 					suite.NoError(suite.appCodec.Unmarshal(vfContract.Metadata, &bankContractMeta))

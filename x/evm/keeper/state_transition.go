@@ -480,8 +480,8 @@ func (k *Keeper) proxiedEvmCall(ctx sdk.Context, evm evm.EVM, stateDB vm.StateDB
 		} else if !vfContract.Active {
 			vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr.String()))
 		} else {
-			switch types.VirtualFrontierContractType(vfContract.Type) {
-			case types.VirtualFrontierContractTypeBankContract:
+			switch vfContract.Type {
+			case types.VFC_TYPE_BANK:
 				vfcExecResult = k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
 
 				break
@@ -510,7 +510,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 ) *types.VFCExecutionResult {
 	compiledVFContract := types.VFBankContract20
 
-	if virtualFrontierContract.Type != uint32(types.VirtualFrontierContractTypeBankContract) {
+	if virtualFrontierContract.Type != types.VFC_TYPE_BANK {
 		return types.NewExecVFCError(fmt.Errorf("not a bank contract"))
 	}
 

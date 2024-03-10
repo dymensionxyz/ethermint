@@ -10,13 +10,6 @@ import (
 	"strings"
 )
 
-type VirtualFrontierContractType uint32
-
-const (
-	VirtualFrontierContractTypeUnknown VirtualFrontierContractType = iota
-	VirtualFrontierContractTypeBankContract
-)
-
 // ValidateBasic performs basic validation of the VirtualFrontierContract fields
 func (m *VirtualFrontierContract) ValidateBasic(cdc codec.BinaryCodec) error {
 	emptyAddress := common.Address{}
@@ -37,8 +30,8 @@ func (m *VirtualFrontierContract) ValidateBasic(cdc codec.BinaryCodec) error {
 		return fmt.Errorf("metadata cannot be empty")
 	}
 
-	switch VirtualFrontierContractType(m.Type) {
-	case VirtualFrontierContractTypeBankContract:
+	switch m.Type {
+	case VFC_TYPE_BANK:
 		var bankContractMetadata VFBankContractMetadata
 		var err error
 
@@ -52,8 +45,6 @@ func (m *VirtualFrontierContract) ValidateBasic(cdc codec.BinaryCodec) error {
 		}
 
 		break
-	case VirtualFrontierContractTypeUnknown:
-		return fmt.Errorf("type must be specified")
 	default:
 		return fmt.Errorf("type must be specified")
 	}
@@ -68,8 +59,8 @@ func (m *VirtualFrontierContract) ContractAddress() common.Address {
 
 // GetTypeName returns the human-readable type name of the type of the VirtualFrontierContract
 func (m *VirtualFrontierContract) GetTypeName() string {
-	switch VirtualFrontierContractType(m.Type) {
-	case VirtualFrontierContractTypeBankContract:
+	switch m.Type {
+	case VFC_TYPE_BANK:
 		return "bank"
 	default:
 		return ""

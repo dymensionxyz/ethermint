@@ -291,8 +291,9 @@ func (suite *EthRpcTestSuite) Test_AllGetTransaction_VFC() {
 		return msgEthereumTx
 	}
 
-	const initialGas = 21572
-	const exactGasConsumption = initialGas + evmtypes.VFBCopgTransfer
+	const intrinsicGas = 21572
+	const exactGasConsumption = intrinsicGas + evmtypes.VFBCopgTransfer
+
 	testsGas := []struct {
 		name        string
 		gas         uint64

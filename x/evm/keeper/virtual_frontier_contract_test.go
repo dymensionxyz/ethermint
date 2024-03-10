@@ -34,7 +34,7 @@ func (m virtualFrontierBankContract) convert(cdc codec.Codec) *types.VirtualFron
 	return &types.VirtualFrontierContract{
 		Address:  m.Address,
 		Active:   m.Active,
-		Type:     uint32(types.VirtualFrontierContractTypeBankContract),
+		Type:     types.VFC_TYPE_BANK,
 		Metadata: bz,
 	}
 }
