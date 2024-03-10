@@ -14,7 +14,7 @@ func (suite *EthRpcTestSuite) Test_AllGetTransaction_VFC() {
 	deployer := suite.CITS.WalletAccounts.Number(1)
 	tokenOwner := suite.CITS.WalletAccounts.Number(2)
 	senderOfVfbc := suite.CITS.WalletAccounts.Number(3)
-	receiver := integration_test_util.NewTestAccount(suite.T(), nil)
+	receiver := suite.CITS.WalletAccounts.Number(4)
 
 	suite.CITS.MintCoin(tokenOwner, suite.CITS.NewBaseCoin(10))
 	suite.CITS.MintCoin(senderOfVfbc, suite.CITS.NewBaseCoin(10))
