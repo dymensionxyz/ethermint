@@ -285,6 +285,8 @@ func (k *Keeper) GetAccountWithoutBalance(ctx sdk.Context, addr common.Address) 
 	ethAcct, ok := acct.(ethermint.EthAccountI)
 	if ok {
 		codeHash = ethAcct.GetCodeHash().Bytes()
+	} else if k.IsVirtualFrontierContract(ctx, addr) {
+		codeHash = types.VFBCCodeHash
 	}
 
 	return &statedb.Account{

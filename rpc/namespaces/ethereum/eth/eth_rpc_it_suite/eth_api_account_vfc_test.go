@@ -1,9 +1,13 @@
 package demo
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/evmos/ethermint/integration_test_util"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	"github.com/evmos/ethermint/testutil"
+	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite *EthRpcTestSuite) Test_GetCode_VFC() {
@@ -61,4 +65,31 @@ func (suite *EthRpcTestSuite) Test_GetCode_VFC() {
 	codeOfVfbcContractAddressOfNative := code
 
 	suite.Equal(codeOfVfbcContractAddressOfIbcAtom, codeOfVfbcContractAddressOfNative, "deployed bytecode of the genesis deployed VFBC must be equals to consensus-deployed ones")
+
+	suite.Run("code for VFC account but proto is not EthAccount", func() {
+		acc := suite.App().AccountKeeper().GetAccount(suite.Ctx(), vfbcContractAddressOfNative.Bytes())
+
+		if _, isEthAccount := acc.(*ethermint.EthAccount); isEthAccount {
+			// change account type
+			baseAcc := authtypes.BaseAccount{}
+			baseAcc.SetAddress(acc.GetAddress())
+			baseAcc.SetPubKey(acc.GetPubKey())
+			baseAcc.SetAccountNumber(acc.GetAccountNumber())
+			baseAcc.SetSequence(acc.GetSequence())
+			suite.App().AccountKeeper().SetAccount(suite.Ctx(), &baseAcc)
+
+			// ensure account overridden
+			acc2 := suite.App().AccountKeeper().GetAccount(suite.Ctx(), vfbcContractAddressOfNative.Bytes())
+			_, isBaseAccount := acc2.(*authtypes.BaseAccount)
+			suite.Require().True(isBaseAccount, "account must be overridden to a BaseAccount")
+		}
+
+		code, err = ethPublicApi.GetCode(vfbcContractAddressOfNative, latestBlock)
+		suite.Require().NoError(err, "failed to get code")
+		suite.Equal(
+			hexutil.Bytes(types.VFBCCode),
+			code,
+			"code hash must be mapped correctly",
+		)
+	})
 }

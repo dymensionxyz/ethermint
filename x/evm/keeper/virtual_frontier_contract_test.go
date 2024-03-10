@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -313,6 +314,66 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 				MinDenom: vfbcMeta3.MinDenom,
 			}, &vfbcMeta3)
 		})
+	})
+}
+
+func (suite *KeeperTestSuite) TestDeployedVirtualFrontierBankContracts() {
+	meta1 := testutil.NewBankDenomMetadata("ibc/uatomAABBCC", 6)
+	meta2 := testutil.NewBankDenomMetadata("ibc/uosmoXXYYZZ", 6)
+
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta1)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta2)
+
+	vfbcMeta1, _ := types.CollectMetadataForVirtualFrontierBankContract(meta1)
+	vfbcMeta2, _ := types.CollectMetadataForVirtualFrontierBankContract(meta2)
+
+	addrAtom, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
+		Active: false,
+	}, &types.VFBankContractMetadata{
+		MinDenom: meta1.Base,
+	}, &vfbcMeta1)
+	suite.Require().NoError(err)
+
+	addrOsmo, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
+		Active: true,
+	}, &types.VFBankContractMetadata{
+		MinDenom: meta2.Base,
+	}, &vfbcMeta2)
+	suite.Require().NoError(err)
+
+	suite.Run("deployment code must equals to the hard-coded one", func() {
+		for _, contractAddress := range []common.Address{addrAtom, addrOsmo} {
+			suite.Equal(types.VFBCCodeHash, suite.app.EvmKeeper.GetAccount(suite.ctx, contractAddress).CodeHash)
+		}
+	})
+
+	suite.Run("deployed bytecode must correctly mapped", func() {
+		suite.Equal(types.VFBCCode, suite.app.EvmKeeper.GetCode(suite.ctx, common.BytesToHash(types.VFBCCodeHash)))
+	})
+
+	suite.Run("code hash for VFC account but proto is not EthAccount", func() {
+		acc := suite.app.AccountKeeper.GetAccount(suite.ctx, addrAtom.Bytes())
+
+		if _, isEthAccount := acc.(*ethermint.EthAccount); isEthAccount {
+			// change account type
+			baseAcc := authtypes.BaseAccount{}
+			baseAcc.SetAddress(acc.GetAddress())
+			baseAcc.SetPubKey(acc.GetPubKey())
+			baseAcc.SetAccountNumber(acc.GetAccountNumber())
+			baseAcc.SetSequence(acc.GetSequence())
+			suite.app.AccountKeeper.SetAccount(suite.ctx, &baseAcc)
+
+			// ensure account overridden
+			acc2 := suite.app.AccountKeeper.GetAccount(suite.ctx, addrAtom.Bytes())
+			_, isBaseAccount := acc2.(*authtypes.BaseAccount)
+			suite.Require().True(isBaseAccount, "account must be overridden to a BaseAccount")
+		}
+
+		suite.Equal(
+			types.VFBCCodeHash,
+			suite.app.EvmKeeper.GetAccount(suite.ctx, addrAtom).CodeHash,
+			"code hash must be mapped correctly",
+		)
 	})
 }
 
