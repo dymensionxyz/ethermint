@@ -194,8 +194,8 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 		contractAddress1 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerNonce+0)
 		contractAddress2 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerNonce+1)
 
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress1))
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress2))
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress1), "bad setup")
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress2), "bad setup")
 
 		// branch a context so inner commit doesn't affect the original ctx
 		topLevelCtx, _ := suite.ctx.CacheContext()
@@ -229,16 +229,19 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 		// ensure contracts are deployed in expected order, meta 1 then meta 2 (basically a nonce comparison)
 		foundAddr1, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(firstTestCtx, meta1.Base)
 		suite.Require().True(found)
-		suite.Require().Equal(contractAddress1, foundAddr1)
+		suite.Require().Equal(contractAddress1, foundAddr1, "bad setup, expected meta1 will be deployed first, then meta2")
+		foundAddr2, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(firstTestCtx, meta2.Base)
+		suite.Require().True(found)
+		suite.Require().Equal(contractAddress2, foundAddr2, "bad setup, expected meta1 will be deployed first, then meta2")
 
-		// ** Second round, deploy contracts, ensure success
+		// ** Second round, deploy contracts, expect error, ensure no change made
 
 		// branch a context so inner commit doesn't affect the original ctx
 		secondTestCtx, _ := topLevelCtx.CacheContext()
 
-		// ensure this effective context does not have the metadata
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress1))
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress2))
+		// ensure this effective context does not have any contract deployed
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress1), "bad setup")
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress2), "bad setup")
 
 		// create a contract account for the meta2, so when creating VFBC for the second meta, it would fail,
 		// thus trigger the expected rollback.
@@ -252,10 +255,10 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 		deploy(secondTestCtx)
 
 		// contracts must NOT be deployed
-		suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta1.Base))
-		suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta2.Base))
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress1))
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress2))
+		suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta1.Base))
+		suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta2.Base))
+		suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress1))
+		suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress2))
 	})
 }
 
