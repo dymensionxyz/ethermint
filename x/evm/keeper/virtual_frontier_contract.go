@@ -118,11 +118,12 @@ func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Cont
 }
 
 // DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords deploys a new virtual frontier bank contract
-// for each bank denom metadata record
+// for each bank denom metadata record.
+// If any error occurs, the function will return immediately and the changes will be rolled back.
 func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	ctx sdk.Context,
 	filterDenomOrDefaultIbcOnly func(metadata banktypes.Metadata) bool,
-) error {
+) {
 	if filterDenomOrDefaultIbcOnly == nil {
 		filterDenomOrDefaultIbcOnly = func(metadata banktypes.Metadata) bool {
 			return strings.HasPrefix(metadata.Base, "ibc/")
@@ -155,26 +156,38 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	})
 
 	if len(newRecords) < 1 {
-		return nil
+		return
 	}
 
-	params := k.GetParams(ctx)
+	cachedCtx, commitFunc := ctx.CacheContext() // branching the store
+
+	var err error
+
+	defer func() {
+		if err == nil {
+			commitFunc() // commit changes to the store
+		} else {
+			k.Logger(ctx).Error("failed to deploy virtual frontier bank contract for all bank denom metadata records", "error", err.Error())
+		}
+	}()
+
+	params := k.GetParams(cachedCtx)
 
 	for _, record := range newRecords {
 		activate := record.MinDenom != params.EvmDenom // contract for native denom should be disabled
 
-		_, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
+		_, err = k.DeployNewVirtualFrontierBankContract(cachedCtx, &types.VirtualFrontierContract{
 			Active: activate,
 		}, &types.VFBankContractMetadata{
 			MinDenom: record.MinDenom,
 		}, &record)
 
 		if err != nil {
-			return err
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 // DeployNewVirtualFrontierBankContract deploys a new virtual frontier bank contract into the store
