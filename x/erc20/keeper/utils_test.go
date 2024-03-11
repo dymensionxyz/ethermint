@@ -28,13 +28,10 @@ import (
 	"github.com/evmos/ethermint/server/config"
 	"github.com/evmos/ethermint/tests"
 	"github.com/evmos/ethermint/testutil"
-	teststypes "github.com/evmos/ethermint/types/tests"
-	claimstypes "github.com/evmos/ethermint/x/claims/types"
+	teststypes "github.com/evmos/ethermint/testutil/types"
 	"github.com/evmos/ethermint/x/erc20/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evm "github.com/evmos/ethermint/x/evm/types"
-	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	inflationtypes "github.com/evmos/ethermint/x/inflation/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -72,7 +69,7 @@ func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 	suite.consAddress = consAddress
 
 	// init app
-	suite.app = app.Setup(false, feemarkettypes.DefaultGenesisState())
+	suite.app = app.Setup(false, nil)
 	header := testutil.NewHeader(
 		1, time.Now().UTC(), "evmos_9001-1", consAddress, nil, nil,
 	)
@@ -89,11 +86,11 @@ func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 
 	// bond denom
 	stakingParams := suite.app.StakingKeeper.GetParams(suite.ctx)
-	stakingParams.BondDenom = testutil.BaseDenom
+	stakingParams.BondDenom = teststypes.BaseDenom
 	suite.app.StakingKeeper.SetParams(suite.ctx, stakingParams)
 
 	evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
-	evmParams.EvmDenom = testutil.BaseDenom
+	evmParams.EvmDenom = teststypes.BaseDenom
 	err = suite.app.EvmKeeper.SetParams(suite.ctx, evmParams)
 	require.NoError(t, err)
 
@@ -113,7 +110,7 @@ func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 		suite.ctx,
 		suite.app.BankKeeper,
 		suite.priv.PubKey().Address().Bytes(),
-		sdk.NewCoins(sdk.NewCoin(testutil.BaseDenom, amt)),
+		sdk.NewCoins(sdk.NewCoin(teststypes.BaseDenom, amt)),
 	)
 	suite.Require().NoError(err)
 
@@ -145,7 +142,7 @@ func (suite *KeeperTestSuite) SetupIBCTest() {
 
 	s.app = suite.EvmosChain.App.(*app.EthermintApp)
 	evmParams := s.app.EvmKeeper.GetParams(s.EvmosChain.GetContext())
-	evmParams.EvmDenom = testutil.BaseDenom
+	evmParams.EvmDenom = teststypes.BaseDenom
 	err := s.app.EvmKeeper.SetParams(s.EvmosChain.GetContext(), evmParams)
 	suite.Require().NoError(err)
 
@@ -168,11 +165,11 @@ func (suite *KeeperTestSuite) SetupIBCTest() {
 	// Mint coins locked on the evmos account generated with secp.
 	amt, ok := sdk.NewIntFromString("1000000000000000000000")
 	suite.Require().True(ok)
-	coinEvmos := sdk.NewCoin(testutil.BaseDenom, amt)
+	coinEvmos := sdk.NewCoin(teststypes.BaseDenom, amt)
 	coins := sdk.NewCoins(coinEvmos)
-	err = s.app.BankKeeper.MintCoins(suite.EvmosChain.GetContext(), inflationtypes.ModuleName, coins)
+	err = s.app.BankKeeper.MintCoins(suite.EvmosChain.GetContext(), minttypes.ModuleName, coins)
 	suite.Require().NoError(err)
-	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(suite.EvmosChain.GetContext(), inflationtypes.ModuleName, suite.EvmosChain.SenderAccount.GetAddress(), coins)
+	err = s.app.BankKeeper.SendCoinsFromModuleToAccount(suite.EvmosChain.GetContext(), minttypes.ModuleName, suite.EvmosChain.SenderAccount.GetAddress(), coins)
 	suite.Require().NoError(err)
 
 	// we need some coins in the bankkeeper to be able to register the coins later
@@ -212,11 +209,11 @@ func (suite *KeeperTestSuite) SetupIBCTest() {
 	err = suite.IBCCosmosChain.GetSimApp().BankKeeper.SendCoinsFromModuleToAccount(suite.IBCCosmosChain.GetContext(), minttypes.ModuleName, suite.IBCCosmosChain.SenderAccount.GetAddress(), stkCoin)
 	suite.Require().NoError(err)
 
-	claimparams := claimstypes.DefaultParams()
-	claimparams.AirdropStartTime = suite.EvmosChain.GetContext().BlockTime()
-	claimparams.EnableClaims = true
-	err = s.app.ClaimsKeeper.SetParams(suite.EvmosChain.GetContext(), claimparams)
-	suite.Require().NoError(err)
+	// claimparams := claimstypes.DefaultParams()
+	// claimparams.AirdropStartTime = suite.EvmosChain.GetContext().BlockTime()
+	// claimparams.EnableClaims = true
+	// err = s.app.ClaimsKeeper.SetParams(suite.EvmosChain.GetContext(), claimparams)
+	// suite.Require().NoError(err)
 
 	params := types.DefaultParams()
 	params.EnableErc20 = true
@@ -233,7 +230,7 @@ func (suite *KeeperTestSuite) SetupIBCTest() {
 	suite.Require().Equal("connection-0", suite.pathOsmosisEvmos.EndpointA.ConnectionID)
 	suite.Require().Equal("channel-0", suite.pathOsmosisEvmos.EndpointA.ChannelID)
 
-	coinEvmos = sdk.NewCoin(testutil.BaseDenom, sdk.NewInt(1000000000000000000))
+	coinEvmos = sdk.NewCoin(teststypes.BaseDenom, sdk.NewInt(1000000000000000000))
 	coins = sdk.NewCoins(coinEvmos)
 	err = s.app.BankKeeper.MintCoins(suite.EvmosChain.GetContext(), types.ModuleName, coins)
 	suite.Require().NoError(err)
@@ -271,17 +268,7 @@ func (suite *KeeperTestSuite) sendTx(contractAddr, from common.Address, transfer
 	// Mint the max gas to the FeeCollector to ensure balance in case of refund
 	evmParams := suite.app.EvmKeeper.GetParams(suite.ctx)
 	suite.MintFeeCollector(sdk.NewCoins(sdk.NewCoin(evmParams.EvmDenom, sdk.NewInt(suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx).Int64()*int64(res.Gas)))))
-	ercTransferTxParams := &evm.EvmTxArgs{
-		ChainID:   chainID,
-		Nonce:     nonce,
-		To:        &contractAddr,
-		GasLimit:  res.Gas,
-		GasFeeCap: suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx),
-		GasTipCap: big.NewInt(1),
-		Input:     transferData,
-		Accesses:  &ethtypes.AccessList{},
-	}
-	ercTransferTx := evm.NewTx(ercTransferTxParams)
+	ercTransferTx := evm.NewTx(chainID, nonce, &contractAddr, nil, res.Gas, suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx), big.NewInt(1), big.NewInt(1), transferData, &ethtypes.AccessList{})
 
 	ercTransferTx.From = suite.address.Hex()
 	err = ercTransferTx.Sign(ethtypes.LatestSignerForChainID(chainID), suite.signer)

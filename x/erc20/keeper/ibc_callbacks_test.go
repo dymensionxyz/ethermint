@@ -249,9 +249,9 @@ func (suite *KeeperTestSuite) TestOnRecvPacket() {
 		{
 			name: "ibc conversion - sender == receiver and from evm chain",
 			malleate: func() {
-				claimsParams := suite.app.ClaimsKeeper.GetParams(suite.ctx)
-				claimsParams.EVMChannels = []string{evmosChannel}
-				suite.app.ClaimsKeeper.SetParams(suite.ctx, claimsParams) //nolint:errcheck
+				// claimsParams := suite.app.ClaimsKeeper.GetParams(suite.ctx)
+				// claimsParams.EVMChannels = []string{evmosChannel}
+				// suite.app.ClaimsKeeper.SetParams(suite.ctx, claimsParams) //nolint:errcheck
 
 				sourcePrefix := transfertypes.GetDenomPrefix(transfertypes.PortID, sourceChannel)
 				prefixedDenom := sourcePrefix + registeredDenom
