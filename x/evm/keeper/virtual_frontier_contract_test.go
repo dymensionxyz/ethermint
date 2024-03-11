@@ -307,13 +307,15 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta3)
 
 		vfbcMeta3, _ := types.CollectMetadataForVirtualFrontierBankContract(meta3)
-		suite.Panics(func() {
-			_, _ = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
-				Active: true,
-			}, &types.VFBankContractMetadata{
-				MinDenom: vfbcMeta3.MinDenom,
-			}, &vfbcMeta3)
-		})
+		_, err = suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(suite.ctx, &types.VirtualFrontierContract{
+			Active: true,
+		}, &types.VFBankContractMetadata{
+			MinDenom: vfbcMeta3.MinDenom,
+		}, &vfbcMeta3)
+
+		if suite.NotNil(err) {
+			suite.Contains(err.Error(), "decimals does not fit uint8")
+		}
 	})
 }
 
