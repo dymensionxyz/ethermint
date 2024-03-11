@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -255,13 +254,9 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 	nonce := deployerModuleAccount.GetSequence()
 	contractAddress = crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, nonce)
 	contractAccount := k.GetAccount(ctx, contractAddress)
-	if contractAccount != nil {
-		if len(contractAccount.CodeHash) > 0 {
-			if bytes.Equal(contractAccount.CodeHash, types.EmptyCodeHash) {
-				err = sdkerrors.ErrInvalidRequest.Wrapf("contract address already exists at %s", contractAddress)
-				return
-			}
-		}
+	if contractAccount != nil && contractAccount.IsContract() {
+		err = sdkerrors.ErrInvalidRequest.Wrapf("contract address already exists at %s", contractAddress)
+		return
 	}
 
 	if k.IsVirtualFrontierContract(ctx, contractAddress) {
@@ -339,7 +334,7 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 			return
 		}
 
-		contractAccount = k.GetAccount(ctx, contractAddress)
+		contractAccount = k.GetAccountWithoutBalance(ctx, contractAddress)
 		if contractAccount == nil {
 			err = errorsmod.Wrap(types.ErrVMExecution, "contract account not found")
 			return
