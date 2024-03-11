@@ -72,5 +72,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount("evmos", "evmospub")
 	suite.DoSetupTest(suite.T())
 }
