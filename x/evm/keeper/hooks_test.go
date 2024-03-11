@@ -5,6 +5,8 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -12,6 +14,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
+	"github.com/evmos/ethermint/x/evm/vm/geth"
 )
 
 // LogRecordHook records all the logs
@@ -61,9 +64,14 @@ func (suite *KeeperTestSuite) TestEvmHooks() {
 	for _, tc := range testCases {
 		suite.SetupTest()
 		hook := tc.setupHook()
-		suite.app.EvmKeeper.SetHooks(keeper.NewMultiEvmHooks(hook))
 
-		k := suite.app.EvmKeeper
+		k := keeper.NewKeeper(
+			suite.app.AppCodec(), suite.app.GetKey(types.StoreKey), suite.app.GetTKey(types.StoreKey), authtypes.NewModuleAddress(govtypes.ModuleName),
+			suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.StakingKeeper, suite.app.FeeMarketKeeper,
+			nil, geth.NewEVM, "", suite.app.GetSubspace(types.ModuleName),
+		)
+		k.SetHooks(keeper.NewMultiEvmHooks(hook))
+
 		ctx := suite.ctx
 		txHash := common.BigToHash(big.NewInt(1))
 		vmdb := statedb.New(ctx, k, statedb.NewTxConfig(

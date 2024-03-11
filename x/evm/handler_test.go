@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/evmos/ethermint/x/evm/keeper"
+	"github.com/evmos/ethermint/x/evm/vm/geth"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
@@ -17,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
@@ -577,7 +579,12 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 	for _, tc := range testCases {
 		suite.Run(tc.msg, func() {
 			suite.SetupTest()
-			k := suite.app.EvmKeeper
+			k := keeper.NewKeeper(
+				suite.app.AppCodec(), suite.app.GetKey(types.StoreKey), suite.app.GetTKey(types.StoreKey), authtypes.NewModuleAddress(govtypes.ModuleName),
+				suite.app.AccountKeeper, suite.app.BankKeeper, suite.app.StakingKeeper, suite.app.FeeMarketKeeper,
+				nil, geth.NewEVM, "", suite.app.GetSubspace(types.ModuleName),
+			)
+
 			k.SetHooks(tc.hooks)
 
 			// add some fund to pay gas fee

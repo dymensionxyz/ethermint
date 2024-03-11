@@ -155,8 +155,8 @@ func (suite *AnteTestSuite) SetupTest() {
 	// fund signer acc to pay for tx fees
 	amt := sdk.NewInt(int64(math.Pow10(18) * 2))
 	err = testutil.FundAccount(
-		suite.app.BankKeeper,
 		suite.ctx,
+		suite.app.BankKeeper,
 		suite.priv.PubKey().Address().Bytes(),
 		sdk.NewCoins(sdk.NewCoin(testtypes.BaseDenom, amt)),
 	)

@@ -13,12 +13,10 @@ import (
 	teststypes "github.com/evmos/ethermint/testutil/types"
 )
 
-// func init() {
-// 	cfg := sdk.GetConfig()
-// 	cfg.SetBech32PrefixForAccount("evmos", "evmospub")
-// }
-
 func TestGetTransferSenderRecipient(t *testing.T) {
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount("evmos", "evmospub")
+
 	testCases := []struct {
 		name         string
 		packet       channeltypes.Packet
