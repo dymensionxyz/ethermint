@@ -26,13 +26,13 @@ import (
 	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/cmd/config"
 	"github.com/evmos/ethermint/encoding"
-	"github.com/evmos/ethermint/testutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	teststypes "github.com/evmos/ethermint/testutil/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -347,7 +347,7 @@ func (suite *EIP712TestSuite) TestEIP712() {
 				err = txBuilder.SetSignatures([]signing.SignatureV2{txSig}...)
 				suite.Require().NoError(err)
 
-				chainID := testutil.TestnetChainID + "-1"
+				chainID := teststypes.TestnetChainID + "-1"
 				if tc.chainID != "" {
 					chainID = tc.chainID
 				}

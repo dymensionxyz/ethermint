@@ -49,6 +49,7 @@ import (
 	ante "github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/tests"
+	testtypes "github.com/evmos/ethermint/testutil/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
@@ -113,7 +114,7 @@ func (suite *AnteTestSuite) SetupTest() {
 		return genesis
 	})
 
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 2, ChainID: testutil.TestnetChainID + "-1", Time: time.Now().UTC()})
+	suite.ctx = suite.app.BaseApp.NewContext(checkTx, tmproto.Header{Height: 2, ChainID: testtypes.TestnetChainID + "-1", Time: time.Now().UTC()})
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdk.OneInt())))
 	suite.ctx = suite.ctx.WithBlockGasMeter(sdk.NewGasMeter(1000000000000000000))
 	suite.app.EvmKeeper.WithChainID(suite.ctx)
@@ -157,7 +158,7 @@ func (suite *AnteTestSuite) SetupTest() {
 		suite.app.BankKeeper,
 		suite.ctx,
 		suite.priv.PubKey().Address().Bytes(),
-		sdk.NewCoins(sdk.NewCoin(testutil.BaseDenom, amt)),
+		sdk.NewCoins(sdk.NewCoin(testtypes.BaseDenom, amt)),
 	)
 	suite.Require().NoError(err)
 
