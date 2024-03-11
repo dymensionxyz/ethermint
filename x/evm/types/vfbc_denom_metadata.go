@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"math"
 )
@@ -44,10 +43,6 @@ func CollectMetadataForVirtualFrontierBankContract(
 		Decimals: biggestExponent,
 		Name:     name,
 		Symbol:   metadata.Symbol,
-	}
-
-	if !isInputPassValidation {
-		fmt.Println(metadata.Validate())
 	}
 
 	return

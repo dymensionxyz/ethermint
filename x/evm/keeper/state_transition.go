@@ -16,7 +16,6 @@
 package keeper
 
 import (
-	"fmt"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
 	"math/big"
 	"time"
@@ -430,8 +429,6 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 	gasUsed := sdk.MaxDec(minimumGasUsed, sdk.NewDec(int64(temporaryGasUsed))).TruncateInt().Uint64()
 	// reset leftoverGas, to be used by the tracer
 	leftoverGas = msg.Gas() - gasUsed
-
-	fmt.Println("VM ERROR:", vmError)
 
 	return &types.MsgEthereumTxResponse{
 		GasUsed: gasUsed,
