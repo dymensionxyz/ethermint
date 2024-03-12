@@ -67,12 +67,6 @@ type EVMKeeper interface {
 	ApplyMessage(ctx sdk.Context, msg core.Message, tracer vm.EVMLogger, commit bool) (*evmtypes.MsgEthereumTxResponse, error)
 }
 
-// StakingKeeper defines the expected interface needed to retrieve the staking denom.
-type ClaimsKeeper interface {
-	// GetParams(ctx sdk.Context) claimstypes.Params
-	GetParams(ctx sdk.Context)
-}
-
 type (
 	LegacyParams = paramtypes.ParamSet
 	// Subspace defines an interface that implements the legacy Cosmos SDK x/params Subspace type.
