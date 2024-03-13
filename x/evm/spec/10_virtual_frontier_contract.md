@@ -15,10 +15,16 @@ Sub-types:
 
 Technical notes:
 - Standing in front of EVM, doing stuffs instead of actually interacting EVM.
-- Prohibit to communicated within EVM.
 - Should not receive funds. If received, it results lost forever. Currently, when an Ethereum tx, with value != 0 (direct transfer or payable method call), are aborted. Not yet any implementation to prevent from Cosmos side.
 - New module store: Contract and meta corresponds to the sub-type.
-- Still a smart contract with its own _address, account state, nonce, code hash, code and deployed bytecode_. Except that the deployed bytecode is not used during execution.
+- Still a smart contract with its own _address, account state, nonce, code hash and deployed bytecode_. Except that the deployed bytecode is not used during execution.
+- Interaction to VFC contract within EVM actual execution:
+  - Will fail if modify the VFC contract state like:
+    - Account state like balance, nonce
+    - Contract code
+    - Storage
+  - Will success in other cases, for example transfer ERC-20 token from/into this address, because the execution only modify the state of the token contract, not the VFC contract itself.
+- Should have actual solidity code & compiled into bytecode for deployment, accept the inner function going to be failed if called [(check this)](https://github.com/dymensionxyz/ethermint/blob/b2df154ea803a77a7329c0f927382c8a7beb7805/x/evm/types/VFBankContract20.sol).
 
 # Virtual Frontier Bank Contract
 

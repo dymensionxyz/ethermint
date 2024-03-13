@@ -3,11 +3,15 @@ package vfc_it_suite_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/integration_test_util"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
+	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth"
+	rpctypes "github.com/evmos/ethermint/rpc/types"
 	"github.com/evmos/ethermint/testutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/tendermint/tendermint/libs/log"
 	"math/big"
 )
 
@@ -416,6 +420,90 @@ func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {
 			int64(2_000_002),
 			suite.CITS.QueryBalanceByDenom(0, receiver.GetCosmosAddress().String(), metaIbcTia.Base).Amount.Int64(),
 		)
+	})
+
+	suite.Run("Normal smart contract interactive must work if does not change VFBC account status and storage", func() {
+		getBalance := func(holder common.Address) *big.Int {
+			inputCallData, err := integration_test_util.ERC20MinterBurnerDecimalsContract.ABI.Pack("balanceOf", holder)
+			suite.Require().NoError(err)
+
+			input := hexutil.Bytes(inputCallData)
+
+			bz, err := eth.NewPublicAPI(log.NewNopLogger(), suite.CITS.RpcBackendAt(0)).Call(evmtypes.TransactionArgs{
+				To: &normalErc20ContractAddress,
+				Gas: func() *hexutil.Uint64 {
+					gas := hexutil.Uint64(100_000)
+					return &gas
+				}(),
+				GasPrice: func() *hexutil.Big {
+					gasPrice := hexutil.Big(*suite.CITS.ChainApp.FeeMarketKeeper().GetBaseFee(suite.Ctx()))
+					return &gasPrice
+				}(),
+				Nonce: func() *hexutil.Uint64 {
+					nonce := hexutil.Uint64(suite.App().EvmKeeper().GetNonce(suite.Ctx(), holder))
+					return &nonce
+				}(),
+				Input: &input,
+				ChainID: func() *hexutil.Big {
+					chainID := hexutil.Big(*suite.CITS.ChainApp.EvmKeeper().ChainID())
+					return &chainID
+				}(),
+			}, rpctypes.BlockNumberOrHash{
+				BlockNumber: func() *rpctypes.BlockNumber {
+					blk := rpctypes.EthLatestBlockNumber
+					return &blk
+				}(),
+			}, nil)
+
+			suite.Require().NoError(err)
+
+			return new(big.Int).SetBytes(bz)
+		}
+
+		sender := tokenOwner.GetEthAddress()
+		receiver := vfbcContractAddress
+
+		originalSenderBalance := getBalance(sender)
+		suite.Require().NotZero(originalSenderBalance.Sign())
+
+		originalReceiverBalance := getBalance(receiver)
+
+		const sendAmount int64 = 10000
+
+		inputCallData, err := integration_test_util.ERC20MinterBurnerDecimalsContract.ABI.Pack("transfer", receiver, big.NewInt(sendAmount))
+		suite.Require().NoError(err)
+		ctx := suite.Ctx()
+
+		msgEthereumTx := evmtypes.NewTx(
+			suite.CITS.ChainApp.EvmKeeper().ChainID(),
+			suite.CITS.ChainApp.EvmKeeper().GetNonce(ctx, sender),
+			&normalErc20ContractAddress,
+			nil,
+			100_000, // gas limit
+			nil,
+			suite.CITS.ChainApp.FeeMarketKeeper().GetBaseFee(ctx),
+			big.NewInt(1),
+			inputCallData,
+			&ethtypes.AccessList{},
+		)
+		msgEthereumTx.From = sender.String()
+
+		// The transaction is expected to be successful because:
+		// 1. It modifies store of the normal ERC-20 contract
+		// 2. It does not modify any store of the VFBC contract
+		// 3. It does not change the VFBC account state like nonce, native coin balance, code, storage
+
+		resp, err := suite.CITS.DeliverEthTx(tokenOwner, msgEthereumTx)
+		suite.Require().NoError(err)
+
+		suite.Commit()
+
+		receipt := suite.GetTxReceipt(common.HexToHash(resp.EthTxHash))
+		suite.Require().NotNil(receipt)
+
+		suite.Equal(ethtypes.ReceiptStatusSuccessful, receipt.Status, "tx must be successful")
+		suite.Equal(new(big.Int).Sub(originalSenderBalance, big.NewInt(sendAmount)), getBalance(sender))
+		suite.Equal(new(big.Int).Add(originalReceiverBalance, big.NewInt(sendAmount)), getBalance(receiver))
 	})
 
 	suite.Run("replay protection, nonce must be increased after success tx", func() {
