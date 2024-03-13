@@ -71,3 +71,15 @@ Technical notes:
         ...
     })
     ```
+- Compare with `x/erc20` module by Evmos:
+
+| Feature                                                 | Evmos `x/erc20` contract                                  | Dymension `VFBC`                                                        |
+|---------------------------------------------------------|-----------------------------------------------------------|-------------------------------------------------------------------------|
+| Interactive using wallet like Metamask                  | 🔥 Yes                                                    | 🔥 Yes                                                                  |
+| Assets                                                  | ERC-20 representation of native bank assets, must convert | 🔥 Native bank assets, no need convert                                  |
+| Asset actual balance                                    | = sum(bank balance + ERC-20 balance)                      | 🔥 = bank balance = ERC-20 balance                                      |
+| Support direct transfer (`transfer`)                    | 🔥 Yes                                                    | 🔥 Yes                                                                  |
+| Support authorized transfer (`transferFrom`)            | 🔥 Yes                                                    | No                                                                      |
+| Support converting ERC-20 token into native token (IBC) | 🔥 Yes                                                    | No                                                                      |
+| New contract deployment                                 | gov _(before v17), automatically (from v17)_              | gov, _can be automatically deploy upon new bank denom metadata created_ |
+| Interact-able within EVM execution                      | 🔥 Yes                                                    | No                                                                      |
