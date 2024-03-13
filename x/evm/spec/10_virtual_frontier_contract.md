@@ -26,7 +26,7 @@ Virtual Frontier Bank Contract is
 - Virtual Frontier Contract.
 - A contract, simulated ERC-20 spec, allowed user to import to MM or other Ethereum wallets and can be used to transfer Cosmos bank assets via the wallets.
 - Deployed follow denom metadata created in bank module.
-  - On Dymension, new contracts deployment will be triggered daily via epoch module.
+  - On Dymension, new contracts deployment will be triggered upon gov create new bank denom metadata (this type of gov provided by `x/denommetadata` module).
   - On Ethermint dev chain, new contracts deployment will be done automatically in next block, right after new bank denom metadata records are created.
 
 Technical notes:

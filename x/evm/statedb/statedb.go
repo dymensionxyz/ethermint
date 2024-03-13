@@ -454,7 +454,11 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 func (s *StateDB) Commit() error {
 	for _, addr := range s.journal.sortedDirties() {
 		if s.keeper.IsVirtualFrontierContract(s.ctx, addr) {
-			return errorsmod.Wrapf(evmtypes.ErrProhibitedAccessingVirtualFrontierContract, "can not access or make change to frontier contract address %s", addr)
+			// regular EVM state transition should not be able to access or make change to the virtual frontier contract
+			return errorsmod.Wrapf(
+				evmtypes.ErrProhibitedAccessingVirtualFrontierContract,
+				"can not access or make change to frontier contract address %s", addr,
+			)
 		}
 
 		obj := s.stateObjects[addr]
