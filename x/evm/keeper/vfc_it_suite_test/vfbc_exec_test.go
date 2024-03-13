@@ -1,10 +1,12 @@
 package vfc_it_suite_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/integration_test_util"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
+	"github.com/evmos/ethermint/testutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"math/big"
 )
@@ -338,6 +340,83 @@ func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {
 			}
 		})
 	}
+
+	suite.Run("Transfer IBC token via VFBC", func() {
+		// prepare metadata and contracts
+		metaIbcAtom := testutil.NewBankDenomMetadata("ibc/C4CFF46FD6DE35CA4CF4CE031E643C8FDC9BA4B99AE598E9B0ED98FE3A2319F9", 6)
+		metaIbcTia := testutil.NewBankDenomMetadata("ibc/45D6B52CAD911A15BD9C2F5FFDA80E26AFCB05C7CD520070790ABC86D2B24229", 6)
+
+		suite.App().BankKeeper().SetDenomMetaData(suite.Ctx(), metaIbcAtom)
+		suite.App().BankKeeper().SetDenomMetaData(suite.Ctx(), metaIbcTia)
+
+		suite.CITS.WaitNextBlockOrCommit()
+
+		vfbcAtom, foundAtom := suite.App().EvmKeeper().GetVirtualFrontierBankContractAddressByDenom(suite.Ctx(), metaIbcAtom.Base)
+		suite.Require().True(foundAtom)
+		vfbcTia, foundTia := suite.App().EvmKeeper().GetVirtualFrontierBankContractAddressByDenom(suite.Ctx(), metaIbcTia.Base)
+		suite.Require().True(foundTia)
+
+		// prepare funds
+
+		const originalBalance = 10_000_000
+
+		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcAtom.Base, sdk.NewInt(originalBalance)))
+		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcTia.Base, sdk.NewInt(originalBalance)))
+
+		suite.CITS.WaitNextBlockOrCommit()
+
+		send := func(contract common.Address, amount uint64) {
+			from := senderOfVfbc.GetEthAddress()
+
+			inputCallData, err := integration_test_util.ERC20MinterBurnerDecimalsContract.ABI.Pack("transfer", receiver.GetEthAddress(), new(big.Int).SetUint64(amount))
+			suite.Require().NoError(err)
+
+			ctx := suite.Ctx()
+
+			msgEthereumTx := evmtypes.NewTx(
+				suite.CITS.ChainApp.EvmKeeper().ChainID(),
+				suite.CITS.ChainApp.EvmKeeper().GetNonce(ctx, from),
+				&contract,
+				nil,
+				100_000, // gas limit
+				nil,
+				suite.CITS.ChainApp.FeeMarketKeeper().GetBaseFee(ctx),
+				big.NewInt(1),
+				inputCallData,
+				&ethtypes.AccessList{},
+			)
+			msgEthereumTx.From = from.String()
+
+			resp, err := suite.CITS.DeliverEthTx(senderOfVfbc, msgEthereumTx)
+			suite.Require().NoError(err)
+
+			suite.Commit()
+
+			receipt := suite.GetTxReceipt(common.HexToHash(resp.EthTxHash))
+			suite.Require().NotNil(receipt)
+			suite.Equal(ethtypes.ReceiptStatusSuccessful, receipt.Status, "tx must be successful")
+		}
+
+		send(vfbcAtom, 1_000_001)
+		send(vfbcTia, 2_000_002)
+
+		suite.Equal(
+			int64(8_999_999),
+			suite.CITS.QueryBalanceByDenom(0, senderOfVfbc.GetCosmosAddress().String(), metaIbcAtom.Base).Amount.Int64(),
+		)
+		suite.Equal(
+			int64(1_000_001),
+			suite.CITS.QueryBalanceByDenom(0, receiver.GetCosmosAddress().String(), metaIbcAtom.Base).Amount.Int64(),
+		)
+		suite.Equal(
+			int64(7_999_998),
+			suite.CITS.QueryBalanceByDenom(0, senderOfVfbc.GetCosmosAddress().String(), metaIbcTia.Base).Amount.Int64(),
+		)
+		suite.Equal(
+			int64(2_000_002),
+			suite.CITS.QueryBalanceByDenom(0, receiver.GetCosmosAddress().String(), metaIbcTia.Base).Amount.Int64(),
+		)
+	})
 
 	suite.Run("replay protection, nonce must be increased after success tx", func() {
 		from := senderOfVfbc.GetEthAddress()
