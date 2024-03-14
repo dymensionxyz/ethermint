@@ -175,9 +175,10 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base))
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base))
 
-	suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(suite.ctx, func(metadata banktypes.Metadata) bool {
+	err := suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(suite.ctx, func(metadata banktypes.Metadata) bool {
 		return strings.HasPrefix(metadata.Base, "ibc/")
 	})
+	suite.Require().NoError(err)
 
 	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base), "virtual frontier bank contract for valid metadata should be created")
 	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfInvalid.Base), "should skip virtual frontier bank contract creation for invalid metadata")
@@ -200,7 +201,7 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 		// branch a context so inner commit doesn't affect the original ctx
 		topLevelCtx, _ := suite.ctx.CacheContext()
 
-		deploy := func(effectiveContext sdk.Context) {
+		deploy := func(effectiveContext sdk.Context) error {
 			suite.Require().False(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta1.Base))
 			suite.app.BankKeeper.SetDenomMetaData(effectiveContext, meta1)
 			suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta1.Base))
@@ -209,7 +210,7 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 			suite.app.BankKeeper.SetDenomMetaData(effectiveContext, meta2)
 			suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta2.Base))
 
-			suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(effectiveContext, func(metadata banktypes.Metadata) bool {
+			return suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(effectiveContext, func(metadata banktypes.Metadata) bool {
 				return strings.HasPrefix(metadata.Base, "ibc/")
 			})
 		}
@@ -218,7 +219,8 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 
 		// branch a context so inner commit doesn't affect the original ctx
 		firstTestCtx, _ := topLevelCtx.CacheContext()
-		deploy(firstTestCtx)
+		err := deploy(firstTestCtx)
+		suite.Require().NoError(err)
 
 		// contracts must be deployed
 		suite.Require().True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(firstTestCtx, meta1.Base))
@@ -245,14 +247,15 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 
 		// create a contract account for the meta2, so when creating VFBC for the second meta, it would fail,
 		// thus trigger the expected rollback.
-		err := suite.app.EvmKeeper.SetAccount(secondTestCtx, contractAddress2, statedb.Account{
+		err = suite.app.EvmKeeper.SetAccount(secondTestCtx, contractAddress2, statedb.Account{
 			Nonce:    1,
 			Balance:  common.Big0,
 			CodeHash: types.VFBCCodeHash,
 		})
 		suite.Require().NoError(err)
 
-		deploy(secondTestCtx)
+		err = deploy(secondTestCtx)
+		suite.Require().Error(err)
 
 		// contracts must NOT be deployed
 		suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta1.Base))
@@ -358,10 +361,12 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForBankDenomM
 				tt.preRun()
 			}
 
-			suite.app.EvmKeeper.DeployVirtualFrontierBankContractForBankDenomMetadataRecord(suite.ctx, tt.base)
+			err := suite.app.EvmKeeper.DeployVirtualFrontierBankContractForBankDenomMetadataRecord(suite.ctx, tt.base)
 			if tt.wantDeployedSuccess {
+				suite.Require().NoError(err)
 				suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, tt.base), "want deployment for %s success", tt.base)
 			} else {
+				suite.Require().Error(err)
 				suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, tt.base), "want deployment for %s failed", tt.base)
 			}
 			for base, found := range tt.wantFound {

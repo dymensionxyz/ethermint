@@ -30,7 +30,7 @@ func (k *Keeper) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 	if utils.IsEthermintDevChain(ctx) {
 		// trigger VFBC registration on Ethermint devnet for development purpose
-		k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx, nil)
+		_ = k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx, nil)
 	}
 }
 

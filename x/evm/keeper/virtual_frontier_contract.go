@@ -119,11 +119,16 @@ func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Cont
 
 // DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords deploys a new virtual frontier bank contract
 // for each bank denom metadata record.
-// If any error occurs, the function will return immediately and the changes will be rolled back.
+// If any error occurs:
+//   - All changes during the execution will be reverted.
+//   - Log the error.
+//   - Stop execution immediately.
+//
+// Handling returned error can be ignored without any side effect.
 func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	ctx sdk.Context,
 	filterDenomOrDefaultIbcOnly func(metadata banktypes.Metadata) bool,
-) {
+) (err error) {
 	if filterDenomOrDefaultIbcOnly == nil {
 		filterDenomOrDefaultIbcOnly = func(metadata banktypes.Metadata) bool {
 			return strings.HasPrefix(metadata.Base, "ibc/")
@@ -147,17 +152,19 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	})
 
 	if len(newRecords) < 1 {
-		return
+		return nil
 	}
 
 	cachedCtx, commitFunc := ctx.CacheContext() // branching the store
 
-	var err error
-
 	defer func() {
 		if err == nil {
 			commitFunc() // commit changes to the store
-		} else {
+		}
+	}()
+
+	defer func() {
+		if err != nil {
 			k.Logger(ctx).Error(
 				"failed to deploy virtual frontier bank contract for all bank denom metadata records",
 				"error", err.Error(),
@@ -186,31 +193,38 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 
 // DeployVirtualFrontierBankContractForBankDenomMetadataRecord deploys a new virtual frontier bank contract
 // for the provided bank denom metadata record if the record satisfies the spec for deployment.
-// If any error occurs, any state changes will be reverted.
+// If any error occurs:
+//   - All changes during the execution will be reverted.
+//   - Log the error.
+//   - Stop execution immediately.
+//
+// Handling returned error can be ignored without any side effect.
 func (k Keeper) DeployVirtualFrontierBankContractForBankDenomMetadataRecord(
 	ctx sdk.Context,
 	base string,
-) {
+) (err error) {
 	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, base)
 	if !found {
 		// only deploy if the metadata is found
-		return
+		return fmt.Errorf("bank denom metadata not found for %s", base)
 	}
 
 	vfbcDenomMetadata, shouldDeploy := k.shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecord(ctx, bankDenomMetadata)
 
 	if !shouldDeploy {
-		return
+		return fmt.Errorf("bank denom metadata %s does not pass validation for deployment", base)
 	}
 
 	cachedCtx, commitFunc := ctx.CacheContext() // branching the store
 
-	var err error
-
 	defer func() {
 		if err == nil {
 			commitFunc() // commit changes to the store
-		} else {
+		}
+	}()
+
+	defer func() {
+		if err != nil {
 			k.Logger(ctx).Error(
 				"failed to deploy virtual frontier bank contract for bank denom metadata record",
 				"base", vfbcDenomMetadata.MinDenom,
@@ -233,7 +247,7 @@ func (k Keeper) shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecor
 	bankDenomMetadata banktypes.Metadata,
 ) (
 	vfbcDenomMeta types.VirtualFrontierBankContractDenomMetadata,
-	should bool,
+	shouldDeploy bool,
 ) {
 	if k.HasVirtualFrontierBankContractByDenom(ctx, bankDenomMetadata.Base) {
 		// unique constraint
@@ -252,7 +266,7 @@ func (k Keeper) shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecor
 	}
 
 	vfbcDenomMeta = vfbcDenomMetadata
-	should = true
+	shouldDeploy = true
 
 	return
 }
