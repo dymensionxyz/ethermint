@@ -136,18 +136,9 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 			return false
 		}
 
-		if k.HasVirtualFrontierBankContractByDenom(ctx, bankDenomMetadata.Base) {
-			return false
-		}
+		vfbcDenomMetadata, shouldDeploy := k.shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecord(ctx, bankDenomMetadata)
 
-		vfbcDenomMetadata, isInputPassValidation := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMetadata)
-		if !isInputPassValidation {
-			// ignore invalid records
-			return false
-		}
-
-		if !vfbcDenomMetadata.CanDecimalsUint8() {
-			// ignore records which exponent can not fit uint8 (for return decimals())
+		if !shouldDeploy {
 			return false
 		}
 
@@ -167,7 +158,10 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 		if err == nil {
 			commitFunc() // commit changes to the store
 		} else {
-			k.Logger(ctx).Error("failed to deploy virtual frontier bank contract for all bank denom metadata records", "error", err.Error())
+			k.Logger(ctx).Error(
+				"failed to deploy virtual frontier bank contract for all bank denom metadata records",
+				"error", err.Error(),
+			)
 		}
 	}()
 
@@ -186,6 +180,79 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 			return
 		}
 	}
+
+	return
+}
+
+// DeployVirtualFrontierBankContractForBankDenomMetadataRecord deploys a new virtual frontier bank contract
+// for the provided bank denom metadata record if the record satisfies the spec for deployment.
+// If any error occurs, any state changes will be reverted.
+func (k Keeper) DeployVirtualFrontierBankContractForBankDenomMetadataRecord(
+	ctx sdk.Context,
+	base string,
+) {
+	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, base)
+	if !found {
+		// only deploy if the metadata is found
+		return
+	}
+
+	vfbcDenomMetadata, shouldDeploy := k.shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecord(ctx, bankDenomMetadata)
+
+	if !shouldDeploy {
+		return
+	}
+
+	cachedCtx, commitFunc := ctx.CacheContext() // branching the store
+
+	var err error
+
+	defer func() {
+		if err == nil {
+			commitFunc() // commit changes to the store
+		} else {
+			k.Logger(ctx).Error(
+				"failed to deploy virtual frontier bank contract for bank denom metadata record",
+				"base", vfbcDenomMetadata.MinDenom,
+				"error", err.Error(),
+			)
+		}
+	}()
+
+	_, err = k.DeployNewVirtualFrontierBankContract(cachedCtx, &types.VirtualFrontierContract{
+		Active: true,
+	}, &types.VFBankContractMetadata{
+		MinDenom: vfbcDenomMetadata.MinDenom,
+	}, &vfbcDenomMetadata)
+
+	return
+}
+
+func (k Keeper) shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecord(
+	ctx sdk.Context,
+	bankDenomMetadata banktypes.Metadata,
+) (
+	vfbcDenomMeta types.VirtualFrontierBankContractDenomMetadata,
+	should bool,
+) {
+	if k.HasVirtualFrontierBankContractByDenom(ctx, bankDenomMetadata.Base) {
+		// unique constraint
+		return
+	}
+
+	vfbcDenomMetadata, isInputPassValidation := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMetadata)
+	if !isInputPassValidation {
+		// do not deploy for invalid records
+		return
+	}
+
+	if !vfbcDenomMetadata.CanDecimalsUint8() {
+		// ignore records which exponent can not fit uint8 (for return decimals())
+		return
+	}
+
+	vfbcDenomMeta = vfbcDenomMetadata
+	should = true
 
 	return
 }

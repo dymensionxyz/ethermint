@@ -22,6 +22,7 @@ func IsEthermintDevChain(ctx sdk.Context) bool {
 //   - Mainnet
 //   - Testnet Blumbus
 //   - Devnet Froopyland
+//   - Localnet
 func IsOneOfDymensionChains(ctx sdk.Context) bool {
 	chainId := ctx.ChainID()
 	if strings.HasPrefix(chainId, "dymension_") {

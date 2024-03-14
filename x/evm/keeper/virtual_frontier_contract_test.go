@@ -262,6 +262,118 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 	})
 }
 
+func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForBankDenomMetadataRecord() {
+	metaOfValid1 := testutil.NewBankDenomMetadata("ibc/uatom", 6)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValid1)
+
+	metaOfInvalid := testutil.NewBankDenomMetadata("ibc/uosmo", 6)
+	metaOfInvalid.Display = ""
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfInvalid)
+	suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(suite.ctx, metaOfInvalid.Base)) // ensure invalid metadata is set
+
+	metaOfOverflowDecimals := testutil.NewBankDenomMetadata("ibc/uosmo", 0)
+	metaOfOverflowDecimals.DenomUnits[1].Exponent = math.MaxUint8 + 1 // overflow uint8
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfOverflowDecimals)
+	suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(suite.ctx, metaOfOverflowDecimals.Base)) // ensure invalid metadata is set
+
+	metaOfValid2 := testutil.NewBankDenomMetadata("ibc/udym", 6)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValid2)
+
+	metaOfValidButNotIbc := testutil.NewBankDenomMetadata("gamm/pool-1", 18)
+	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValidButNotIbc)
+
+	metaOfValid3ButNotBankMetadata := testutil.NewBankDenomMetadata("ibc/usk", 6)
+
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfInvalid.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValidButNotIbc.Base))
+	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid3ButNotBankMetadata.Base))
+
+	tests := []struct {
+		name                string
+		base                string
+		preRun              func()
+		wantDeployedSuccess bool
+		wantFound           []string
+		wantNotFound        []string
+	}{
+		{
+			name:                "success",
+			base:                metaOfValid1.Base,
+			wantDeployedSuccess: true,
+			wantFound:           []string{metaOfValid1.Base},
+			wantNotFound:        []string{metaOfValid2.Base, metaOfInvalid.Base, metaOfOverflowDecimals.Base, metaOfValidButNotIbc.Base, metaOfValid3ButNotBankMetadata.Base},
+		},
+		{
+			name:                "success",
+			base:                metaOfValid2.Base,
+			wantDeployedSuccess: true,
+			wantFound:           []string{metaOfValid1.Base, metaOfValid2.Base},
+			wantNotFound:        []string{metaOfInvalid.Base, metaOfOverflowDecimals.Base, metaOfValidButNotIbc.Base, metaOfValid3ButNotBankMetadata.Base},
+		},
+		{
+			name:                "do not deploy invalid metadata",
+			base:                metaOfInvalid.Base,
+			wantDeployedSuccess: false,
+			wantFound:           []string{metaOfValid1.Base, metaOfValid2.Base},
+			wantNotFound:        []string{metaOfInvalid.Base, metaOfOverflowDecimals.Base, metaOfValidButNotIbc.Base, metaOfValid3ButNotBankMetadata.Base},
+		},
+		{
+			name:                "do not deploy for metadata with exponent > uint8",
+			base:                metaOfOverflowDecimals.Base,
+			wantDeployedSuccess: false,
+			wantFound:           []string{metaOfValid1.Base, metaOfValid2.Base},
+			wantNotFound:        []string{metaOfInvalid.Base, metaOfOverflowDecimals.Base, metaOfValidButNotIbc.Base, metaOfValid3ButNotBankMetadata.Base},
+		},
+		{
+			name:                "any base passed, will be deployed as long as it valid",
+			base:                metaOfValidButNotIbc.Base,
+			wantDeployedSuccess: true,
+			wantFound:           []string{metaOfValid1.Base, metaOfValid2.Base, metaOfValidButNotIbc.Base},
+			wantNotFound:        []string{metaOfInvalid.Base, metaOfOverflowDecimals.Base, metaOfValid3ButNotBankMetadata.Base},
+		},
+		{
+			name:                "ignore metadata not found",
+			base:                metaOfValid3ButNotBankMetadata.Base,
+			wantDeployedSuccess: false,
+			wantFound:           []string{metaOfValid1.Base, metaOfValid2.Base, metaOfValidButNotIbc.Base},
+			wantNotFound:        []string{metaOfInvalid.Base, metaOfOverflowDecimals.Base, metaOfValid3ButNotBankMetadata.Base},
+		},
+		{
+			name: "re-deploy for added missing metadata",
+			base: metaOfValid3ButNotBankMetadata.Base,
+			preRun: func() {
+				suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfValid3ButNotBankMetadata)
+			},
+			wantDeployedSuccess: true,
+			wantFound:           []string{metaOfValid1.Base, metaOfValid2.Base, metaOfValidButNotIbc.Base, metaOfValid3ButNotBankMetadata.Base},
+			wantNotFound:        []string{metaOfInvalid.Base, metaOfOverflowDecimals.Base},
+		},
+	}
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			if tt.preRun != nil {
+				tt.preRun()
+			}
+
+			suite.app.EvmKeeper.DeployVirtualFrontierBankContractForBankDenomMetadataRecord(suite.ctx, tt.base)
+			if tt.wantDeployedSuccess {
+				suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, tt.base), "want deployment for %s success", tt.base)
+			} else {
+				suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, tt.base), "want deployment for %s failed", tt.base)
+			}
+			for base, found := range tt.wantFound {
+				suite.Truef(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, found), "want smart contract for %s exists", base)
+			}
+			for base, notFound := range tt.wantNotFound {
+				suite.Falsef(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, notFound), "do not want smart contract for %s exists", base)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 	deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
 	suite.Require().NotNil(deployerModuleAccount)

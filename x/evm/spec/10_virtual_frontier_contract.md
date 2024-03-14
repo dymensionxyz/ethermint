@@ -57,11 +57,13 @@ Technical notes:
 - How to deploy:
   - New contracts for new bank denom metadata records:
     ```golang
-    if err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx, nil); err != nil {
-        panic(errors.Wrap(err, "failed to deploy virtual frontier bank contract for new bank denom metadata records"))
-    }
+    err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx, nil)
     ```
   - New contract for a specific bank denom metadata record:
+    ```golang
+    err := k.DeployVirtualFrontierBankContractForBankDenomMetadataRecord(ctx, "ibc/uatom")
+    ```
+    or
     ```golang
     err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
         Active: true,
