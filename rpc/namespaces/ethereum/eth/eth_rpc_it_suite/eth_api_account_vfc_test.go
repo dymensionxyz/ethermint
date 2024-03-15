@@ -82,9 +82,11 @@ func (suite *EthRpcTestSuite) Test_GetCode_VFC() {
 			acc2 := suite.App().AccountKeeper().GetAccount(suite.Ctx(), vfbcContractAddressOfNative.Bytes())
 			_, isBaseAccount := acc2.(*authtypes.BaseAccount)
 			suite.Require().True(isBaseAccount, "account must be overridden to a BaseAccount")
+
+			suite.Commit()
 		}
 
-		code, err = ethPublicApi.GetCode(vfbcContractAddressOfNative, latestBlock)
+		code, err = suite.GetEthPublicAPI().GetCode(vfbcContractAddressOfNative, latestBlock)
 		suite.Require().NoError(err, "failed to get code")
 		suite.Equal(
 			hexutil.Bytes(types.VFBCCode),
