@@ -240,7 +240,9 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 		}
 
 		senderBalance := k.bankKeeper.GetBalance(ctx, sender.Bytes(), bankContractMetadata.MinDenom)
+
 		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, sdk.NewIntFromBigInt(amount))
+		// the above also checks if the amount is negative and if it has more than 256 bits
 
 		if senderBalance.Amount.LT(sendAmount.Amount) {
 			return types.NewExecVFCRevert(opGasCostOnRevert, errors.New("ERC20: transfer amount exceeds balance"))
