@@ -1,7 +1,9 @@
 package vfc_it_suite_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
@@ -13,7 +15,19 @@ func (suite *EvmITSuite) TestTransfer() {
 	sender := suite.CITS.WalletAccounts.Number(1)
 	receiver := suite.CITS.WalletAccounts.Number(2)
 
-	suite.CITS.MintCoin(sender, suite.CITS.NewBaseCoin(30))
+	extremeBalance := new(big.Int).SetBytes(func() []byte {
+		b := make([]byte, 32)
+		b[0] = 0xFF
+		return b
+	}())
+	if extremeBalance.Sign() < 1 {
+		extremeBalance = new(big.Int).Abs(extremeBalance)
+	}
+
+	suite.CITS.MintCoin(sender, sdk.Coin{
+		Denom:  suite.CITS.ChainConstantsConfig.GetMinDenom(),
+		Amount: sdkmath.NewIntFromBigInt(extremeBalance),
+	})
 
 	balance := func(address common.Address) *big.Int {
 		return suite.App().EvmKeeper().GetBalance(suite.Ctx(), address)
@@ -21,32 +35,83 @@ func (suite *EvmITSuite) TestTransfer() {
 
 	tests := []struct {
 		name        string
-		amount      *big.Int
+		modifier    func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (modifiedAmount, modifiedGasPrice, modifiedGasFeeCap, modifiedGasTipCap *big.Int)
 		wantSuccess bool
 	}{
 		{
-			name:        "send small amount",
-			amount:      big.NewInt(10),
+			name: "send small amount",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				amount = big.NewInt(10)
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
 			wantSuccess: true,
 		},
 		{
-			name:        "send all",
-			amount:      balance(sender.GetEthAddress()),
+			name: "send all balance",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				amount = balance(sender.GetEthAddress())
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
 			wantSuccess: false,
 		},
 		{
-			name:        "send more than have",
-			amount:      new(big.Int).Add(common.Big1, balance(sender.GetEthAddress())),
+			name: "send amount more than have",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				amount = new(big.Int).Add(common.Big1, balance(sender.GetEthAddress()))
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
 			wantSuccess: false,
 		},
 		{
-			name:        "send zero",
-			amount:      common.Big0,
+			name: "send zero amount",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				amount = common.Big0
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
 			wantSuccess: true,
 		},
 		{
-			name:        "send negative",
-			amount:      big.NewInt(-1),
+			name: "send negative amount",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				amount = big.NewInt(-1)
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
+			wantSuccess: false,
+		},
+		{
+			name: "negative gas price",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				gasPrice = big.NewInt(-1)
+
+				gasFeeCap = nil
+				gasTipCap = nil
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
+			wantSuccess: false,
+		},
+		{
+			name: "negative gas fee cap",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				gasFeeCap = new(big.Int).Neg(gasFeeCap)
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
+			wantSuccess: false,
+		},
+		{
+			name: "negative gas tip cap",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				gasTipCap = new(big.Int).Neg(gasTipCap)
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
+			wantSuccess: false,
+		},
+		{
+			name: "negative gas fee cap & gas tip cap",
+			modifier: func(amount, gasPrice, gasFeeCap, gasTipCap *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+				gasFeeCap = new(big.Int).Neg(gasFeeCap)
+				gasTipCap = new(big.Int).Neg(gasTipCap)
+				return amount, gasPrice, gasFeeCap, gasTipCap
+			},
 			wantSuccess: false,
 		},
 	}
@@ -62,18 +127,24 @@ func (suite *EvmITSuite) TestTransfer() {
 
 			baseFee := suite.CITS.ChainApp.FeeMarketKeeper().GetBaseFee(suite.Ctx())
 
-			msgEthereumTx := evmtypes.NewTx(
-				suite.CITS.ChainApp.EvmKeeper().ChainID(),
-				suite.CITS.ChainApp.EvmKeeper().GetNonce(ctx, from),
-				&to,
-				tt.amount,    // amount
-				params.TxGas, // gas limit
-				nil,          // gas price
-				baseFee,      // gas fee cap
-				baseFee,      // gas tip cap
-				nil,          // data
-				&ethtypes.AccessList{},
-			)
+			amount, gasPrice, gasFeeCap, gasTipCap := tt.modifier(common.Big0, nil, baseFee, baseFee)
+
+			newTx := func() *evmtypes.MsgEthereumTx {
+				return evmtypes.NewTx(
+					suite.CITS.ChainApp.EvmKeeper().ChainID(),
+					suite.CITS.ChainApp.EvmKeeper().GetNonce(ctx, from),
+					&to,
+					amount,       // amount
+					params.TxGas, // gas limit
+					gasPrice,     // gas price
+					gasFeeCap,    // gas fee cap
+					gasTipCap,    // gas tip cap
+					nil,          // data
+					&ethtypes.AccessList{},
+				)
+			}
+
+			msgEthereumTx := newTx()
 			msgEthereumTx.From = from.String()
 
 			resp, err := suite.CITS.DeliverEthTx(sender, msgEthereumTx)
@@ -93,7 +164,6 @@ func (suite *EvmITSuite) TestTransfer() {
 				suite.Equal(ethtypes.ReceiptStatusSuccessful, receipt.Status, "tx must be successful")
 				suite.Empty(resp.EvmError)
 
-				amount := tt.amount
 				if amount == nil {
 					amount = common.Big0
 				}
@@ -136,9 +206,10 @@ func (suite *EvmITSuite) TestTransfer() {
 
 					suite.Equal(ethtypes.ReceiptStatusFailed, receipt.Status, "tx must be failed")
 
-					suite.Equal(senderBalanceBefore, senderBalanceAfter, "sender balance must not change")
-					suite.Equal(receiverBalanceBefore, receiverBalanceAfter, "receiver balance must not change")
 				}
+
+				suite.Equal(senderBalanceBefore, senderBalanceAfter, "sender balance must not change")
+				suite.Equal(receiverBalanceBefore, receiverBalanceAfter, "receiver balance must not change")
 			}
 		})
 	}
