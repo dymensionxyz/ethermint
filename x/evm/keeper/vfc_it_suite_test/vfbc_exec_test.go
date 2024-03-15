@@ -200,6 +200,27 @@ func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {
 			wantErrContains: "execution reverted",
 		},
 		{
+			name: "safe - VFBC transfer(address,uint256) - amount overflow 256 bits",
+			// this case won't happen because there are only 256 bits for the amount
+			inputFunc: func() []byte {
+				overflow := make([]byte, 33)
+				overflow[0] = 0xFF
+				overflowAmount := new(big.Int).SetBytes(overflow)
+
+				inputCallData, err := integration_test_util.ERC20MinterBurnerDecimalsContract.ABI.Pack("transfer", receiver.GetEthAddress(), overflowAmount)
+				suite.Require().NoError(err)
+
+				// take the last 32 bytes
+				last32Bytes := inputCallData[len(inputCallData)-32:]
+				suite.Require().Equal(overflow[1:], last32Bytes)
+
+				return inputCallData
+			},
+			targetContract:  vfbcContract,
+			wantSuccess:     true,
+			wantErrContains: "",
+		},
+		{
 			name: "pass - ERC-20 approve(address,uint256)",
 			inputFunc: func() []byte {
 				// lazySender approve tokenOwner to spend max 100 tokens on behalf of lazySender
