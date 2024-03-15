@@ -187,6 +187,19 @@ func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {
 			wantErrContains: "",
 		},
 		{
+			name: "fail - VFBC transfer(address,uint256) - negative amount",
+			inputFunc: func() []byte {
+				suite.CITS.MintCoin(receiver, suite.CITS.NewBaseCoin(1)) // mint some coin to receiver so will not be negative when increased by a negative number
+
+				inputCallData, err := integration_test_util.ERC20MinterBurnerDecimalsContract.ABI.Pack("transfer", receiver.GetEthAddress(), big.NewInt(-1))
+				suite.Require().NoError(err)
+				return inputCallData
+			},
+			targetContract:  vfbcContract,
+			wantSuccess:     false,
+			wantErrContains: "execution reverted",
+		},
+		{
 			name: "pass - ERC-20 approve(address,uint256)",
 			inputFunc: func() []byte {
 				// lazySender approve tokenOwner to spend max 100 tokens on behalf of lazySender
