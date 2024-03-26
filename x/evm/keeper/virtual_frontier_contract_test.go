@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -10,7 +9,6 @@ import (
 	"github.com/evmos/ethermint/testutil"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
-	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 	"math"
 	"strings"
@@ -185,84 +183,6 @@ func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForAllBankDen
 	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfOverflowDecimals.Base), "should skip virtual frontier bank contract creation for metadata which exponent overflow of uint8")
 	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base), "virtual frontier bank contract for valid metadata should be created")
 	suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValidButNotIbc.Base), "should skip non-IBC tokens")
-
-	suite.Run("if any error occurs during deployment, should rollback the change has made before", func() {
-		// prepare
-		meta1 := testutil.NewBankDenomMetadata("ibc/btc", 8)
-		meta2 := testutil.NewBankDenomMetadata("ibc/wei", 18)
-
-		deployerNonce := suite.app.EvmKeeper.GetNonce(suite.ctx, types.VirtualFrontierContractDeployerAddress)
-		contractAddress1 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerNonce+0)
-		contractAddress2 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerNonce+1)
-
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress1), "bad setup")
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddress2), "bad setup")
-
-		// branch a context so inner commit doesn't affect the original ctx
-		topLevelCtx, _ := suite.ctx.CacheContext()
-
-		deploy := func(effectiveContext sdk.Context) error {
-			suite.Require().False(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta1.Base))
-			suite.app.BankKeeper.SetDenomMetaData(effectiveContext, meta1)
-			suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta1.Base))
-
-			suite.Require().False(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta2.Base))
-			suite.app.BankKeeper.SetDenomMetaData(effectiveContext, meta2)
-			suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(effectiveContext, meta2.Base))
-
-			return suite.app.EvmKeeper.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(effectiveContext, func(metadata banktypes.Metadata) bool {
-				return strings.HasPrefix(metadata.Base, "ibc/")
-			})
-		}
-
-		// ** First round, deploy contracts, ensure success
-
-		// branch a context so inner commit doesn't affect the original ctx
-		firstTestCtx, _ := topLevelCtx.CacheContext()
-		err := deploy(firstTestCtx)
-		suite.Require().NoError(err)
-
-		// contracts must be deployed
-		suite.Require().True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(firstTestCtx, meta1.Base))
-		suite.Require().True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(firstTestCtx, meta2.Base))
-		suite.Require().True(suite.app.EvmKeeper.IsVirtualFrontierContract(firstTestCtx, contractAddress1))
-		suite.Require().True(suite.app.EvmKeeper.IsVirtualFrontierContract(firstTestCtx, contractAddress2))
-
-		// ensure contracts are deployed in expected order, meta 1 then meta 2 (basically a nonce comparison)
-		foundAddr1, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(firstTestCtx, meta1.Base)
-		suite.Require().True(found)
-		suite.Require().Equal(contractAddress1, foundAddr1, "bad setup, expected meta1 will be deployed first, then meta2")
-		foundAddr2, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(firstTestCtx, meta2.Base)
-		suite.Require().True(found)
-		suite.Require().Equal(contractAddress2, foundAddr2, "bad setup, expected meta1 will be deployed first, then meta2")
-
-		// ** Second round, deploy contracts, expect error, ensure no change made
-
-		// branch a context so inner commit doesn't affect the original ctx
-		secondTestCtx, _ := topLevelCtx.CacheContext()
-
-		// ensure this effective context does not have any contract deployed
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress1), "bad setup")
-		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress2), "bad setup")
-
-		// create a contract account for the meta2, so when creating VFBC for the second meta, it would fail,
-		// thus trigger the expected rollback.
-		err = suite.app.EvmKeeper.SetAccount(secondTestCtx, contractAddress2, statedb.Account{
-			Nonce:    1,
-			Balance:  common.Big0,
-			CodeHash: types.VFBCCodeHash,
-		})
-		suite.Require().NoError(err)
-
-		err = deploy(secondTestCtx)
-		suite.Require().Error(err)
-
-		// contracts must NOT be deployed
-		suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta1.Base))
-		suite.False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(secondTestCtx, meta2.Base))
-		suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress1))
-		suite.False(suite.app.EvmKeeper.IsVirtualFrontierContract(secondTestCtx, contractAddress2))
-	})
 }
 
 func (suite *KeeperTestSuite) TestDeployVirtualFrontierBankContractForBankDenomMetadataRecord() {

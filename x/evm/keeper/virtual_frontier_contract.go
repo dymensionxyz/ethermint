@@ -120,15 +120,13 @@ func (k Keeper) SetMappingVirtualFrontierBankContractAddressByDenom(ctx sdk.Cont
 // DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords deploys a new virtual frontier bank contract
 // for each bank denom metadata record.
 // If any error occurs:
-//   - All changes during the execution will be reverted.
+//   - State becomes dirty and caller should handle revert if needed.
 //   - Log the error.
 //   - Stop execution immediately.
-//
-// Handling returned error can be ignored without any side effect.
 func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 	ctx sdk.Context,
 	filterDenomOrDefaultIbcOnly func(metadata banktypes.Metadata) bool,
-) (err error) {
+) error {
 	if filterDenomOrDefaultIbcOnly == nil {
 		filterDenomOrDefaultIbcOnly = func(metadata banktypes.Metadata) bool {
 			return strings.HasPrefix(metadata.Base, "ibc/")
@@ -155,54 +153,39 @@ func (k Keeper) DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(
 		return nil
 	}
 
-	cachedCtx, commitFunc := ctx.CacheContext() // branching the store
-
-	defer func() {
-		if err == nil {
-			commitFunc() // commit changes to the store
-		}
-	}()
-
-	defer func() {
-		if err != nil {
-			k.Logger(ctx).Error(
-				"failed to deploy virtual frontier bank contract for all bank denom metadata records",
-				"error", err.Error(),
-			)
-		}
-	}()
-
-	params := k.GetParams(cachedCtx)
+	params := k.GetParams(ctx)
 
 	for _, record := range newRecords {
 		activate := record.MinDenom != params.EvmDenom // contract for native denom should be disabled
 
-		_, err = k.DeployNewVirtualFrontierBankContract(cachedCtx, &types.VirtualFrontierContract{
+		_, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
 			Active: activate,
 		}, &types.VFBankContractMetadata{
 			MinDenom: record.MinDenom,
 		}, &record)
 
 		if err != nil {
-			return
+			k.Logger(ctx).Error(
+				"failed to deploy virtual frontier bank contract for all bank denom metadata records",
+				"error", err.Error(),
+			)
+			return err
 		}
 	}
 
-	return
+	return nil
 }
 
 // DeployVirtualFrontierBankContractForBankDenomMetadataRecord deploys a new virtual frontier bank contract
 // for the provided bank denom metadata record if the record satisfies the spec for deployment.
 // If any error occurs:
-//   - All changes during the execution will be reverted.
+//   - State becomes dirty and caller should handle revert if needed.
 //   - Log the error.
 //   - Stop execution immediately.
-//
-// Handling returned error can be ignored without any side effect.
 func (k Keeper) DeployVirtualFrontierBankContractForBankDenomMetadataRecord(
 	ctx sdk.Context,
 	base string,
-) (err error) {
+) error {
 	bankDenomMetadata, found := k.bankKeeper.GetDenomMetaData(ctx, base)
 	if !found {
 		// only deploy if the metadata is found
@@ -215,31 +198,23 @@ func (k Keeper) DeployVirtualFrontierBankContractForBankDenomMetadataRecord(
 		return fmt.Errorf("bank denom metadata %s does not pass validation for deployment", base)
 	}
 
-	cachedCtx, commitFunc := ctx.CacheContext() // branching the store
-
-	defer func() {
-		if err == nil {
-			commitFunc() // commit changes to the store
-		}
-	}()
-
-	defer func() {
-		if err != nil {
-			k.Logger(ctx).Error(
-				"failed to deploy virtual frontier bank contract for bank denom metadata record",
-				"base", vfbcDenomMetadata.MinDenom,
-				"error", err.Error(),
-			)
-		}
-	}()
-
-	_, err = k.DeployNewVirtualFrontierBankContract(cachedCtx, &types.VirtualFrontierContract{
+	_, err := k.DeployNewVirtualFrontierBankContract(ctx, &types.VirtualFrontierContract{
 		Active: true,
 	}, &types.VFBankContractMetadata{
 		MinDenom: vfbcDenomMetadata.MinDenom,
 	}, &vfbcDenomMetadata)
 
-	return
+	if err != nil {
+		k.Logger(ctx).Error(
+			"failed to deploy virtual frontier bank contract for bank denom metadata record",
+			"base", vfbcDenomMetadata.MinDenom,
+			"error", err.Error(),
+		)
+
+		return err
+	}
+
+	return nil
 }
 
 func (k Keeper) shouldDeployVirtualFrontierBankContractForBankDenomMetadataRecord(

@@ -30,7 +30,14 @@ func (k *Keeper) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 	if utils.IsEthermintDevChain(ctx) {
 		// trigger VFBC registration on Ethermint devnet for development purpose
-		_ = k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(ctx, nil)
+
+		cacheCtx, commitFunc := ctx.CacheContext()
+		err := k.DeployVirtualFrontierBankContractForAllBankDenomMetadataRecords(cacheCtx, nil)
+		if err != nil {
+			k.Logger(ctx).Error("failed to deploy VFBC contract for all bank denom metadata records", "error", err)
+		} else {
+			commitFunc()
+		}
 	}
 }
 
