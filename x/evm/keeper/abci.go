@@ -16,8 +16,8 @@
 package keeper
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/evmos/ethermint/utils"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

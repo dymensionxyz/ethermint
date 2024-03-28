@@ -2,6 +2,7 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,6 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type ChainApp interface {

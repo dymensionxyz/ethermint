@@ -11,7 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/gogo/protobuf/proto"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

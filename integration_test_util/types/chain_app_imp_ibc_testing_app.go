@@ -1,6 +1,7 @@
 package types
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -10,7 +11,6 @@ import (
 	"github.com/cosmos/ibc-go/v7/testing/types"
 	chainapp "github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (c chainAppImp) Info(info abci.RequestInfo) abci.ResponseInfo {

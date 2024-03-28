@@ -10,8 +10,8 @@ import (
 	"github.com/evmos/ethermint/tests"
 	"google.golang.org/grpc/metadata"
 
+	"github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/abci/types"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/evmos/ethermint/rpc/backend/mocks"
