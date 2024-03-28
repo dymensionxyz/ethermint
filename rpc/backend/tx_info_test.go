@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	dbm "github.com/cometbft/cometbft-db"
 	tmlog "github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -16,7 +17,6 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc/metadata"
 )
 

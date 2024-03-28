@@ -3,6 +3,7 @@ package backend
 import (
 	"fmt"
 
+	dbm "github.com/cometbft/cometbft-db"
 	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/ethereum/go-ethereum/common"
@@ -15,7 +16,6 @@ import (
 	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func (suite *BackendTestSuite) TestTraceTransaction() {

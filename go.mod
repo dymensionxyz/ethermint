@@ -36,7 +36,6 @@ require (
 	github.com/status-im/keycard-go v0.2.0
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/tendermint v0.34.27
-	github.com/tendermint/tm-db v0.6.7
 	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/sjson v1.2.5
 	github.com/tyler-smith/go-bip39 v1.1.0
@@ -47,7 +46,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
+require (
+	github.com/cometbft/cometbft v0.37.4
+	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
+)
 
 require (
 	cloud.google.com/go v0.111.0 // indirect
@@ -80,11 +82,9 @@ require (
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
-	github.com/cometbft/cometbft v0.37.4 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.20.1 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.4 // indirect

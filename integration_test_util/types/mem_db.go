@@ -2,7 +2,7 @@ package types
 
 import (
 	cdb "github.com/cometbft/cometbft-db"
-	tdb "github.com/tendermint/tm-db"
+	tdb "github.com/cometbft/cometbft-db"
 )
 
 var _ cdb.DB = (*MemDB)(nil)

@@ -14,6 +14,7 @@ import (
 	"time"
 	"unsafe"
 
+	tdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
@@ -54,7 +55,6 @@ import (
 	"github.com/tendermint/tendermint/store"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
-	tdb "github.com/tendermint/tm-db"
 )
 
 // ChainIntegrationTestSuite is a helper for Chain integration test.

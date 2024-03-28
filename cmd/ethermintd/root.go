@@ -24,10 +24,10 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
+	dbm "github.com/cometbft/cometbft-db"
 	tmlog "github.com/cometbft/cometbft/libs/log"
 	tmcfg "github.com/tendermint/tendermint/config"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

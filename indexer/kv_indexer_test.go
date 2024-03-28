@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	dbm "github.com/cometbft/cometbft-db"
 	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
@@ -18,7 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func TestKVIndexer(t *testing.T) {
