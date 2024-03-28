@@ -17,10 +17,6 @@ func (c chainAppImp) Info(info abci.RequestInfo) abci.ResponseInfo {
 	return c.app.BaseApp.Info(info)
 }
 
-func (c chainAppImp) SetOption(option abci.RequestSetOption) abci.ResponseSetOption {
-	return c.app.BaseApp.SetOption(option)
-}
-
 func (c chainAppImp) Query(query abci.RequestQuery) abci.ResponseQuery {
 	return c.app.BaseApp.Query(query)
 }

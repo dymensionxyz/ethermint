@@ -200,7 +200,7 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 		)
 		require.NoError(t, err)
 
-		val = stakingkeeper.TestingUpdateValidator(*app.StakingKeeper(), ctx, val, true)
+		val = stakingkeeper.TestingUpdateValidator(app.StakingKeeper(), ctx, val, true)
 
 		refKeeper := reflect.ValueOf(app.StakingKeeper())
 		if refKeeper.Kind() == reflect.Ptr {
@@ -415,7 +415,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 	banktypes.RegisterQueryServer(queryHelper, suite.ChainApp.BankKeeper())
 	bankQueryClient := banktypes.NewQueryClient(queryHelper)
 
-	distributiontypes.RegisterQueryServer(queryHelper, suite.ChainApp.DistributionKeeper())
+	//distributiontypes.RegisterQueryServer(queryHelper, suite.ChainApp.DistributionKeeper())
 	distributionQueryClient := distributiontypes.NewQueryClient(queryHelper)
 
 	evmtypes.RegisterQueryServer(queryHelper, suite.ChainApp.EvmKeeper())
@@ -427,7 +427,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 	govv1types.RegisterQueryServer(queryHelper, suite.ChainApp.GovKeeper())
 	govV1QueryClient := govv1types.NewQueryClient(queryHelper)
 
-	govlegacytypes.RegisterQueryServer(queryHelper, govkeeper.NewLegacyQueryServer(*suite.ChainApp.GovKeeper()))
+	govlegacytypes.RegisterQueryServer(queryHelper, govkeeper.NewLegacyQueryServer(suite.ChainApp.GovKeeper()))
 	govLegacyQueryClient := govlegacytypes.NewQueryClient(queryHelper)
 
 	ibctransfertypes.RegisterQueryServer(queryHelper, suite.ChainApp.IbcTransferKeeper())
@@ -436,7 +436,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 	slashingtypes.RegisterQueryServer(queryHelper, suite.ChainApp.SlashingKeeper())
 	slashingQueryClient := slashingtypes.NewQueryClient(queryHelper)
 
-	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: *suite.ChainApp.StakingKeeper()})
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: suite.ChainApp.StakingKeeper()})
 	stakingQueryClient := stakingtypes.NewQueryClient(queryHelper)
 
 	serviceClient := cosmostxtypes.NewServiceClient(queryHelper)

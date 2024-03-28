@@ -17,6 +17,16 @@ type chainAppImp struct {
 	app *chainapp.EthermintApp
 }
 
+// PrepareProposal implements ibctesting.TestingApp.
+func (c chainAppImp) PrepareProposal(abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	panic("unimplemented")
+}
+
+// ProcessProposal implements ibctesting.TestingApp.
+func (c chainAppImp) ProcessProposal(abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	panic("unimplemented")
+}
+
 func (c chainAppImp) App() abci.Application {
 	return c.app
 }

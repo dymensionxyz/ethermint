@@ -37,17 +37,16 @@ import (
 )
 
 var defaultConsensusParams = &tmproto.ConsensusParams{
-	Block: tmproto.BlockParams{
-		MaxBytes:   200000,
-		MaxGas:     40000000, // 40m
-		TimeIotaMs: 499,
+	Block: &tmproto.BlockParams{
+		MaxBytes: 200000,
+		MaxGas:   40000000, // 40m
 	},
-	Evidence: tmproto.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: tmproto.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 		},
@@ -142,7 +141,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 		GenesisTime:     time.Time{},
 		ChainID:         chainCfg.CosmosChainId,
 		InitialHeight:   0,
-		ConsensusParams: defaultConsensusParams,
+		ConsensusParams: tmtypes.DefaultConsensusParams(),
 		Validators:      make([]tmtypes.GenesisValidator, len(valSet.Validators)),
 		AppHash:         nil,
 		AppState:        stateBytes,
@@ -161,13 +160,13 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	if chainCfg.DisableTendermint {
 		app.InitChain(abci.RequestInitChain{
 			ChainId: chainCfg.CosmosChainId,
-			ConsensusParams: &abci.ConsensusParams{
-				Block: &abci.BlockParams{
+			ConsensusParams: &tmproto.ConsensusParams{
+				Block: &tmproto.BlockParams{
 					MaxBytes: defaultConsensusParams.Block.MaxBytes,
 					MaxGas:   defaultConsensusParams.Block.MaxGas,
 				},
-				Evidence:  &defaultConsensusParams.Evidence,
-				Validator: &defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Validator: defaultConsensusParams.Validator,
 			},
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
@@ -291,7 +290,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 	}
 
 	{
-		bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, denomMetadata)
+		bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, denomMetadata, []banktypes.SendEnabled{})
 		genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 	}
 
