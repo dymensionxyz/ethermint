@@ -4,8 +4,8 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/evmos/ethermint/app"
 )

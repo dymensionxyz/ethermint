@@ -9,8 +9,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmproto "github.com/cometbft/cometbftt/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
@@ -19,7 +20,6 @@ import (
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // commitAndCreateNewCtx commits a block at a given time, creating and return a new ctx for the next block

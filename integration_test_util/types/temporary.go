@@ -2,9 +2,10 @@ package types
 
 import (
 	"fmt"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"path"
 	"strings"
+
+	tmtypes "github.com/cometbft/cometbft/types"
 )
 
 type TemporaryHolder struct {

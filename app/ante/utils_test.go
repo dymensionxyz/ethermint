@@ -3,9 +3,10 @@ package ante_test
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/big"
 	"time"
+
+	"math"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
@@ -52,8 +53,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
-	tmproto "github.com/cometbft/cometbftt/proto/tendermint/types"
-	"github.com/evmos/ethermint/app"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type AnteTestSuite struct {
@@ -152,7 +152,7 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.ethSigner = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 
 	// fund signer acc to pay for tx fees
-	amt := sdk.NewInt(int64(math.Pow10(18) * 2))
+	amt := sdk.NewInt(int64(1e18 * 2))
 	err = testutil.FundAccount(
 		suite.app.BankKeeper,
 		suite.ctx,
@@ -421,7 +421,7 @@ func (suite *AnteTestSuite) CreateTestEIP712SubmitProposalV1(from sdk.AccAddress
 		proposalMsgs,
 		sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(100))),
 		sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), from.Bytes()),
-		"Metadata",
+		"Metadata", "title", "summary",
 	)
 
 	suite.Require().NoError(err)

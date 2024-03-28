@@ -42,7 +42,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/types"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	tmproto "github.com/cometbft/cometbftt/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 
 	"github.com/tendermint/tendermint/version"

@@ -19,9 +19,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/cometbft/cometbft/types"
 	"github.com/tendermint/tendermint/libs/service"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"github.com/tendermint/tendermint/types"
 
 	ethermint "github.com/evmos/ethermint/types"
 )

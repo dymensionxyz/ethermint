@@ -17,7 +17,8 @@ import (
 	tdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbftt/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -53,7 +54,6 @@ import (
 	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	tmstate "github.com/tendermint/tendermint/state"
 	"github.com/tendermint/tendermint/store"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 )
 

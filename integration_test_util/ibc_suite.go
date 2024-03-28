@@ -7,13 +7,13 @@ import (
 	"math/big"
 	"time"
 
+	tmtypes "github.com/cometbft/cometbft/types"
 	cosmosed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	ibcmock "github.com/cosmos/ibc-go/v7/testing/mock"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // ChainsIbcIntegrationTestSuite is a wrapper of ChainIntegrationTestSuite for IBC testing.
