@@ -4,11 +4,13 @@ package utils
 import (
 	"context"
 	"fmt"
+	"time"
+
 	cdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/google/uuid"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/log"
 	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
@@ -18,7 +20,6 @@ import (
 	tmrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"time"
 )
 
 // StartTendermintNode starts a Tendermint node for the given ABCI Application, used for testing purposes.

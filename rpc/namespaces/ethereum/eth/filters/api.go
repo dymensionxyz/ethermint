@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/evmos/ethermint/rpc/types"
 
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"

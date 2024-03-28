@@ -30,8 +30,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
+	tmlog "github.com/cometbft/cometbft/libs/log"
 	tmcmd "github.com/tendermint/tendermint/cmd/cometbft/commands"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )
 

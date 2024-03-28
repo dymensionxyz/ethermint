@@ -10,7 +10,7 @@ import (
 
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	log "github.com/tendermint/tendermint/libs/log"
+	log "github.com/cometbft/cometbft/libs/log"
 
 	mock "github.com/stretchr/testify/mock"
 
