@@ -38,21 +38,20 @@ parent:
   </a>
 </div>
 
-> [!WARNING] 
+> [!WARNING]
 > Evmos, the team behind Ethermint, has fully shifted its focus to [Evmos](https://github.com/evmos/evmos), where we
 > continue to build interoperability solutions for the future!
 > As a result, this repository is no longer maintained for that reason and all relevant code has been migrated.
 >
 > **NOTE: If you are interested in using this software** email us at [evmos-sdk@evmos.org](mailto:evmos-sdk@evmos.org) with copy to [legal@thars.is](mailto:legal@thars.is)
 
-## About 
+## About
 
-Ethermint is a scalable and interoperable Ethereum library, built on Proof-of-Stake with fast-finality using the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk/) which runs on top of [Tendermint Core](https://github.com/tendermint/tendermint) consensus engine.
+Ethermint is a scalable and interoperable Ethereum library, built on Proof-of-Stake with fast-finality using the [Cosmos SDK](https://github.com/cosmos/cosmos-sdk/) which runs on top of [Tendermint Core](https://github.com/cometbft/cometbft) consensus engine.
 
 ## Careers
 
 See our open positions on [Greenhouse](https://evmos.org/careers).
-
 
 ## Community
 
@@ -62,6 +61,3 @@ The following chat channels and forums are a great spot to ask questions about E
 - [Evmos Discord](https://discord.gg/trje9XuAmy)
 - [Evmos Telegram](https://t.me/EvmosOrg)
 - [Altiplanic Twitter](https://twitter.com/Altiplanic_io)
-
-
-

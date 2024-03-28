@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Ethermint Chain - Legacy REST and gRPC Gateway docs
   description: A REST interface for state queries, legacy transactions
@@ -9,7 +9,7 @@ paths:
       summary: Account queries an Ethereum account.
       operationId: Account
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -234,7 +234,7 @@ paths:
         EthAccount.
       operationId: Balance
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -454,7 +454,7 @@ paths:
         hardfork status.
       operationId: BaseFee
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -662,7 +662,7 @@ paths:
       summary: Code queries the balance of all coins for a single account.
       operationId: Code
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -879,7 +879,7 @@ paths:
       summary: CosmosAccount queries an Ethereum account's Cosmos Address.
       operationId: CosmosAccount
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1105,7 +1105,7 @@ paths:
       summary: EstimateGas implements the `eth_estimateGas` rpc api
       operationId: EstimateGas
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1341,7 +1341,7 @@ paths:
       summary: EthCall implements the `eth_call` rpc api
       operationId: EthCall
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1354,7 +1354,7 @@ paths:
 
                   Tendermint sha256 hash of the transaction bytes. See
 
-                  https://github.com/tendermint/tendermint/issues/6539 for
+                  https://github.com/cometbft/cometbft/issues/6539 for
                   reference
               logs:
                 type: array
@@ -1670,7 +1670,7 @@ paths:
       summary: Params queries the parameters of x/evm module.
       operationId: EvmParams
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -1737,10 +1737,10 @@ paths:
                           clients as only gas pricing changed)
                       eip155_block:
                         type: string
-                        title: 'eip155_block: EIP155Block HF block'
+                        title: "eip155_block: EIP155Block HF block"
                       eip158_block:
                         type: string
-                        title: 'eip158_block: EIP158 HF block'
+                        title: "eip158_block: EIP158 HF block"
                       byzantium_block:
                         type: string
                         title: >-
@@ -2016,7 +2016,7 @@ paths:
       summary: Storage queries the balance of all coins for a single account.
       operationId: Storage
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2243,7 +2243,7 @@ paths:
         `debug_traceBlockByHash` rpc api
       operationId: TraceBlock
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -2527,12 +2527,12 @@ paths:
           required: false
           type: string
         - name: trace_config.overrides.eip155_block
-          description: 'eip155_block: EIP155Block HF block.'
+          description: "eip155_block: EIP155Block HF block."
           in: query
           required: false
           type: string
         - name: trace_config.overrides.eip158_block
-          description: 'eip158_block: EIP158 HF block.'
+          description: "eip158_block: EIP158 HF block."
           in: query
           required: false
           type: string
@@ -2671,7 +2671,7 @@ paths:
       summary: TraceTx implements the `debug_traceTransaction` rpc api
       operationId: TraceTx
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3037,12 +3037,12 @@ paths:
           required: false
           type: string
         - name: trace_config.overrides.eip155_block
-          description: 'eip155_block: EIP155Block HF block.'
+          description: "eip155_block: EIP155Block HF block."
           in: query
           required: false
           type: string
         - name: trace_config.overrides.eip158_block
-          description: 'eip158_block: EIP158 HF block.'
+          description: "eip158_block: EIP158 HF block."
           in: query
           required: false
           type: string
@@ -3185,7 +3185,7 @@ paths:
         Address.
       operationId: ValidatorAccount
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3413,7 +3413,7 @@ paths:
         corresponding min denom
       operationId: VirtualFrontierBankContractByDenom
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3642,7 +3642,7 @@ paths:
       summary: ListVirtualFrontierBankContracts returns the list of bank contract
       operationId: ListVirtualFrontierBankContracts
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -3947,7 +3947,7 @@ paths:
         virtual frontier contracts.
       operationId: ListVirtualFrontierContracts
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4236,7 +4236,7 @@ paths:
         corresponding virtual frontier contract by address
       operationId: VirtualFrontierContractByAddress
       responses:
-        '200':
+        "200":
           description: A successful response.
           schema:
             type: object
@@ -4553,10 +4553,10 @@ definitions:
           gas pricing changed)
       eip155_block:
         type: string
-        title: 'eip155_block: EIP155Block HF block'
+        title: "eip155_block: EIP155Block HF block"
       eip158_block:
         type: string
-        title: 'eip158_block: EIP158 HF block'
+        title: "eip158_block: EIP158 HF block"
       byzantium_block:
         type: string
         title: >-
@@ -4569,7 +4569,7 @@ definitions:
           already activated)
       petersburg_block:
         type: string
-        title: 'petersburg_block: Petersburg switch block (nil same as Constantinople)'
+        title: "petersburg_block: Petersburg switch block (nil same as Constantinople)"
       istanbul_block:
         type: string
         title: >-
@@ -4873,7 +4873,7 @@ definitions:
 
           Tendermint sha256 hash of the transaction bytes. See
 
-          https://github.com/tendermint/tendermint/issues/6539 for reference
+          https://github.com/cometbft/cometbft/issues/6539 for reference
       logs:
         type: array
         items:
@@ -5005,10 +5005,10 @@ definitions:
               only gas pricing changed)
           eip155_block:
             type: string
-            title: 'eip155_block: EIP155Block HF block'
+            title: "eip155_block: EIP155Block HF block"
           eip158_block:
             type: string
-            title: 'eip158_block: EIP158 HF block'
+            title: "eip158_block: EIP158 HF block"
           byzantium_block:
             type: string
             title: >-
@@ -5200,10 +5200,10 @@ definitions:
                   only gas pricing changed)
               eip155_block:
                 type: string
-                title: 'eip155_block: EIP155Block HF block'
+                title: "eip155_block: EIP155Block HF block"
               eip158_block:
                 type: string
-                title: 'eip158_block: EIP158 HF block'
+                title: "eip158_block: EIP158 HF block"
               byzantium_block:
                 type: string
                 title: >-
@@ -5484,10 +5484,10 @@ definitions:
               only gas pricing changed)
           eip155_block:
             type: string
-            title: 'eip155_block: EIP155Block HF block'
+            title: "eip155_block: EIP155Block HF block"
           eip158_block:
             type: string
-            title: 'eip158_block: EIP158 HF block'
+            title: "eip158_block: EIP158 HF block"
           byzantium_block:
             type: string
             title: >-

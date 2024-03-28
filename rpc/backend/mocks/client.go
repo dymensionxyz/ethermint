@@ -4,7 +4,7 @@ package mocks
 
 import (
 	bytes "github.com/cometbft/cometbft/libs/bytes"
-	client "github.com/tendermint/tendermint/rpc/client"
+	client "github.com/cometbft/cometbft/rpc/client"
 
 	context "context"
 

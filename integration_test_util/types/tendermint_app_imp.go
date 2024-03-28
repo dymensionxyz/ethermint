@@ -2,8 +2,9 @@ package types
 
 import (
 	"fmt"
-	nm "github.com/tendermint/tendermint/node"
 	"strings"
+
+	nm "github.com/cometbft/cometbft/node"
 )
 
 var _ TendermintApp = &tendermintAppImp{}

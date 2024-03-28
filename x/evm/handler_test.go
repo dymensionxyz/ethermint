@@ -12,11 +12,10 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/tendermint/tendermint/libs/json"
+	tmjson "github.com/cometbft/cometbft/libs/json"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/evmos/ethermint/app"
 
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
@@ -43,9 +42,9 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
+	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
 
-	"github.com/tendermint/tendermint/version"
+	"github.com/cometbft/cometbft/version"
 )
 
 type EvmTestSuite struct {

@@ -10,16 +10,16 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/libs/log"
+	nm "github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
 	tmcorestypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmgrpc "github.com/cometbft/cometbft/rpc/grpc"
+	tmrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	rpctest "github.com/cometbft/cometbft/rpc/test"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/google/uuid"
-	nm "github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
-	tmgrpc "github.com/tendermint/tendermint/rpc/grpc"
-	tmrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	rpctest "github.com/tendermint/tendermint/rpc/test"
 )
 
 // StartTendermintNode starts a Tendermint node for the given ABCI Application, used for testing purposes.

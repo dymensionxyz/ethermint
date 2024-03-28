@@ -27,8 +27,8 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	rpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	tmtypes "github.com/cometbft/cometbft/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"

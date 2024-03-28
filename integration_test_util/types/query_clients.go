@@ -2,6 +2,7 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
+	httpclient "github.com/cometbft/cometbft/rpc/client/http"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	cosmostxtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -15,7 +16,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	httpclient "github.com/tendermint/tendermint/rpc/client/http"
 )
 
 type QueryClients struct {
