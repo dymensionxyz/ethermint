@@ -3,10 +3,20 @@ package integration_test_util
 //goland:noinspection SpellCheckingInspection,GoSnakeCaseUsage
 import (
 	"fmt"
+	"math"
+	"math/big"
+	"os"
+	"reflect"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+	"unsafe"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmostxtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -24,6 +34,7 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	chainapp "github.com/evmos/ethermint/app"
+	"github.com/evmos/ethermint/app/params"
 	ethermint_hd "github.com/evmos/ethermint/crypto/hd"
 	"github.com/evmos/ethermint/encoding"
 	kvindexer "github.com/evmos/ethermint/indexer"
@@ -44,16 +55,6 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/tendermint/tendermint/version"
 	tdb "github.com/tendermint/tm-db"
-	"math"
-	"math/big"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-	"sync"
-	"testing"
-	"time"
-	"unsafe"
 )
 
 // ChainIntegrationTestSuite is a helper for Chain integration test.

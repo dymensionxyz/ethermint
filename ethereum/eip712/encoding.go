@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/evmos/ethermint/params"
+	"github.com/evmos/ethermint/app/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"

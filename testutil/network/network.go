@@ -62,7 +62,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/evmos/ethermin/app"
-	"github.com/evmos/ethermint/params"
+	"github.com/evmos/ethermint/app/params"
 
 	"github.com/evmos/ethermint/crypto/hd"
 	"github.com/evmos/ethermint/encoding"

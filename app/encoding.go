@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/sideprotocol/side/app/params"
+	"github.com/evmos/ethermint/app/params"
 )
 
 // makeEncodingConfig creates an EncodingConfig for an amino based test configuration.

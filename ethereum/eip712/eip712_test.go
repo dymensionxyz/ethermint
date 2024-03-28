@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
+	chainparams "github.com/evmos/ethermint/app/params"
 	"github.com/evmos/ethermint/ethereum/eip712"
-	chainparams "github.com/evmos/ethermint/params"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 

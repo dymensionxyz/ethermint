@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	"github.com/evmos/ethermint/params"
+	"github.com/evmos/ethermint/app/params"
 
 	enccodec "github.com/evmos/ethermint/encoding/codec"
 )
