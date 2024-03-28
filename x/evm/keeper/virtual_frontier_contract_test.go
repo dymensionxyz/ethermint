@@ -2,7 +2,9 @@ package keeper_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -430,6 +432,185 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierBankContract() {
 		if suite.NotNil(err) {
 			suite.Contains(err.Error(), "decimals does not fit uint8")
 		}
+	})
+
+	suite.Run("accounts which is neither contract account nor module account will not prevent deployment", func() {
+		defer func() {
+			suite.Commit()
+		}()
+
+		meta3 := testutil.NewBankDenomMetadata("ibc/denom3", 6)
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta3)
+		vfbcMeta3, _ := types.CollectMetadataForVirtualFrontierBankContract(meta3)
+
+		deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
+		suite.Require().NotNil(deployerModuleAccount)
+
+		expectedContractAddrMeta3 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+0)
+
+		newAccount := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, expectedContractAddrMeta3.Bytes())
+		newBaseAccount := authtypes.NewBaseAccount(
+			newAccount.GetAddress(),
+			newAccount.GetPubKey(),
+			newAccount.GetAccountNumber(),
+			newAccount.GetSequence(),
+		)
+		suite.app.AccountKeeper.SetAccount(
+			suite.ctx,
+			vestingtypes.NewContinuousVestingAccount(newBaseAccount, sdk.NewCoins(sdk.NewCoin(suite.denom, sdk.NewInt(1))), 0, 0),
+		)
+		recheckAuthAcc := suite.app.AccountKeeper.GetAccount(suite.ctx, expectedContractAddrMeta3.Bytes())
+		suite.Require().NotNil(recheckAuthAcc)
+		recheckEvmAcc := suite.app.EvmKeeper.GetAccount(suite.ctx, expectedContractAddrMeta3)
+		suite.Require().NotNil(recheckEvmAcc)
+		suite.Require().False(recheckEvmAcc.IsContract(), "can not yet be a contract account")
+
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, expectedContractAddrMeta3))
+
+		addrMeta3, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
+			suite.ctx,
+			&types.VirtualFrontierContract{
+				Active: true,
+			}, &types.VFBankContractMetadata{
+				MinDenom: meta3.Base,
+			},
+			&vfbcMeta3,
+		)
+		suite.Require().NoError(err)
+
+		suite.Require().Equal(expectedContractAddrMeta3, addrMeta3)
+
+		suite.Require().True(
+			suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, addrMeta3),
+			"account must be converted into VFBC",
+		)
+
+		recheckAuthAcc = suite.app.AccountKeeper.GetAccount(suite.ctx, addrMeta3.Bytes())
+		suite.Require().NotNil(recheckAuthAcc)
+		_, isEthAccount := recheckAuthAcc.(*ethermint.EthAccount)
+		suite.Require().False(isEthAccount, "account type must be kept as is")
+
+		recheckEvmAcc = suite.app.EvmKeeper.GetAccount(suite.ctx, addrMeta3)
+		suite.Require().NotNil(recheckEvmAcc)
+		suite.True(recheckEvmAcc.IsContract(), "must be contract account")
+		suite.Equal(uint64(1), recheckEvmAcc.Nonce)
+	})
+
+	suite.Run("accounts is module account will prevent deployment", func() {
+		defer func() {
+			suite.Commit()
+		}()
+
+		meta4 := testutil.NewBankDenomMetadata("ibc/denom3", 6)
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta4)
+		vfbcMeta4, _ := types.CollectMetadataForVirtualFrontierBankContract(meta4)
+
+		deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
+		suite.Require().NotNil(deployerModuleAccount)
+
+		expectedContractAddrMeta4 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+0)
+
+		newAccount := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, expectedContractAddrMeta4.Bytes())
+		newBaseAccount := authtypes.NewBaseAccount(
+			newAccount.GetAddress(),
+			newAccount.GetPubKey(),
+			newAccount.GetAccountNumber(),
+			newAccount.GetSequence(),
+		)
+		newModuleAccount := authtypes.NewModuleAccount(newBaseAccount, "test", authtypes.Burner, authtypes.Minter)
+		suite.app.AccountKeeper.SetAccount(
+			suite.ctx,
+			newModuleAccount,
+		)
+		recheckAuthAcc := suite.app.AccountKeeper.GetAccount(suite.ctx, expectedContractAddrMeta4.Bytes())
+		suite.Require().NotNil(recheckAuthAcc)
+		recheckEvmAcc := suite.app.EvmKeeper.GetAccount(suite.ctx, expectedContractAddrMeta4)
+		suite.Require().NotNil(recheckEvmAcc)
+		suite.Require().False(recheckEvmAcc.IsContract(), "can not yet be a contract account")
+
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, expectedContractAddrMeta4))
+
+		suite.Commit()
+
+		_, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
+			suite.ctx,
+			&types.VirtualFrontierContract{
+				Active: true,
+			}, &types.VFBankContractMetadata{
+				MinDenom: meta4.Base,
+			},
+			&vfbcMeta4,
+		)
+		suite.Require().Error(err)
+
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, expectedContractAddrMeta4))
+
+		recheckAuthAcc = suite.app.AccountKeeper.GetAccount(suite.ctx, expectedContractAddrMeta4.Bytes())
+		suite.Require().NotNil(recheckAuthAcc)
+		_, isEthAccount := recheckAuthAcc.(*ethermint.EthAccount)
+		suite.Require().False(isEthAccount, "account type must be kept as is")
+
+		recheckEvmAcc = suite.app.EvmKeeper.GetAccount(suite.ctx, expectedContractAddrMeta4)
+		suite.Require().NotNil(recheckEvmAcc)
+		suite.False(recheckEvmAcc.IsContract(), "must not be contract account")
+	})
+
+	suite.Run("base account is ok but if having non-zero sequence number, will prevent deployment", func() {
+		defer func() {
+			suite.Commit()
+		}()
+
+		meta5 := testutil.NewBankDenomMetadata("ibc/denom5", 6)
+		suite.app.BankKeeper.SetDenomMetaData(suite.ctx, meta5)
+		vfbcMeta5, _ := types.CollectMetadataForVirtualFrontierBankContract(meta5)
+
+		deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
+		suite.Require().NotNil(deployerModuleAccount)
+
+		expectedContractAddrMeta5 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, deployerModuleAccount.GetSequence()+0)
+
+		newAccount := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, expectedContractAddrMeta5.Bytes())
+		newBaseAccount := authtypes.NewBaseAccount(
+			newAccount.GetAddress(),
+			newAccount.GetPubKey(),
+			newAccount.GetAccountNumber(),
+			1, // sequence number is non-zero
+		)
+		suite.app.AccountKeeper.SetAccount(
+			suite.ctx,
+			vestingtypes.NewContinuousVestingAccount(newBaseAccount, sdk.NewCoins(sdk.NewCoin(suite.denom, sdk.NewInt(1))), 0, 0),
+		)
+		recheckAuthAcc := suite.app.AccountKeeper.GetAccount(suite.ctx, expectedContractAddrMeta5.Bytes())
+		suite.Require().NotNil(recheckAuthAcc)
+		recheckEvmAcc := suite.app.EvmKeeper.GetAccount(suite.ctx, expectedContractAddrMeta5)
+		suite.Require().NotNil(recheckEvmAcc)
+		suite.Require().False(recheckEvmAcc.IsContract(), "can not yet be a contract account")
+
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, expectedContractAddrMeta5))
+
+		suite.Commit()
+
+		_, err := suite.app.EvmKeeper.DeployNewVirtualFrontierBankContract(
+			suite.ctx,
+			&types.VirtualFrontierContract{
+				Active: true,
+			}, &types.VFBankContractMetadata{
+				MinDenom: meta5.Base,
+			},
+			&vfbcMeta5,
+		)
+		suite.Require().Error(err)
+
+		suite.Require().False(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, expectedContractAddrMeta5))
+
+		recheckAuthAcc = suite.app.AccountKeeper.GetAccount(suite.ctx, expectedContractAddrMeta5.Bytes())
+		suite.Require().NotNil(recheckAuthAcc)
+		_, isEthAccount := recheckAuthAcc.(*ethermint.EthAccount)
+		suite.Require().False(isEthAccount, "account type must be kept as is")
+
+		recheckEvmAcc = suite.app.EvmKeeper.GetAccount(suite.ctx, expectedContractAddrMeta5)
+		suite.Require().NotNil(recheckEvmAcc)
+		suite.False(recheckEvmAcc.IsContract(), "must not be contract account")
 	})
 }
 
