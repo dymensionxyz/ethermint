@@ -52,8 +52,8 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
+	tmproto "github.com/cometbft/cometbftt/proto/tendermint/types"
 	"github.com/evmos/ethermint/app"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type AnteTestSuite struct {
