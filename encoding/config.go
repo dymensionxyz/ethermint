@@ -18,9 +18,9 @@ package encoding
 import (
 	amino "github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/evmos/ethermint/params"
 
 	enccodec "github.com/evmos/ethermint/encoding/codec"
 )
