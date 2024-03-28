@@ -3,12 +3,12 @@
 package mocks
 
 import (
-	bytes "github.com/tendermint/tendermint/libs/bytes"
+	bytes "github.com/cometbft/cometbft/libs/bytes"
 	client "github.com/tendermint/tendermint/rpc/client"
 
 	context "context"
 
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	log "github.com/cometbft/cometbft/libs/log"
 

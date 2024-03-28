@@ -15,6 +15,7 @@ import (
 	"unsafe"
 
 	tdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
@@ -46,7 +47,6 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	httpclient "github.com/tendermint/tendermint/rpc/client/http"

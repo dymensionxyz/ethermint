@@ -29,8 +29,8 @@ import (
 	ethrlp "github.com/ethereum/go-ethereum/rlp"
 
 	"github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	"github.com/tendermint/tendermint/version"

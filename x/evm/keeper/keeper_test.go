@@ -45,7 +45,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
 	"github.com/tendermint/tendermint/version"

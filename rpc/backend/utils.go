@@ -35,11 +35,11 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 
+	"github.com/cometbft/cometbftt/proto/tendermint/crypto"
 	"github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 type txGasAndReward struct {

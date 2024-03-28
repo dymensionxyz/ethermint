@@ -9,6 +9,8 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/rpc/backend/mocks"
@@ -16,9 +18,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/bytes"
 	tmrpcclient "github.com/tendermint/tendermint/rpc/client"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
 )
 
