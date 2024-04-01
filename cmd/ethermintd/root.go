@@ -78,7 +78,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		WithBroadcastMode(flags.FlagBroadcastMode).
 		WithHomeDir(app.DefaultNodeHome).
 		WithKeyringOptions(hd.EthSecp256k1Option()).
-		WithViper(EnvPrefix)
+		WithViper(EnvPrefix).WithLedgerHasProtobuf(true)
 
 	eip712.SetEncodingConfig(encodingConfig)
 
@@ -116,7 +116,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 
 	cfg := sdk.GetConfig()
 	cfg.Seal()
-
+	a := appCreator{encodingConfig}
 	rootCmd.AddCommand(
 		ethermintclient.ValidateChainID(
 			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
@@ -132,7 +132,6 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		config.Cmd(),
 	)
 
-	a := appCreator{encodingConfig}
 	server.AddCommands(
 		rootCmd,
 		server.NewDefaultStartOptions(a.newApp, app.DefaultNodeHome),
