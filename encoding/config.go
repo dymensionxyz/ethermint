@@ -36,8 +36,8 @@ func MakeConfig(mb module.BasicManager) params.EncodingConfig {
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
 		Amino:             cdc,
 	}
-	// enccodec.RegisterLegacyAminoCodec(encodingConfig.Amino)
-	// mb.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	enccodec.RegisterLegacyAminoCodec(encodingConfig.Amino)
+	mb.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	enccodec.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	mb.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	return encodingConfig
