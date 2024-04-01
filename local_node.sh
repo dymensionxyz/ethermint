@@ -8,8 +8,8 @@ MONIKER="localtestnet"
 KEYRING="test"
 KEYALGO="eth_secp256k1"
 LOGLEVEL="info"
-# Set dedicated home directory for the ethermintd instance
-HOMEDIR="$HOME/.tmp-ethermintd"
+# Set dedicated home directory for the evmosd instance
+HOMEDIR="$HOME/.tmp-evmosd"
 # to trace evm
 #TRACE="--trace"
 TRACE=""
@@ -50,7 +50,7 @@ while [[ $# -gt 0 ]]; do
 		shift # Move past the argument
 		;;
 	--no-install)
-		echo "Flag --no-install passed -> Skipping installation of the ethermintd binary."
+		echo "Flag --no-install passed -> Skipping installation of the evmosd binary."
 		install=false
 		shift # Move past the flag
 		;;
@@ -84,8 +84,8 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	rm -rf "$HOMEDIR"
 
 	# Set client config
-	ethermintd config keyring-backend "$KEYRING" --home "$HOMEDIR"
-	ethermintd config chain-id "$CHAINID" --home "$HOMEDIR"
+	evmosd config keyring-backend "$KEYRING" --home "$HOMEDIR"
+	evmosd config chain-id "$CHAINID" --home "$HOMEDIR"
 
 	# myKey address 0x7cb61d4117ae31a12e393a1cfa3bac666481d02e | evmos10jmp6sgh4cc6zt3e8gw05wavvejgr5pwjnpcky
 	VAL_KEY="mykey"
@@ -108,18 +108,18 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	USER4_MNEMONIC="doll midnight silk carpet brush boring pluck office gown inquiry duck chief aim exit gain never tennis crime fragile ship cloud surface exotic patch"
 
 	# Import keys from mnemonics
-	echo "$VAL_MNEMONIC" | ethermintd keys add "$VAL_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
+	echo "$VAL_MNEMONIC" | evmosd keys add "$VAL_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
 
 	# Store the validator address in a variable to use it later
-	node_address=$(ethermintd keys show -a "$VAL_KEY" --keyring-backend "$KEYRING" --home "$HOMEDIR")
+	node_address=$(evmosd keys show -a "$VAL_KEY" --keyring-backend "$KEYRING" --home "$HOMEDIR")
 
-	echo "$USER1_MNEMONIC" | ethermintd keys add "$USER1_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
-	echo "$USER2_MNEMONIC" | ethermintd keys add "$USER2_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
-	echo "$USER3_MNEMONIC" | ethermintd keys add "$USER3_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
-	echo "$USER4_MNEMONIC" | ethermintd keys add "$USER4_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
+	echo "$USER1_MNEMONIC" | evmosd keys add "$USER1_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
+	echo "$USER2_MNEMONIC" | evmosd keys add "$USER2_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
+	echo "$USER3_MNEMONIC" | evmosd keys add "$USER3_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
+	echo "$USER4_MNEMONIC" | evmosd keys add "$USER4_KEY" --recover --keyring-backend "$KEYRING" --algo "$KEYALGO" --home "$HOMEDIR"
 
 	# Set moniker and chain-id for Evmos (Moniker can be anything, chain-id must be an integer)
-	ethermintd init $MONIKER -o --chain-id "$CHAINID" --home "$HOMEDIR"
+	evmosd init $MONIKER -o --chain-id "$CHAINID" --home "$HOMEDIR"
 
 	# Change parameter token denominations to aevmos
 	jq '.app_state["staking"]["params"]["bond_denom"]="aevmos"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
@@ -201,11 +201,11 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	sed -i.bak 's/pruning-interval = "0"/pruning-interval = "10"/g' "$APP_TOML"
 
 	# Allocate genesis accounts (cosmos formatted addresses)
-	ethermintd add-genesis-account "$(ethermintd keys show "$VAL_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 100000000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
-	ethermintd add-genesis-account "$(ethermintd keys show "$USER1_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
-	ethermintd add-genesis-account "$(ethermintd keys show "$USER2_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
-	ethermintd add-genesis-account "$(ethermintd keys show "$USER3_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
-	ethermintd add-genesis-account "$(ethermintd keys show "$USER4_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
+	evmosd add-genesis-account "$(evmosd keys show "$VAL_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 100000000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
+	evmosd add-genesis-account "$(evmosd keys show "$USER1_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
+	evmosd add-genesis-account "$(evmosd keys show "$USER2_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
+	evmosd add-genesis-account "$(evmosd keys show "$USER3_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
+	evmosd add-genesis-account "$(evmosd keys show "$USER4_KEY" -a --keyring-backend "$KEYRING" --home "$HOMEDIR")" 1000000000000000000000aevmos --keyring-backend "$KEYRING" --home "$HOMEDIR"
 
 	# bc is required to add these big numbers
 	# NOTE: we have the validator account (1e26) plus 4 (1e21) accounts
@@ -214,19 +214,19 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 	jq -r --arg total_supply "$total_supply" '.app_state["bank"]["supply"][0]["amount"]=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 	# Sign genesis transaction
-	ethermintd gentx "$VAL_KEY" 1000000000000000000000aevmos --gas-prices ${BASEFEE}aevmos --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HOMEDIR"
+	evmosd gentx "$VAL_KEY" 1000000000000000000000aevmos --gas-prices ${BASEFEE}aevmos --keyring-backend "$KEYRING" --chain-id "$CHAINID" --home "$HOMEDIR"
 	## In case you want to create multiple validators at genesis
-	## 1. Back to `ethermintd keys add` step, init more keys
-	## 2. Back to `ethermintd add-genesis-account` step, add balance for those
-	## 3. Clone this ~/.ethermintd home directory into some others, let's say `~/.clonedethermintd`
+	## 1. Back to `evmosd keys add` step, init more keys
+	## 2. Back to `evmosd add-genesis-account` step, add balance for those
+	## 3. Clone this ~/.evmosd home directory into some others, let's say `~/.clonedevmosd`
 	## 4. Run `gentx` in each of those folders
-	## 5. Copy the `gentx-*` folders under `~/.clonedethermintd/config/gentx/` folders into the original `~/.ethermintd/config/gentx`
+	## 5. Copy the `gentx-*` folders under `~/.clonedevmosd/config/gentx/` folders into the original `~/.evmosd/config/gentx`
 
 	# Collect genesis tx
-	ethermintd collect-gentxs --home "$HOMEDIR"
+	evmosd collect-gentxs --home "$HOMEDIR"
 
 	# Run this to ensure everything worked and that the genesis file is setup correctly
-	ethermintd validate-genesis --home "$HOMEDIR"
+	evmosd validate-genesis --home "$HOMEDIR"
 
 	if [[ $1 == "pending" ]]; then
 		echo "pending mode is on, please wait for the first block committed."
@@ -234,7 +234,7 @@ if [[ $overwrite == "y" || $overwrite == "Y" ]]; then
 fi
 
 # Start the node
-ethermintd start \
+evmosd start \
 	--metrics "$TRACE" \
 	--log_level $LOGLEVEL \
 	--minimum-gas-prices=0.0001aevmos \
