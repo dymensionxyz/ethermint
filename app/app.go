@@ -190,15 +190,15 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                         nil,
-		distrtypes.ModuleName:                              nil,
-		minttypes.ModuleName:                               {authtypes.Minter},
-		stakingtypes.BondedPoolName:                        {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:                     {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                                {authtypes.Burner},
-		ibctransfertypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-		evmtypes.ModuleName:                                {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
-		evmtypes.ModuleVirtualFrontierContractDeployerName: nil,
+		authtypes.FeeCollectorName:     nil,
+		distrtypes.ModuleName:          nil,
+		minttypes.ModuleName:           {authtypes.Minter},
+		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:            {authtypes.Burner},
+		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
+		//evmtypes.ModuleVirtualFrontierContractDeployerName: nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -376,9 +376,17 @@ func NewEthermintApp(
 		appCodec, keys[distrtypes.StoreKey], app.AccountKeeper, app.BankKeeper,
 		stakingKeeper, authtypes.FeeCollectorName, authAddr,
 	)
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, app.LegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authAddr,
+		appCodec,
+		&codec.LegacyAmino{},
+		keys[slashingtypes.StoreKey],
+		stakingKeeper,
+		authAddr,
 	)
+	// app.SlashingKeeper = slashingkeeper.NewKeeper(
+	// 	appCodec, app.LegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authAddr,
+	// )
 	crisisKeeper := crisiskeeper.NewKeeper(
 		appCodec,
 		keys[crisistypes.StoreKey],

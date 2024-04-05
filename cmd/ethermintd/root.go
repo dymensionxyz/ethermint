@@ -17,6 +17,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -200,6 +201,7 @@ func (a appCreator) appExport(
 ) (servertypes.ExportedApp, error) {
 	var ethermintApp *app.EthermintApp
 	homePath, ok := appOpts.Get(flags.FlagHome).(string)
+	fmt.Println("Hellow:", homePath)
 	if !ok || homePath == "" {
 		return servertypes.ExportedApp{}, errors.New("application home not set")
 	}
@@ -213,7 +215,7 @@ func (a appCreator) appExport(
 	} else {
 		ethermintApp = app.NewEthermintApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
 	}
-
+	fmt.Println("Still working")
 	return ethermintApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
 
