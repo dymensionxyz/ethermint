@@ -190,15 +190,15 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
-		//evmtypes.ModuleVirtualFrontierContractDeployerName: nil,
+		authtypes.FeeCollectorName:                         nil,
+		distrtypes.ModuleName:                              nil,
+		minttypes.ModuleName:                               {authtypes.Minter},
+		stakingtypes.BondedPoolName:                        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                                {authtypes.Burner},
+		ibctransfertypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+		evmtypes.ModuleName:                                {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
+		evmtypes.ModuleVirtualFrontierContractDeployerName: {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -295,11 +295,11 @@ func NewEthermintApp(
 
 	keys := sdk.NewKVStoreKeys(
 		// SDK keys
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
+		authtypes.StoreKey, consensusparamtypes.StoreKey, crisistypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
-		feegrant.StoreKey, authzkeeper.StoreKey,
+		feegrant.StoreKey, authz.ModuleName,
 		// ibc keys
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
 		// ethermint keys
@@ -363,6 +363,8 @@ func NewEthermintApp(
 		authAddr,
 	)
 
+	app.StakingKeeper = *stakingKeeper
+
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
 		keys[minttypes.StoreKey],
@@ -377,16 +379,16 @@ func NewEthermintApp(
 		stakingKeeper, authtypes.FeeCollectorName, authAddr,
 	)
 
-	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec,
-		&codec.LegacyAmino{},
-		keys[slashingtypes.StoreKey],
-		stakingKeeper,
-		authAddr,
-	)
 	// app.SlashingKeeper = slashingkeeper.NewKeeper(
-	// 	appCodec, app.LegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authAddr,
+	// 	appCodec,
+	// 	&codec.LegacyAmino{},
+	// 	keys[slashingtypes.StoreKey],
+	// 	stakingKeeper,
+	// 	authAddr,
 	// )
+	app.SlashingKeeper = slashingkeeper.NewKeeper(
+		appCodec, app.LegacyAmino(), keys[slashingtypes.StoreKey], stakingKeeper, authAddr,
+	)
 	crisisKeeper := crisiskeeper.NewKeeper(
 		appCodec,
 		keys[crisistypes.StoreKey],
