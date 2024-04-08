@@ -47,7 +47,7 @@ ethermintd add-genesis-account $KEY 100000000000000000000000000aphoton --keyring
 # Sign genesis transaction
 ethermintd gentx $KEY 1000000000000000000000aphoton --keyring-backend $KEYRING --chain-id $CHAINID
 
-# # # Collect genesis tx
+# Collect genesis tx
 ethermintd collect-gentxs
 
 # # Run this to ensure everything worked and that the genesis file is setup correctly

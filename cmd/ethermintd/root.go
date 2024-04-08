@@ -50,6 +50,7 @@ import (
 	"github.com/evmos/ethermint/app/params"
 
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/evmos/ethermint/app"
 	ethermintclient "github.com/evmos/ethermint/client"
@@ -118,13 +119,19 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 	a := appCreator{encodingConfig}
+	gentxModule := app.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
 		ethermintclient.ValidateChainID(
 			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, genutiltypes.DefaultMessageValidator),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator),
 		genutilcli.MigrateGenesisCmd(), // TODO: shouldn't this include the local app version instead of the SDK?
-		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
+		genutilcli.GenTxCmd(
+			app.ModuleBasics,
+			encodingConfig.TxConfig,
+			banktypes.GenesisBalancesIterator{},
+			app.DefaultNodeHome,
+		),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
@@ -215,7 +222,6 @@ func (a appCreator) appExport(
 	} else {
 		ethermintApp = app.NewEthermintApp(logger, db, traceStore, true, map[int64]bool{}, "", uint(1), a.encCfg, appOpts)
 	}
-	fmt.Println("Still working")
 	return ethermintApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
 
