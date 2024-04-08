@@ -16,11 +16,12 @@
 package keeper
 
 import (
-	"github.com/evmos/ethermint/x/evm/vm/geth"
 	"math/big"
 	"time"
 
-	tmtypes "github.com/tendermint/tendermint/types"
+	"github.com/evmos/ethermint/x/evm/vm/geth"
+
+	tmtypes "github.com/cometbft/cometbft/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"

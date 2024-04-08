@@ -2,8 +2,9 @@ package integration_test_util
 
 import (
 	"fmt"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	"strings"
+
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 )
 
 // QueryDenomHash returns the denom hash of given denom trace information.

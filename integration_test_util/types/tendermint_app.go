@@ -1,6 +1,6 @@
 package types
 
-import nm "github.com/tendermint/tendermint/node"
+import nm "github.com/cometbft/cometbft/node"
 
 type TendermintApp interface {
 	TendermintNode() *nm.Node

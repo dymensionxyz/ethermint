@@ -9,7 +9,6 @@ option go_package = "github.com/evmos/ethermint/types";
 // the fee payer as well as its signature data.
 message ExtensionOptionsWeb3Tx {
   option (gogoproto.goproto_getters) = false;
-
   // typed_data_chain_id is used only in EIP712 Domain and should match
   // Ethereum network ID in a Web3 provider (e.g. Metamask).
   uint64 typed_data_chain_id = 1

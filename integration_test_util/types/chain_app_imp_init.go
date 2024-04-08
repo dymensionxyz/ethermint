@@ -2,16 +2,21 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
-	sdkmath "cosmossdk.io/math"
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
+	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmosed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,31 +27,26 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/evmos/ethermint/app"
 	chainapp "github.com/evmos/ethermint/app"
+	"github.com/evmos/ethermint/app/params"
 	itutilutils "github.com/evmos/ethermint/integration_test_util/utils"
 	evmostypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"strings"
-	"time"
 )
 
 var defaultConsensusParams = &tmproto.ConsensusParams{
-	Block: tmproto.BlockParams{
-		MaxBytes:   200000,
-		MaxGas:     40000000, // 40m
-		TimeIotaMs: 499,
+	Block: &tmproto.BlockParams{
+		MaxBytes: 200000,
+		MaxGas:   40000000, // 40m
 	},
-	Evidence: tmproto.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: tmproto.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 		},
@@ -141,7 +141,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 		GenesisTime:     time.Time{},
 		ChainID:         chainCfg.CosmosChainId,
 		InitialHeight:   0,
-		ConsensusParams: defaultConsensusParams,
+		ConsensusParams: tmtypes.DefaultConsensusParams(),
 		Validators:      make([]tmtypes.GenesisValidator, len(valSet.Validators)),
 		AppHash:         nil,
 		AppState:        stateBytes,
@@ -160,13 +160,13 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	if chainCfg.DisableTendermint {
 		app.InitChain(abci.RequestInitChain{
 			ChainId: chainCfg.CosmosChainId,
-			ConsensusParams: &abci.ConsensusParams{
-				Block: &abci.BlockParams{
+			ConsensusParams: &tmproto.ConsensusParams{
+				Block: &tmproto.BlockParams{
 					MaxBytes: defaultConsensusParams.Block.MaxBytes,
 					MaxGas:   defaultConsensusParams.Block.MaxGas,
 				},
-				Evidence:  &defaultConsensusParams.Evidence,
-				Validator: &defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Validator: defaultConsensusParams.Validator,
 			},
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
@@ -188,7 +188,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	return cai, tendermintApp, valSet
 }
 
-func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec codec.Codec, genesisState map[string]json.RawMessage, valSet *tmtypes.ValidatorSet, genesisValidatorAccounts []authtypes.GenesisAccount, genesisWalletAccounts []authtypes.GenesisAccount, balances []banktypes.Balance, signingInfos []slashingtypes.SigningInfo) simapp.GenesisState {
+func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec codec.Codec, genesisState map[string]json.RawMessage, valSet *tmtypes.ValidatorSet, genesisValidatorAccounts []authtypes.GenesisAccount, genesisWalletAccounts []authtypes.GenesisAccount, balances []banktypes.Balance, signingInfos []slashingtypes.SigningInfo) app.GenesisState {
 	genesisAccounts := append(genesisValidatorAccounts, genesisWalletAccounts...)
 
 	// set genesis accounts
@@ -290,7 +290,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 	}
 
 	{
-		bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, denomMetadata)
+		bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, denomMetadata, []banktypes.SendEnabled{})
 		genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 	}
 

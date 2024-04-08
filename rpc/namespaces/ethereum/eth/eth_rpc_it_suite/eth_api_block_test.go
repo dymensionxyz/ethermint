@@ -5,6 +5,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"math/rand"
+	"strconv"
+	"strings"
+	"time"
+
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -12,12 +19,6 @@ import (
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	tmrpcclient "github.com/tendermint/tendermint/rpc/client"
-	"math/big"
-	"math/rand"
-	"strconv"
-	"strings"
-	"time"
 )
 
 //goland:noinspection SpellCheckingInspection

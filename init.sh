@@ -29,7 +29,7 @@ echo "$MNEMONIC" | ethermintd keys add $KEY --recover --keyring-backend $KEYRING
 # Set moniker and chain-id for Ethermint (Moniker can be anything, chain-id must be an integer)
 ethermintd init $MONIKER --chain-id $CHAINID
 
-# Change parameter token denominations to aphoton
+# # Change parameter token denominations to aphoton
 cat $HOME/.ethermintd/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="aphoton"' > $HOME/.ethermintd/config/tmp_genesis.json && mv $HOME/.ethermintd/config/tmp_genesis.json $HOME/.ethermintd/config/genesis.json
 cat $HOME/.ethermintd/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="aphoton"' > $HOME/.ethermintd/config/tmp_genesis.json && mv $HOME/.ethermintd/config/tmp_genesis.json $HOME/.ethermintd/config/genesis.json
 cat $HOME/.ethermintd/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["amount"]="10"' > $HOME/.ethermintd/config/tmp_genesis.json && mv $HOME/.ethermintd/config/tmp_genesis.json $HOME/.ethermintd/config/genesis.json
@@ -50,7 +50,7 @@ ethermintd gentx $KEY 1000000000000000000000aphoton --keyring-backend $KEYRING -
 # Collect genesis tx
 ethermintd collect-gentxs
 
-# Run this to ensure everything worked and that the genesis file is setup correctly
+# # Run this to ensure everything worked and that the genesis file is setup correctly
 ethermintd validate-genesis
 
 # disable produce empty block and enable prometheus metrics

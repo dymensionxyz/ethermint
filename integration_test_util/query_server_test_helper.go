@@ -3,14 +3,15 @@ package integration_test_util
 import (
 	gocontext "context"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/metadata"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	abci "github.com/tendermint/tendermint/abci/types"
 	"google.golang.org/grpc"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

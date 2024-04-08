@@ -17,11 +17,12 @@ package cli
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	"github.com/pkg/errors"
 

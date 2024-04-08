@@ -1,8 +1,8 @@
 package types
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 type ResponseDeliverEthTx struct {

@@ -2,19 +2,29 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	chainapp "github.com/evmos/ethermint/app"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var _ ChainApp = &chainAppImp{}
 
 type chainAppImp struct {
 	app *chainapp.EthermintApp
+}
+
+// PrepareProposal implements ibctesting.TestingApp.
+func (c chainAppImp) PrepareProposal(abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	panic("unimplemented")
+}
+
+// ProcessProposal implements ibctesting.TestingApp.
+func (c chainAppImp) ProcessProposal(abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	panic("unimplemented")
 }
 
 func (c chainAppImp) App() abci.Application {

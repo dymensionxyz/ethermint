@@ -1,24 +1,20 @@
 package types
 
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-	"github.com/cosmos/ibc-go/v6/testing/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	"github.com/cosmos/ibc-go/v7/testing/types"
 	chainapp "github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (c chainAppImp) Info(info abci.RequestInfo) abci.ResponseInfo {
 	return c.app.BaseApp.Info(info)
-}
-
-func (c chainAppImp) SetOption(option abci.RequestSetOption) abci.ResponseSetOption {
-	return c.app.BaseApp.SetOption(option)
 }
 
 func (c chainAppImp) Query(query abci.RequestQuery) abci.ResponseQuery {
