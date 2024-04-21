@@ -44,7 +44,10 @@ import (
 // stack if:
 // - ERC20s are disabled
 // - Denomination is native staking token
+// Return an error acknowledgement if:
 // - The base denomination is not registered as ERC20
+// - The packet is received from a non-evm channel
+// - The packet is received from a non-evm chain
 func (k Keeper) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -68,7 +71,7 @@ func (k Keeper) OnRecvPacket(
 	}
 
 	// Get addresses in `evmos1` and the original bech32 format
-	sender, recipient, _, _, err := ibc.GetTransferSenderRecipient(packet)
+	sender, recipient, err := ibc.GetTransferSenderRecipientFromData(data)
 	if err != nil {
 		return channeltypes.NewErrorAcknowledgement(err)
 	}
@@ -96,18 +99,8 @@ func (k Keeper) OnRecvPacket(
 
 	pairID := k.GetTokenPairID(ctx, coin.Denom)
 	if len(pairID) == 0 {
-		if transfertypes.ReceiverChainIsSource(packet.SourcePort, packet.SourceChannel, data.Denom) {
-			return ack
-		}
-		//skip the first packet, as the bank don't have token and registration is not possible
-		if !k.bankKeeper.HasSupply(ctx, coin.Denom) {
-			return ack
-		}
-		err := k.AutoRegisterCoin(ctx, coin.Denom, data.Denom)
-		if err != nil {
-			return channeltypes.NewErrorAcknowledgement(errorsmod.Wrapf(err, "failed to auto register new IBC token"))
-		}
-		pairID = k.GetTokenPairID(ctx, coin.Denom)
+		err = errorsmod.Wrapf(types.ErrTokenPairNotFound, "coin denom: %s", coin.Denom)
+		return channeltypes.NewErrorAcknowledgement(err)
 	}
 
 	pair, _ := k.GetTokenPair(ctx, pairID)
