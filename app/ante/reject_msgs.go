@@ -1,40 +1,39 @@
-// Copyright 2021 Evmos Foundation
-// This file is part of Evmos' Ethermint library.
-//
-// The Ethermint library is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// The Ethermint library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public License
-// along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
 package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // RejectMessagesDecorator prevents invalid msg types from being executed
-type RejectMessagesDecorator struct{}
+type RejectMessagesDecorator struct {
+	disabledMsgTypeURLs []string
+}
+
+var _ sdk.AnteDecorator = RejectMessagesDecorator{}
+
+// NewRejectMessagesDecorator creates a decorator to block vesting messages from reaching the mempool
+func NewRejectMessagesDecorator(msgs []string) RejectMessagesDecorator {
+	return RejectMessagesDecorator{
+		disabledMsgTypeURLs: msgs,
+	}
+}
 
 // AnteHandle rejects messages that requires ethereum-specific authentication.
 // For example `MsgEthereumTx` requires fee to be deducted in the antehandler in
 // order to perform the refund.
 func (rmd RejectMessagesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
 	for _, msg := range tx.GetMsgs() {
-		if _, ok := msg.(*evmtypes.MsgEthereumTx); ok {
-			return ctx, errorsmod.Wrapf(
-				errortypes.ErrInvalidType,
-				"MsgEthereumTx needs to be contained within a tx with 'ExtensionOptionsEthereumTx' option",
-			)
+		typeURL := sdk.MsgTypeURL(msg)
+		for _, disabledTypeURL := range rmd.disabledMsgTypeURLs {
+			if typeURL == disabledTypeURL {
+				return ctx, errorsmod.Wrapf(
+					sdkerrors.ErrUnauthorized,
+					"MsgTypeURL %s not supported",
+					typeURL,
+				)
+			}
 		}
 	}
 	return next(ctx, tx, simulate)
