@@ -259,8 +259,6 @@ func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
 
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *KeeperTestSuite) DeployTestContract(t *testing.T, owner common.Address, supply *big.Int) common.Address {
-	t.SkipNow()
-
 	ctx := sdk.WrapSDKContext(suite.ctx)
 	chainID := suite.app.EvmKeeper.ChainID()
 
@@ -463,17 +461,17 @@ func (suite *KeeperTestSuite) TestGetAccountStorage() {
 		expRes   []int
 	}{
 		{
-			"Only one account that's not a contract (no storage)",
+			"One account (no storage) + Genesis contract (no storage)",
 			func() {},
-			[]int{0},
+			[]int{0, 0},
 		},
 		{
-			"Two accounts - one contract (with storage), one wallet",
+			"One account (no storage) + Genesis contract (no storage) + One contract (with storage)",
 			func() {
 				supply := big.NewInt(100)
 				suite.DeployTestContract(suite.T(), suite.address, supply)
 			},
-			[]int{2, 0},
+			[]int{2, 0, 0},
 		},
 	}
 

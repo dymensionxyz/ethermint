@@ -429,9 +429,9 @@ proto-gen:
 
 
 # TODO: Rethink API docs generation
-# proto-swagger-gen:
-# 	@echo "Generating Protobuf Swagger"
-# 	$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+proto-swagger-gen:
+	@echo "Generating Protobuf Swagger"
+	$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
 proto-format:
 	@echo "Formatting Protobuf files"

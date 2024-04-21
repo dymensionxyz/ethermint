@@ -1284,6 +1284,473 @@ func (m *QueryBaseFeeResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryBaseFeeResponse proto.InternalMessageInfo
 
+// QueryVirtualFrontierContractsRequest defines the request for querying virtual frontier contract list
+type QueryVirtualFrontierContractsRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryVirtualFrontierContractsRequest) Reset()         { *m = QueryVirtualFrontierContractsRequest{} }
+func (m *QueryVirtualFrontierContractsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVirtualFrontierContractsRequest) ProtoMessage()    {}
+func (*QueryVirtualFrontierContractsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{24}
+}
+func (m *QueryVirtualFrontierContractsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierContractsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierContractsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierContractsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierContractsRequest.Merge(m, src)
+}
+func (m *QueryVirtualFrontierContractsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierContractsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierContractsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierContractsRequest proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierContractsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryVirtualFrontierContractsResponse returns the list of the virtual frontier contract
+type QueryVirtualFrontierContractsResponse struct {
+	VirtualFrontierContractsJson []string `protobuf:"bytes,1,rep,name=virtual_frontier_contracts_json,json=virtualFrontierContractsJson,proto3" json:"virtual_frontier_contracts_json,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryVirtualFrontierContractsResponse) Reset()         { *m = QueryVirtualFrontierContractsResponse{} }
+func (m *QueryVirtualFrontierContractsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryVirtualFrontierContractsResponse) ProtoMessage()    {}
+func (*QueryVirtualFrontierContractsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{25}
+}
+func (m *QueryVirtualFrontierContractsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierContractsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierContractsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierContractsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierContractsResponse.Merge(m, src)
+}
+func (m *QueryVirtualFrontierContractsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierContractsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierContractsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierContractsResponse proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierContractsResponse) GetVirtualFrontierContractsJson() []string {
+	if m != nil {
+		return m.VirtualFrontierContractsJson
+	}
+	return nil
+}
+
+func (m *QueryVirtualFrontierContractsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryVirtualFrontierBankContractByDenomRequest defines the request for querying virtual frontier bank contract by it min denom
+type QueryVirtualFrontierBankContractByDenomRequest struct {
+	MinDenom string `protobuf:"bytes,1,opt,name=min_denom,json=minDenom,proto3" json:"min_denom,omitempty"`
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomRequest) Reset() {
+	*m = QueryVirtualFrontierBankContractByDenomRequest{}
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryVirtualFrontierBankContractByDenomRequest) ProtoMessage() {}
+func (*QueryVirtualFrontierBankContractByDenomRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{26}
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierBankContractByDenomRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierBankContractByDenomRequest.Merge(m, src)
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierBankContractByDenomRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierBankContractByDenomRequest proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierBankContractByDenomRequest) GetMinDenom() string {
+	if m != nil {
+		return m.MinDenom
+	}
+	return ""
+}
+
+// QueryVirtualFrontierBankContractByDenomResponse returns the bank contract of the corresponding min denom
+type QueryVirtualFrontierBankContractByDenomResponse struct {
+	Pair *VFBCPair `protobuf:"bytes,1,opt,name=pair,proto3" json:"pair,omitempty"`
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomResponse) Reset() {
+	*m = QueryVirtualFrontierBankContractByDenomResponse{}
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryVirtualFrontierBankContractByDenomResponse) ProtoMessage() {}
+func (*QueryVirtualFrontierBankContractByDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{27}
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierBankContractByDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierBankContractByDenomResponse.Merge(m, src)
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierBankContractByDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierBankContractByDenomResponse proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierBankContractByDenomResponse) GetPair() *VFBCPair {
+	if m != nil {
+		return m.Pair
+	}
+	return nil
+}
+
+// QueryVirtualFrontierContractByAddressRequest defines the request for querying virtual frontier contract by it address
+type QueryVirtualFrontierContractByAddressRequest struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *QueryVirtualFrontierContractByAddressRequest) Reset() {
+	*m = QueryVirtualFrontierContractByAddressRequest{}
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryVirtualFrontierContractByAddressRequest) ProtoMessage() {}
+func (*QueryVirtualFrontierContractByAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{28}
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierContractByAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierContractByAddressRequest.Merge(m, src)
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierContractByAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierContractByAddressRequest proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierContractByAddressRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// QueryVirtualFrontierContractByAddressResponse returns the virtual frontier contract corresponding to the address
+type QueryVirtualFrontierContractByAddressResponse struct {
+	VirtualFrontierContractJson string `protobuf:"bytes,1,opt,name=virtual_frontier_contract_json,json=virtualFrontierContractJson,proto3" json:"virtual_frontier_contract_json,omitempty"`
+}
+
+func (m *QueryVirtualFrontierContractByAddressResponse) Reset() {
+	*m = QueryVirtualFrontierContractByAddressResponse{}
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryVirtualFrontierContractByAddressResponse) ProtoMessage() {}
+func (*QueryVirtualFrontierContractByAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{29}
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierContractByAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierContractByAddressResponse.Merge(m, src)
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierContractByAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierContractByAddressResponse proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierContractByAddressResponse) GetVirtualFrontierContractJson() string {
+	if m != nil {
+		return m.VirtualFrontierContractJson
+	}
+	return ""
+}
+
+// QueryVirtualFrontierBankContractsRequest defines the request for querying all virtual frontier bank contracts
+type QueryVirtualFrontierBankContractsRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryVirtualFrontierBankContractsRequest) Reset() {
+	*m = QueryVirtualFrontierBankContractsRequest{}
+}
+func (m *QueryVirtualFrontierBankContractsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVirtualFrontierBankContractsRequest) ProtoMessage()    {}
+func (*QueryVirtualFrontierBankContractsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{30}
+}
+func (m *QueryVirtualFrontierBankContractsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierBankContractsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierBankContractsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierBankContractsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierBankContractsRequest.Merge(m, src)
+}
+func (m *QueryVirtualFrontierBankContractsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierBankContractsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierBankContractsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierBankContractsRequest proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierBankContractsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryVirtualFrontierBankContractsResponse returns all virtual frontier bank contracts
+type QueryVirtualFrontierBankContractsResponse struct {
+	// pairs is list of available virtual frontier bank contracts
+	Pairs []*VFBCPair `protobuf:"bytes,1,rep,name=pairs,proto3" json:"pairs,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryVirtualFrontierBankContractsResponse) Reset() {
+	*m = QueryVirtualFrontierBankContractsResponse{}
+}
+func (m *QueryVirtualFrontierBankContractsResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryVirtualFrontierBankContractsResponse) ProtoMessage() {}
+func (*QueryVirtualFrontierBankContractsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{31}
+}
+func (m *QueryVirtualFrontierBankContractsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVirtualFrontierBankContractsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVirtualFrontierBankContractsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVirtualFrontierBankContractsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVirtualFrontierBankContractsResponse.Merge(m, src)
+}
+func (m *QueryVirtualFrontierBankContractsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVirtualFrontierBankContractsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVirtualFrontierBankContractsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVirtualFrontierBankContractsResponse proto.InternalMessageInfo
+
+func (m *QueryVirtualFrontierBankContractsResponse) GetPairs() []*VFBCPair {
+	if m != nil {
+		return m.Pairs
+	}
+	return nil
+}
+
+func (m *QueryVirtualFrontierBankContractsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// VFBCPair is a pair of a native Cosmos token (base) with an ERC20 virtual frontier bank contract address.
+type VFBCPair struct {
+	// contract_address is the hex address of the contract
+	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	// min_denom defines the cosmos base denomination
+	MinDenom string `protobuf:"bytes,2,opt,name=min_denom,json=minDenom,proto3" json:"min_denom,omitempty"`
+	// enabled is status of the contract, whether it is enabled or not
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *VFBCPair) Reset()         { *m = VFBCPair{} }
+func (m *VFBCPair) String() string { return proto.CompactTextString(m) }
+func (*VFBCPair) ProtoMessage()    {}
+func (*VFBCPair) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e15a877459347994, []int{32}
+}
+func (m *VFBCPair) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VFBCPair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VFBCPair.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VFBCPair) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VFBCPair.Merge(m, src)
+}
+func (m *VFBCPair) XXX_Size() int {
+	return m.Size()
+}
+func (m *VFBCPair) XXX_DiscardUnknown() {
+	xxx_messageInfo_VFBCPair.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VFBCPair proto.InternalMessageInfo
+
+func (m *VFBCPair) GetContractAddress() string {
+	if m != nil {
+		return m.ContractAddress
+	}
+	return ""
+}
+
+func (m *VFBCPair) GetMinDenom() string {
+	if m != nil {
+		return m.MinDenom
+	}
+	return ""
+}
+
+func (m *VFBCPair) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*QueryAccountRequest)(nil), "ethermint.evm.v1.QueryAccountRequest")
 	proto.RegisterType((*QueryAccountResponse)(nil), "ethermint.evm.v1.QueryAccountResponse")
@@ -1309,102 +1776,167 @@ func init() {
 	proto.RegisterType((*QueryTraceBlockResponse)(nil), "ethermint.evm.v1.QueryTraceBlockResponse")
 	proto.RegisterType((*QueryBaseFeeRequest)(nil), "ethermint.evm.v1.QueryBaseFeeRequest")
 	proto.RegisterType((*QueryBaseFeeResponse)(nil), "ethermint.evm.v1.QueryBaseFeeResponse")
+	proto.RegisterType((*QueryVirtualFrontierContractsRequest)(nil), "ethermint.evm.v1.QueryVirtualFrontierContractsRequest")
+	proto.RegisterType((*QueryVirtualFrontierContractsResponse)(nil), "ethermint.evm.v1.QueryVirtualFrontierContractsResponse")
+	proto.RegisterType((*QueryVirtualFrontierBankContractByDenomRequest)(nil), "ethermint.evm.v1.QueryVirtualFrontierBankContractByDenomRequest")
+	proto.RegisterType((*QueryVirtualFrontierBankContractByDenomResponse)(nil), "ethermint.evm.v1.QueryVirtualFrontierBankContractByDenomResponse")
+	proto.RegisterType((*QueryVirtualFrontierContractByAddressRequest)(nil), "ethermint.evm.v1.QueryVirtualFrontierContractByAddressRequest")
+	proto.RegisterType((*QueryVirtualFrontierContractByAddressResponse)(nil), "ethermint.evm.v1.QueryVirtualFrontierContractByAddressResponse")
+	proto.RegisterType((*QueryVirtualFrontierBankContractsRequest)(nil), "ethermint.evm.v1.QueryVirtualFrontierBankContractsRequest")
+	proto.RegisterType((*QueryVirtualFrontierBankContractsResponse)(nil), "ethermint.evm.v1.QueryVirtualFrontierBankContractsResponse")
+	proto.RegisterType((*VFBCPair)(nil), "ethermint.evm.v1.VFBCPair")
 }
 
 func init() { proto.RegisterFile("ethermint/evm/v1/query.proto", fileDescriptor_e15a877459347994) }
 
 var fileDescriptor_e15a877459347994 = []byte{
-	// 1434 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x56, 0xcd, 0x6f, 0x13, 0x47,
-	0x14, 0xcf, 0xc6, 0x4e, 0xec, 0x3c, 0x07, 0x70, 0x87, 0x50, 0xcc, 0x36, 0xb1, 0xc3, 0x42, 0x3e,
-	0x09, 0xbb, 0x8d, 0x5b, 0x21, 0x95, 0x4b, 0xc1, 0x56, 0xa0, 0x14, 0xa8, 0xa8, 0x1b, 0xf5, 0x50,
-	0x09, 0x59, 0xe3, 0xf5, 0xb0, 0xb6, 0x62, 0xef, 0x9a, 0x9d, 0xb1, 0xeb, 0x40, 0xe9, 0xa1, 0x52,
-	0x11, 0x15, 0x52, 0x85, 0xd4, 0x7b, 0xc5, 0x7f, 0xd0, 0x63, 0xff, 0x05, 0x8e, 0x48, 0xbd, 0x54,
-	0x3d, 0x50, 0x44, 0x7a, 0xe8, 0xad, 0xf7, 0x9e, 0xaa, 0x99, 0x9d, 0xf1, 0xd7, 0xfa, 0x23, 0x54,
-	0xf4, 0xd4, 0xd3, 0xee, 0xcc, 0xbc, 0x79, 0xef, 0xf7, 0x3e, 0xe6, 0xbd, 0x1f, 0x2c, 0x12, 0x56,
-	0x21, 0x7e, 0xbd, 0xea, 0x32, 0x8b, 0xb4, 0xea, 0x56, 0x6b, 0xdb, 0xba, 0xdb, 0x24, 0xfe, 0xbe,
-	0xd9, 0xf0, 0x3d, 0xe6, 0xa1, 0x64, 0xe7, 0xd4, 0x24, 0xad, 0xba, 0xd9, 0xda, 0xd6, 0x37, 0x6d,
-	0x8f, 0xd6, 0x3d, 0x6a, 0x95, 0x30, 0x25, 0x81, 0xa8, 0xd5, 0xda, 0x2e, 0x11, 0x86, 0xb7, 0xad,
-	0x06, 0x76, 0xaa, 0x2e, 0x66, 0x55, 0xcf, 0x0d, 0x6e, 0xeb, 0x7a, 0x48, 0x37, 0x57, 0x12, 0x9c,
-	0x9d, 0x0a, 0x9d, 0xb1, 0xb6, 0x3c, 0x5a, 0x70, 0x3c, 0xc7, 0x13, 0xbf, 0x16, 0xff, 0x93, 0xbb,
-	0x8b, 0x8e, 0xe7, 0x39, 0x35, 0x62, 0xe1, 0x46, 0xd5, 0xc2, 0xae, 0xeb, 0x31, 0x61, 0x89, 0xca,
-	0xd3, 0x8c, 0x3c, 0x15, 0xab, 0x52, 0xf3, 0x8e, 0xc5, 0xaa, 0x75, 0x42, 0x19, 0xae, 0x37, 0x02,
-	0x01, 0xe3, 0x03, 0x38, 0xfe, 0x29, 0x47, 0x7b, 0xd9, 0xb6, 0xbd, 0xa6, 0xcb, 0x0a, 0xe4, 0x6e,
-	0x93, 0x50, 0x86, 0x52, 0x10, 0xc3, 0xe5, 0xb2, 0x4f, 0x28, 0x4d, 0x69, 0xcb, 0xda, 0xfa, 0x5c,
-	0x41, 0x2d, 0x2f, 0xc6, 0x1f, 0x3d, 0xcd, 0x4c, 0xfd, 0xf9, 0x34, 0x33, 0x65, 0xd8, 0xb0, 0xd0,
-	0x7f, 0x95, 0x36, 0x3c, 0x97, 0x12, 0x7e, 0xb7, 0x84, 0x6b, 0xd8, 0xb5, 0x89, 0xba, 0x2b, 0x97,
-	0xe8, 0x1d, 0x98, 0xb3, 0xbd, 0x32, 0x29, 0x56, 0x30, 0xad, 0xa4, 0xa6, 0xc5, 0x59, 0x9c, 0x6f,
-	0x7c, 0x84, 0x69, 0x05, 0x2d, 0xc0, 0x8c, 0xeb, 0xf1, 0x4b, 0x91, 0x65, 0x6d, 0x3d, 0x5a, 0x08,
-	0x16, 0xc6, 0x87, 0x70, 0x4a, 0x18, 0xc9, 0x8b, 0xf0, 0xfe, 0x0b, 0x94, 0x0f, 0x35, 0xd0, 0x87,
-	0x69, 0x90, 0x60, 0x57, 0xe0, 0x68, 0x90, 0xb9, 0x62, 0xbf, 0xa6, 0x23, 0xc1, 0xee, 0xe5, 0x60,
-	0x13, 0xe9, 0x10, 0xa7, 0xdc, 0x28, 0xc7, 0x37, 0x2d, 0xf0, 0x75, 0xd6, 0x5c, 0x05, 0x0e, 0xb4,
-	0x16, 0xdd, 0x66, 0xbd, 0x44, 0x7c, 0xe9, 0xc1, 0x11, 0xb9, 0xfb, 0x89, 0xd8, 0x34, 0xae, 0xc3,
-	0xa2, 0xc0, 0xf1, 0x39, 0xae, 0x55, 0xcb, 0x98, 0x79, 0xfe, 0x80, 0x33, 0xa7, 0x61, 0xde, 0xf6,
-	0xdc, 0x41, 0x1c, 0x09, 0xbe, 0x77, 0x39, 0xe4, 0xd5, 0x63, 0x0d, 0x96, 0x46, 0x68, 0x93, 0x8e,
-	0xad, 0xc1, 0x31, 0x85, 0xaa, 0x5f, 0xa3, 0x02, 0xfb, 0x06, 0x5d, 0x53, 0x45, 0x94, 0x0b, 0xf2,
-	0xfc, 0x3a, 0xe9, 0x79, 0x57, 0x16, 0x51, 0xe7, 0xea, 0xa4, 0x22, 0x32, 0xae, 0x4b, 0x63, 0x9f,
-	0x31, 0xcf, 0xc7, 0xce, 0x64, 0x63, 0x28, 0x09, 0x91, 0x3d, 0xb2, 0x2f, 0xeb, 0x8d, 0xff, 0xf6,
-	0x98, 0xdf, 0x92, 0xe6, 0x3b, 0xca, 0xa4, 0xf9, 0x05, 0x98, 0x69, 0xe1, 0x5a, 0x53, 0x19, 0x0f,
-	0x16, 0xc6, 0x05, 0x48, 0xca, 0x52, 0x2a, 0xbf, 0x96, 0x93, 0x6b, 0xf0, 0x56, 0xcf, 0x3d, 0x69,
-	0x02, 0x41, 0x94, 0xd7, 0xbe, 0xb8, 0x35, 0x5f, 0x10, 0xff, 0xc6, 0x3d, 0x40, 0x42, 0x70, 0xb7,
-	0x7d, 0xc3, 0x73, 0xa8, 0x32, 0x81, 0x20, 0x2a, 0x5e, 0x4c, 0xa0, 0x5f, 0xfc, 0xa3, 0x2b, 0x00,
-	0xdd, 0xbe, 0x22, 0x7c, 0x4b, 0x64, 0x57, 0xcd, 0xa0, 0x68, 0x4d, 0xde, 0x84, 0xcc, 0xa0, 0x5f,
-	0xc9, 0x26, 0x64, 0xde, 0xea, 0x86, 0xaa, 0xd0, 0x73, 0xb3, 0x07, 0xe4, 0x77, 0x9a, 0x0c, 0xac,
-	0x32, 0x2e, 0x71, 0x6e, 0x40, 0xb4, 0xe6, 0x39, 0xdc, 0xbb, 0xc8, 0x7a, 0x22, 0x7b, 0xc2, 0x1c,
-	0x6c, 0x7d, 0xe6, 0x0d, 0xcf, 0x29, 0x08, 0x11, 0x74, 0x75, 0x08, 0xa8, 0xb5, 0x89, 0xa0, 0x02,
-	0x3b, 0xbd, 0xa8, 0x8c, 0x05, 0x19, 0x87, 0x5b, 0xd8, 0xc7, 0x75, 0x15, 0x07, 0xe3, 0xa6, 0x04,
-	0xa8, 0x76, 0x25, 0xc0, 0x0b, 0x30, 0xdb, 0x10, 0x3b, 0x22, 0x40, 0x89, 0x6c, 0x2a, 0x0c, 0x31,
-	0xb8, 0x91, 0x8b, 0x3e, 0x7b, 0x91, 0x99, 0x2a, 0x48, 0x69, 0xe3, 0x67, 0x0d, 0x8e, 0xee, 0xb0,
-	0x4a, 0x1e, 0xd7, 0x6a, 0x3d, 0x91, 0xc6, 0xbe, 0x43, 0x55, 0x4e, 0xf8, 0x3f, 0x3a, 0x09, 0x31,
-	0x07, 0xd3, 0xa2, 0x8d, 0x1b, 0xf2, 0x79, 0xcc, 0x3a, 0x98, 0xe6, 0x71, 0x03, 0xdd, 0x86, 0x64,
-	0xc3, 0xf7, 0x1a, 0x1e, 0x25, 0x7e, 0xe7, 0x89, 0xf1, 0xe7, 0x31, 0x9f, 0xcb, 0xfe, 0xfd, 0x22,
-	0x63, 0x3a, 0x55, 0x56, 0x69, 0x96, 0x4c, 0xdb, 0xab, 0x5b, 0x72, 0x36, 0x04, 0x9f, 0xf3, 0xb4,
-	0xbc, 0x67, 0xb1, 0xfd, 0x06, 0xa1, 0x66, 0xbe, 0xfb, 0xb6, 0x0b, 0xc7, 0x94, 0x2e, 0xf5, 0x2e,
-	0x4f, 0x41, 0xdc, 0xae, 0xe0, 0xaa, 0x5b, 0xac, 0x96, 0x53, 0xd1, 0x65, 0x6d, 0x3d, 0x52, 0x88,
-	0x89, 0xf5, 0xb5, 0xb2, 0xb1, 0x06, 0xc7, 0x77, 0x28, 0xab, 0xd6, 0x31, 0x23, 0x57, 0x71, 0x37,
-	0x10, 0x49, 0x88, 0x38, 0x38, 0x00, 0x1f, 0x2d, 0xf0, 0x5f, 0xe3, 0x65, 0x44, 0xe5, 0xd4, 0xc7,
-	0x36, 0xd9, 0x6d, 0x2b, 0x3f, 0xb7, 0x21, 0x52, 0xa7, 0x8e, 0x8c, 0x57, 0x26, 0x1c, 0xaf, 0x9b,
-	0xd4, 0xd9, 0xe1, 0x7b, 0xa4, 0x59, 0xdf, 0x6d, 0x17, 0xb8, 0x2c, 0xba, 0x04, 0xf3, 0x8c, 0x2b,
-	0x29, 0xda, 0x9e, 0x7b, 0xa7, 0xea, 0x08, 0x4f, 0x13, 0xd9, 0xa5, 0xf0, 0x5d, 0x61, 0x2a, 0x2f,
-	0x84, 0x0a, 0x09, 0xd6, 0x5d, 0xa0, 0x3c, 0xcc, 0x37, 0x7c, 0x52, 0x26, 0x36, 0xa1, 0xd4, 0xf3,
-	0x69, 0x2a, 0x2a, 0x0a, 0x6a, 0xa2, 0xf5, 0xbe, 0x4b, 0xbc, 0x4b, 0x96, 0x6a, 0x9e, 0xbd, 0xa7,
-	0xfa, 0xd1, 0x8c, 0x88, 0x4c, 0x42, 0xec, 0x05, 0xdd, 0x08, 0x2d, 0x01, 0x04, 0x22, 0xe2, 0xd1,
-	0xcc, 0x8a, 0x47, 0x33, 0x27, 0x76, 0xc4, 0x9c, 0xc9, 0xab, 0x63, 0x3e, 0x0a, 0x53, 0x31, 0xe1,
-	0x86, 0x6e, 0x06, 0x73, 0xd2, 0x54, 0x73, 0xd2, 0xdc, 0x55, 0x73, 0x32, 0x17, 0xe7, 0x45, 0xf3,
-	0xe4, 0xf7, 0x8c, 0x26, 0x95, 0xf0, 0x93, 0xa1, 0xb9, 0x8f, 0xff, 0x37, 0xb9, 0x9f, 0xeb, 0xcb,
-	0xfd, 0xc7, 0xd1, 0xf8, 0x74, 0x32, 0x52, 0x88, 0xb3, 0x76, 0xb1, 0xea, 0x96, 0x49, 0xdb, 0xd8,
-	0x94, 0x1d, 0xac, 0x93, 0xe1, 0x6e, 0x7b, 0x29, 0x63, 0x86, 0x55, 0x29, 0xf3, 0x7f, 0xe3, 0xfb,
-	0x08, 0xbc, 0xdd, 0x15, 0xce, 0x71, 0x6f, 0x7a, 0x2a, 0x82, 0xb5, 0xd5, 0x23, 0x9f, 0x5c, 0x11,
-	0xac, 0x4d, 0xdf, 0x40, 0x45, 0xfc, 0xdf, 0x93, 0x69, 0x9c, 0x87, 0x93, 0xa1, 0x7c, 0x8c, 0xc9,
-	0xdf, 0x89, 0xce, 0x9c, 0xa5, 0xe4, 0x0a, 0x51, 0xfd, 0xdc, 0xb8, 0xdd, 0x99, 0xa1, 0x72, 0x5b,
-	0xaa, 0xd8, 0x81, 0x38, 0x6f, 0xba, 0xc5, 0x3b, 0x44, 0xce, 0xb1, 0xdc, 0xe6, 0x6f, 0x2f, 0x32,
-	0xab, 0x87, 0xf0, 0xe7, 0x9a, 0xcb, 0xf8, 0xc0, 0x15, 0xea, 0xb2, 0x7f, 0xcd, 0xc3, 0x8c, 0xd0,
-	0x8f, 0xbe, 0xd5, 0x20, 0x26, 0x79, 0x06, 0x5a, 0x09, 0xe7, 0x79, 0x08, 0x91, 0xd4, 0x57, 0x27,
-	0x89, 0x05, 0x58, 0x8d, 0x73, 0xdf, 0xfc, 0xf2, 0xc7, 0x0f, 0xd3, 0x2b, 0xe8, 0x8c, 0x15, 0x22,
-	0xc0, 0x92, 0x6b, 0x58, 0xf7, 0x65, 0x6e, 0x1e, 0xa0, 0x1f, 0x35, 0x38, 0xd2, 0x47, 0xe7, 0xd0,
-	0xb9, 0x11, 0x66, 0x86, 0xd1, 0x46, 0x7d, 0xeb, 0x70, 0xc2, 0x12, 0x59, 0x56, 0x20, 0xdb, 0x42,
-	0x9b, 0x61, 0x64, 0x8a, 0x39, 0x86, 0x00, 0xfe, 0xa4, 0x41, 0x72, 0x90, 0x99, 0x21, 0x73, 0x84,
-	0xd9, 0x11, 0x84, 0x50, 0xb7, 0x0e, 0x2d, 0x2f, 0x91, 0x5e, 0x14, 0x48, 0xdf, 0x47, 0xd9, 0x30,
-	0xd2, 0x96, 0xba, 0xd3, 0x05, 0xdb, 0x4b, 0x36, 0x1f, 0xa0, 0x87, 0x1a, 0xc4, 0x24, 0x07, 0x1b,
-	0x99, 0xda, 0x7e, 0x7a, 0x37, 0x32, 0xb5, 0x03, 0x54, 0xce, 0xd8, 0x12, 0xb0, 0x56, 0xd1, 0xd9,
-	0x30, 0x2c, 0xc9, 0xe9, 0x68, 0x4f, 0xe8, 0x1e, 0x6b, 0x10, 0x93, 0x6c, 0x6c, 0x24, 0x90, 0x7e,
-	0xea, 0x37, 0x12, 0xc8, 0x00, 0xa9, 0x33, 0xb6, 0x05, 0x90, 0x73, 0x68, 0x23, 0x0c, 0x84, 0x06,
-	0xa2, 0x5d, 0x1c, 0xd6, 0xfd, 0x3d, 0xb2, 0xff, 0x00, 0xdd, 0x83, 0x28, 0x27, 0x6d, 0xc8, 0x18,
-	0x59, 0x32, 0x1d, 0x26, 0xa8, 0x9f, 0x19, 0x2b, 0x23, 0x31, 0x6c, 0x08, 0x0c, 0x67, 0xd0, 0xe9,
-	0x61, 0xd5, 0x54, 0xee, 0x8b, 0xc4, 0x97, 0x30, 0x1b, 0xf0, 0x16, 0x74, 0x76, 0x84, 0xe6, 0x3e,
-	0x7a, 0xa4, 0xaf, 0x4c, 0x90, 0x92, 0x08, 0x96, 0x05, 0x02, 0x1d, 0xa5, 0xc2, 0x08, 0x02, 0x62,
-	0x84, 0xda, 0x10, 0x93, 0xbc, 0x08, 0x2d, 0x87, 0x75, 0xf6, 0x53, 0x26, 0x7d, 0x6d, 0xd2, 0xac,
-	0x50, 0x76, 0x0d, 0x61, 0x77, 0x11, 0xe9, 0x61, 0xbb, 0x84, 0x55, 0x8a, 0x36, 0x37, 0xf7, 0x35,
-	0x24, 0x7a, 0x88, 0xcd, 0x21, 0xac, 0x0f, 0xf1, 0x79, 0x08, 0x33, 0x32, 0x56, 0x85, 0xed, 0x65,
-	0x94, 0x1e, 0x62, 0x5b, 0x8a, 0x17, 0x1d, 0x4c, 0xd1, 0x57, 0x10, 0x93, 0x73, 0x74, 0x64, 0xed,
-	0xf5, 0x33, 0xa9, 0x91, 0xb5, 0x37, 0x30, 0x8e, 0xc7, 0x79, 0x1f, 0x0c, 0x51, 0xd6, 0x46, 0x8f,
-	0x34, 0x80, 0xee, 0x24, 0x40, 0xeb, 0xe3, 0x54, 0xf7, 0x0e, 0x6f, 0x7d, 0xe3, 0x10, 0x92, 0x12,
-	0xc7, 0x8a, 0xc0, 0x91, 0x41, 0x4b, 0xa3, 0x70, 0x88, 0xb1, 0xc8, 0x03, 0x21, 0xa7, 0xc9, 0x98,
-	0x6e, 0xd0, 0x3b, 0x84, 0xc6, 0x74, 0x83, 0xbe, 0xa1, 0x34, 0x2e, 0x10, 0x6a, 0x58, 0xe5, 0x2e,
-	0x3d, 0x7b, 0x95, 0xd6, 0x9e, 0xbf, 0x4a, 0x6b, 0x2f, 0x5f, 0xa5, 0xb5, 0x27, 0x07, 0xe9, 0xa9,
-	0xe7, 0x07, 0xe9, 0xa9, 0x5f, 0x0f, 0xd2, 0x53, 0x5f, 0xf4, 0x0e, 0x2f, 0xd2, 0xe2, 0xb3, 0xab,
-	0xab, 0xa5, 0x2d, 0xf4, 0x88, 0x01, 0x56, 0x9a, 0x15, 0xb3, 0xff, 0xbd, 0x7f, 0x02, 0x00, 0x00,
-	0xff, 0xff, 0xa4, 0xba, 0x06, 0x5b, 0xc7, 0x11, 0x00, 0x00,
+	// 1828 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0xcd, 0x6f, 0x1b, 0xc7,
+	0x15, 0xd7, 0x8a, 0x94, 0x48, 0x3d, 0xc9, 0xb1, 0x3a, 0x56, 0x1a, 0x7a, 0x2d, 0x93, 0xcc, 0xda,
+	0xfa, 0xb2, 0xe5, 0xdd, 0x88, 0x09, 0xdc, 0xc6, 0x05, 0x12, 0x9b, 0xac, 0xec, 0x7c, 0xd8, 0x85,
+	0xbb, 0x35, 0x72, 0x28, 0x10, 0x10, 0x43, 0x72, 0xbc, 0xdc, 0x8a, 0xdc, 0x65, 0x76, 0x86, 0x2c,
+	0x15, 0xd7, 0x3d, 0x14, 0x68, 0x90, 0x22, 0x40, 0x11, 0xa0, 0xf7, 0xc2, 0xa7, 0x5e, 0x7b, 0xec,
+	0x5f, 0x50, 0x20, 0xc7, 0x00, 0x05, 0x8a, 0xa2, 0x07, 0x37, 0xb0, 0x7b, 0xf0, 0xb5, 0xb7, 0xa2,
+	0xa7, 0x62, 0x66, 0x67, 0x48, 0x2e, 0x97, 0x4b, 0x52, 0xae, 0x7a, 0xca, 0x69, 0x77, 0x66, 0xde,
+	0xc7, 0xef, 0x7d, 0xcc, 0x9b, 0xf7, 0x60, 0x93, 0xb0, 0x26, 0x09, 0xda, 0xae, 0xc7, 0x2c, 0xd2,
+	0x6b, 0x5b, 0xbd, 0x03, 0xeb, 0x93, 0x2e, 0x09, 0x8e, 0xcd, 0x4e, 0xe0, 0x33, 0x1f, 0xad, 0x0f,
+	0x4e, 0x4d, 0xd2, 0x6b, 0x9b, 0xbd, 0x03, 0xfd, 0x4a, 0xdd, 0xa7, 0x6d, 0x9f, 0x5a, 0x35, 0x4c,
+	0x49, 0x48, 0x6a, 0xf5, 0x0e, 0x6a, 0x84, 0xe1, 0x03, 0xab, 0x83, 0x1d, 0xd7, 0xc3, 0xcc, 0xf5,
+	0xbd, 0x90, 0x5b, 0xd7, 0x63, 0xb2, 0xb9, 0x90, 0xf0, 0xec, 0x7c, 0xec, 0x8c, 0xf5, 0xe5, 0xd1,
+	0x86, 0xe3, 0x3b, 0xbe, 0xf8, 0xb5, 0xf8, 0x9f, 0xdc, 0xdd, 0x74, 0x7c, 0xdf, 0x69, 0x11, 0x0b,
+	0x77, 0x5c, 0x0b, 0x7b, 0x9e, 0xcf, 0x84, 0x26, 0x2a, 0x4f, 0x0b, 0xf2, 0x54, 0xac, 0x6a, 0xdd,
+	0x87, 0x16, 0x73, 0xdb, 0x84, 0x32, 0xdc, 0xee, 0x84, 0x04, 0xc6, 0xdb, 0x70, 0xee, 0xc7, 0x1c,
+	0xed, 0xad, 0x7a, 0xdd, 0xef, 0x7a, 0xcc, 0x26, 0x9f, 0x74, 0x09, 0x65, 0x28, 0x07, 0x19, 0xdc,
+	0x68, 0x04, 0x84, 0xd2, 0x9c, 0x56, 0xd4, 0x76, 0x57, 0x6c, 0xb5, 0xbc, 0x91, 0xfd, 0xfc, 0x49,
+	0x61, 0xe1, 0xc5, 0x93, 0xc2, 0x82, 0x51, 0x87, 0x8d, 0x28, 0x2b, 0xed, 0xf8, 0x1e, 0x25, 0x9c,
+	0xb7, 0x86, 0x5b, 0xd8, 0xab, 0x13, 0xc5, 0x2b, 0x97, 0xe8, 0x02, 0xac, 0xd4, 0xfd, 0x06, 0xa9,
+	0x36, 0x31, 0x6d, 0xe6, 0x16, 0xc5, 0x59, 0x96, 0x6f, 0xbc, 0x87, 0x69, 0x13, 0x6d, 0xc0, 0x92,
+	0xe7, 0x73, 0xa6, 0x54, 0x51, 0xdb, 0x4d, 0xdb, 0xe1, 0xc2, 0x78, 0x17, 0xce, 0x0b, 0x25, 0x15,
+	0xe1, 0xde, 0x97, 0x40, 0xf9, 0x99, 0x06, 0xfa, 0x24, 0x09, 0x12, 0xec, 0x16, 0xbc, 0x12, 0x46,
+	0xae, 0x1a, 0x95, 0x74, 0x26, 0xdc, 0xbd, 0x15, 0x6e, 0x22, 0x1d, 0xb2, 0x94, 0x2b, 0xe5, 0xf8,
+	0x16, 0x05, 0xbe, 0xc1, 0x9a, 0x8b, 0xc0, 0xa1, 0xd4, 0xaa, 0xd7, 0x6d, 0xd7, 0x48, 0x20, 0x2d,
+	0x38, 0x23, 0x77, 0x7f, 0x24, 0x36, 0x8d, 0x0f, 0x61, 0x53, 0xe0, 0xf8, 0x08, 0xb7, 0xdc, 0x06,
+	0x66, 0x7e, 0x30, 0x66, 0xcc, 0xeb, 0xb0, 0x56, 0xf7, 0xbd, 0x71, 0x1c, 0xab, 0x7c, 0xef, 0x56,
+	0xcc, 0xaa, 0x2f, 0x34, 0xb8, 0x98, 0x20, 0x4d, 0x1a, 0xb6, 0x03, 0x67, 0x15, 0xaa, 0xa8, 0x44,
+	0x05, 0xf6, 0x14, 0x4d, 0x53, 0x49, 0x54, 0x0e, 0xe3, 0x7c, 0x92, 0xf0, 0xbc, 0x21, 0x93, 0x68,
+	0xc0, 0x3a, 0x2b, 0x89, 0x8c, 0x0f, 0xa5, 0xb2, 0x9f, 0x30, 0x3f, 0xc0, 0xce, 0x6c, 0x65, 0x68,
+	0x1d, 0x52, 0x47, 0xe4, 0x58, 0xe6, 0x1b, 0xff, 0x1d, 0x51, 0xbf, 0x2f, 0xd5, 0x0f, 0x84, 0x49,
+	0xf5, 0x1b, 0xb0, 0xd4, 0xc3, 0xad, 0xae, 0x52, 0x1e, 0x2e, 0x8c, 0xeb, 0xb0, 0x2e, 0x53, 0xa9,
+	0x71, 0x22, 0x23, 0x77, 0xe0, 0x3b, 0x23, 0x7c, 0x52, 0x05, 0x82, 0x34, 0xcf, 0x7d, 0xc1, 0xb5,
+	0x66, 0x8b, 0x7f, 0xe3, 0x53, 0x40, 0x82, 0xf0, 0x41, 0xff, 0xae, 0xef, 0x50, 0xa5, 0x02, 0x41,
+	0x5a, 0xdc, 0x98, 0x50, 0xbe, 0xf8, 0x47, 0xb7, 0x01, 0x86, 0x75, 0x45, 0xd8, 0xb6, 0x5a, 0xda,
+	0x36, 0xc3, 0xa4, 0x35, 0x79, 0x11, 0x32, 0xc3, 0x7a, 0x25, 0x8b, 0x90, 0x79, 0x7f, 0xe8, 0x2a,
+	0x7b, 0x84, 0x73, 0x04, 0xe4, 0x6f, 0x34, 0xe9, 0x58, 0xa5, 0x5c, 0xe2, 0xdc, 0x83, 0x74, 0xcb,
+	0x77, 0xb8, 0x75, 0xa9, 0xdd, 0xd5, 0xd2, 0xab, 0xe6, 0x78, 0xe9, 0x33, 0xef, 0xfa, 0x8e, 0x2d,
+	0x48, 0xd0, 0x9d, 0x09, 0xa0, 0x76, 0x66, 0x82, 0x0a, 0xf5, 0x8c, 0xa2, 0x32, 0x36, 0xa4, 0x1f,
+	0xee, 0xe3, 0x00, 0xb7, 0x95, 0x1f, 0x8c, 0x7b, 0x12, 0xa0, 0xda, 0x95, 0x00, 0xaf, 0xc3, 0x72,
+	0x47, 0xec, 0x08, 0x07, 0xad, 0x96, 0x72, 0x71, 0x88, 0x21, 0x47, 0x39, 0xfd, 0xd5, 0xd3, 0xc2,
+	0x82, 0x2d, 0xa9, 0x8d, 0x3f, 0x69, 0xf0, 0xca, 0x21, 0x6b, 0x56, 0x70, 0xab, 0x35, 0xe2, 0x69,
+	0x1c, 0x38, 0x54, 0xc5, 0x84, 0xff, 0xa3, 0xd7, 0x20, 0xe3, 0x60, 0x5a, 0xad, 0xe3, 0x8e, 0xbc,
+	0x1e, 0xcb, 0x0e, 0xa6, 0x15, 0xdc, 0x41, 0x1f, 0xc3, 0x7a, 0x27, 0xf0, 0x3b, 0x3e, 0x25, 0xc1,
+	0xe0, 0x8a, 0xf1, 0xeb, 0xb1, 0x56, 0x2e, 0xfd, 0xe7, 0x69, 0xc1, 0x74, 0x5c, 0xd6, 0xec, 0xd6,
+	0xcc, 0xba, 0xdf, 0xb6, 0xe4, 0xdb, 0x10, 0x7e, 0xae, 0xd1, 0xc6, 0x91, 0xc5, 0x8e, 0x3b, 0x84,
+	0x9a, 0x95, 0xe1, 0xdd, 0xb6, 0xcf, 0x2a, 0x59, 0xea, 0x5e, 0x9e, 0x87, 0x6c, 0xbd, 0x89, 0x5d,
+	0xaf, 0xea, 0x36, 0x72, 0xe9, 0xa2, 0xb6, 0x9b, 0xb2, 0x33, 0x62, 0xfd, 0x7e, 0xc3, 0xd8, 0x81,
+	0x73, 0x87, 0x94, 0xb9, 0x6d, 0xcc, 0xc8, 0x1d, 0x3c, 0x74, 0xc4, 0x3a, 0xa4, 0x1c, 0x1c, 0x82,
+	0x4f, 0xdb, 0xfc, 0xd7, 0xf8, 0x26, 0xa5, 0x62, 0x1a, 0xe0, 0x3a, 0x79, 0xd0, 0x57, 0x76, 0x1e,
+	0x40, 0xaa, 0x4d, 0x1d, 0xe9, 0xaf, 0x42, 0xdc, 0x5f, 0xf7, 0xa8, 0x73, 0xc8, 0xf7, 0x48, 0xb7,
+	0xfd, 0xa0, 0x6f, 0x73, 0x5a, 0x74, 0x13, 0xd6, 0x18, 0x17, 0x52, 0xad, 0xfb, 0xde, 0x43, 0xd7,
+	0x11, 0x96, 0xae, 0x96, 0x2e, 0xc6, 0x79, 0x85, 0xaa, 0x8a, 0x20, 0xb2, 0x57, 0xd9, 0x70, 0x81,
+	0x2a, 0xb0, 0xd6, 0x09, 0x48, 0x83, 0xd4, 0x09, 0xa5, 0x7e, 0x40, 0x73, 0x69, 0x91, 0x50, 0x33,
+	0xb5, 0x47, 0x98, 0x78, 0x95, 0xac, 0xb5, 0xfc, 0xfa, 0x91, 0xaa, 0x47, 0x4b, 0xc2, 0x33, 0xab,
+	0x62, 0x2f, 0xac, 0x46, 0xe8, 0x22, 0x40, 0x48, 0x22, 0x2e, 0xcd, 0xb2, 0xb8, 0x34, 0x2b, 0x62,
+	0x47, 0xbc, 0x33, 0x15, 0x75, 0xcc, 0x9f, 0xc2, 0x5c, 0x46, 0x98, 0xa1, 0x9b, 0xe1, 0x3b, 0x69,
+	0xaa, 0x77, 0xd2, 0x7c, 0xa0, 0xde, 0xc9, 0x72, 0x96, 0x27, 0xcd, 0x97, 0xff, 0x28, 0x68, 0x52,
+	0x08, 0x3f, 0x99, 0x18, 0xfb, 0xec, 0xff, 0x27, 0xf6, 0x2b, 0x91, 0xd8, 0x7f, 0x90, 0xce, 0x2e,
+	0xae, 0xa7, 0xec, 0x2c, 0xeb, 0x57, 0x5d, 0xaf, 0x41, 0xfa, 0xc6, 0x15, 0x59, 0xc1, 0x06, 0x11,
+	0x1e, 0x96, 0x97, 0x06, 0x66, 0x58, 0xa5, 0x32, 0xff, 0x37, 0x7e, 0x9b, 0x82, 0xef, 0x0e, 0x89,
+	0xcb, 0xdc, 0x9a, 0x91, 0x8c, 0x60, 0x7d, 0x75, 0xc9, 0x67, 0x67, 0x04, 0xeb, 0xd3, 0x53, 0xc8,
+	0x88, 0x6f, 0x7b, 0x30, 0x8d, 0x6b, 0xf0, 0x5a, 0x2c, 0x1e, 0x53, 0xe2, 0xf7, 0xea, 0xe0, 0x9d,
+	0xa5, 0xe4, 0x36, 0x51, 0xf5, 0xdc, 0xf8, 0x78, 0xf0, 0x86, 0xca, 0x6d, 0x29, 0xe2, 0x10, 0xb2,
+	0xbc, 0xe8, 0x56, 0x1f, 0x12, 0xf9, 0x8e, 0x95, 0xaf, 0xfc, 0xfd, 0x69, 0x61, 0x7b, 0x0e, 0x7b,
+	0xde, 0xf7, 0x18, 0x7f, 0x70, 0x85, 0x38, 0xc3, 0x83, 0xcb, 0x61, 0xab, 0xe1, 0x06, 0xac, 0x8b,
+	0x5b, 0xb7, 0x03, 0xdf, 0x63, 0x2e, 0x09, 0x2a, 0xbe, 0xc7, 0x63, 0xc9, 0x06, 0xcf, 0x54, 0xf4,
+	0x49, 0xd2, 0x5e, 0xf6, 0x49, 0xe2, 0x75, 0x79, 0x6b, 0x86, 0xc2, 0x81, 0x81, 0x85, 0x5e, 0x48,
+	0x53, 0x7d, 0x28, 0x89, 0x78, 0x32, 0x86, 0x54, 0xd5, 0x9f, 0x51, 0x01, 0x23, 0xb5, 0xbb, 0x62,
+	0x6f, 0xf6, 0x12, 0x44, 0x7d, 0x40, 0x7d, 0xef, 0xf4, 0x9e, 0xad, 0x7b, 0x60, 0x4e, 0x02, 0x5e,
+	0xc6, 0xde, 0x91, 0xd2, 0x58, 0x3e, 0xfe, 0x21, 0xf1, 0xfc, 0xb6, 0xf2, 0xd9, 0x05, 0x58, 0x69,
+	0xbb, 0x5e, 0xb5, 0xc1, 0xf7, 0xe4, 0xfb, 0x9e, 0x6d, 0xbb, 0x9e, 0xa0, 0x31, 0x30, 0x58, 0x73,
+	0x8b, 0x93, 0x1e, 0x31, 0x21, 0xdd, 0xc1, 0x6e, 0x20, 0xbd, 0xaf, 0xc7, 0xef, 0xe2, 0x47, 0xb7,
+	0xcb, 0x95, 0xfb, 0xd8, 0x0d, 0x6c, 0x41, 0x67, 0xbc, 0x07, 0xfb, 0xd3, 0x5c, 0x5d, 0x3e, 0x56,
+	0x59, 0x3d, 0xab, 0xdb, 0x31, 0x18, 0x5c, 0x9b, 0x53, 0x92, 0x84, 0x5a, 0x81, 0x7c, 0x62, 0xf0,
+	0x54, 0xec, 0xb8, 0x86, 0x0b, 0x09, 0xb1, 0xe3, 0xa1, 0x33, 0x02, 0xd8, 0x9d, 0xe5, 0xa2, 0x53,
+	0xcf, 0xcf, 0x3f, 0x68, 0xb0, 0x37, 0x87, 0x52, 0x69, 0xe6, 0x1b, 0xb0, 0xc4, 0x3d, 0xad, 0x4a,
+	0xeb, 0xb4, 0x90, 0x84, 0x84, 0xa7, 0x97, 0x8e, 0x01, 0x64, 0x95, 0x6c, 0xb4, 0x07, 0xeb, 0x03,
+	0xe7, 0x46, 0x23, 0x78, 0x56, 0xed, 0xab, 0x7a, 0x15, 0xc9, 0xc9, 0xc5, 0x68, 0x4e, 0xf2, 0x04,
+	0x20, 0x1e, 0xae, 0xb5, 0x48, 0x43, 0xd4, 0xfb, 0xac, 0xad, 0x96, 0x37, 0xd2, 0x2f, 0x9e, 0x14,
+	0xb4, 0xd2, 0xbf, 0xce, 0xc1, 0x92, 0x70, 0x0e, 0xfa, 0xb5, 0x06, 0x19, 0x39, 0x94, 0xa0, 0xad,
+	0xb8, 0xd5, 0x13, 0xa6, 0x4e, 0x7d, 0x7b, 0x16, 0x59, 0x68, 0xa4, 0x71, 0xf5, 0x57, 0x7f, 0xf9,
+	0xe7, 0xef, 0x16, 0xb7, 0xd0, 0x25, 0x2b, 0x36, 0x2d, 0xcb, 0xc1, 0xc4, 0x7a, 0x24, 0x8d, 0x7c,
+	0x8c, 0x7e, 0xaf, 0xc1, 0x99, 0xc8, 0xec, 0x87, 0xae, 0x26, 0xa8, 0x99, 0x34, 0x63, 0xea, 0xfb,
+	0xf3, 0x11, 0x4b, 0x64, 0x25, 0x81, 0x6c, 0x1f, 0x5d, 0x89, 0x23, 0x53, 0x63, 0x66, 0x0c, 0xe0,
+	0x1f, 0x35, 0x58, 0x1f, 0x1f, 0xe3, 0x90, 0x99, 0xa0, 0x36, 0x61, 0x7a, 0xd4, 0xad, 0xb9, 0xe9,
+	0x25, 0xd2, 0x1b, 0x02, 0xe9, 0x5b, 0xa8, 0x14, 0x47, 0xda, 0x53, 0x3c, 0x43, 0xb0, 0xa3, 0x93,
+	0xe9, 0x63, 0xf4, 0x99, 0x06, 0x19, 0x39, 0xb0, 0x25, 0x86, 0x36, 0x3a, 0x0b, 0x26, 0x86, 0x76,
+	0x6c, 0xee, 0x33, 0xf6, 0x05, 0xac, 0x6d, 0x74, 0x39, 0x0e, 0x4b, 0x0e, 0x80, 0x74, 0xc4, 0x75,
+	0x5f, 0x68, 0x90, 0x91, 0xa3, 0x5b, 0x22, 0x90, 0xe8, 0x9c, 0x98, 0x08, 0x64, 0x6c, 0x02, 0x34,
+	0x0e, 0x04, 0x90, 0xab, 0x68, 0x2f, 0x0e, 0x84, 0x86, 0xa4, 0x43, 0x1c, 0xd6, 0xa3, 0x23, 0x72,
+	0xfc, 0x18, 0x7d, 0x0a, 0x69, 0x3e, 0xe1, 0x21, 0x23, 0x31, 0x65, 0x06, 0x63, 0xa3, 0x7e, 0x69,
+	0x2a, 0x8d, 0xc4, 0xb0, 0x27, 0x30, 0x5c, 0x42, 0xaf, 0x4f, 0xca, 0xa6, 0x46, 0xc4, 0x13, 0x3f,
+	0x87, 0xe5, 0x70, 0xc8, 0x41, 0x97, 0x13, 0x24, 0x47, 0x66, 0x29, 0x7d, 0x6b, 0x06, 0x95, 0x44,
+	0x50, 0x14, 0x08, 0x74, 0x94, 0x8b, 0x23, 0x08, 0xa7, 0x28, 0xd4, 0x87, 0x8c, 0x1c, 0xa2, 0x50,
+	0x31, 0x2e, 0x33, 0x3a, 0x5f, 0xe9, 0x3b, 0xb3, 0x1a, 0x4b, 0xa5, 0xd7, 0x10, 0x7a, 0x37, 0x91,
+	0x1e, 0xd7, 0x4b, 0x58, 0xb3, 0x5a, 0xe7, 0xea, 0x7e, 0x09, 0xab, 0x23, 0x53, 0xd0, 0x1c, 0xda,
+	0x27, 0xd8, 0x3c, 0x61, 0x8c, 0x32, 0xb6, 0x85, 0xee, 0x22, 0xca, 0x4f, 0xd0, 0x2d, 0xc9, 0xab,
+	0x0e, 0xa6, 0xe8, 0x17, 0x90, 0x91, 0x4d, 0x77, 0x62, 0xee, 0x45, 0xc7, 0xae, 0xc4, 0xdc, 0x1b,
+	0xeb, 0xdd, 0xa7, 0x59, 0x1f, 0x76, 0xdc, 0xac, 0x8f, 0x3e, 0xd7, 0x00, 0x86, 0x6d, 0x23, 0xda,
+	0x9d, 0x26, 0x7a, 0xb4, 0xd3, 0xd7, 0xf7, 0xe6, 0xa0, 0x94, 0x38, 0xb6, 0x04, 0x8e, 0x02, 0xba,
+	0x98, 0x84, 0x43, 0xf4, 0xd0, 0xdc, 0x11, 0xb2, 0xf5, 0x9c, 0x52, 0x0d, 0x46, 0x3b, 0xd6, 0x29,
+	0xd5, 0x20, 0xd2, 0xc1, 0x4e, 0x73, 0x84, 0xea, 0x6c, 0xd1, 0x9f, 0x35, 0xd8, 0xbc, 0xeb, 0x52,
+	0x96, 0xd4, 0x2d, 0xa2, 0xeb, 0x49, 0xa5, 0x71, 0x7a, 0x3f, 0xab, 0x7f, 0xef, 0xc4, 0x7c, 0x12,
+	0xf5, 0x5b, 0x02, 0xb5, 0x89, 0xf6, 0x27, 0x94, 0xd6, 0xc4, 0x76, 0x15, 0x3d, 0xd7, 0xa0, 0x38,
+	0xab, 0x79, 0x42, 0xef, 0x9c, 0x0c, 0xd3, 0x78, 0xff, 0xa6, 0xbf, 0xfb, 0xd2, 0xfc, 0xd2, 0xb6,
+	0x77, 0x84, 0x6d, 0xdf, 0x47, 0xd7, 0x4f, 0x62, 0xdb, 0x48, 0x9d, 0xfa, 0xb7, 0x06, 0xc6, 0xec,
+	0x7e, 0x16, 0xdd, 0x9c, 0x0f, 0x67, 0x72, 0x67, 0xad, 0xdf, 0xfa, 0x1f, 0x24, 0x48, 0x5b, 0xef,
+	0x09, 0x5b, 0xef, 0xa0, 0xc3, 0x39, 0x6c, 0xad, 0x61, 0xef, 0x68, 0x60, 0xb0, 0x55, 0x3b, 0x0e,
+	0xdb, 0x27, 0xeb, 0xd1, 0xa0, 0x93, 0x7a, 0x8c, 0xfe, 0xaa, 0x41, 0x71, 0x42, 0xa2, 0x46, 0xda,
+	0x46, 0x74, 0xe3, 0xe4, 0xb0, 0x07, 0xc1, 0xfd, 0xc1, 0x4b, 0xf1, 0x4a, 0x63, 0xdf, 0x16, 0xc6,
+	0xbe, 0x89, 0x0e, 0x4e, 0x6a, 0x2c, 0x2d, 0xdf, 0xfc, 0xea, 0x59, 0x5e, 0xfb, 0xfa, 0x59, 0x5e,
+	0xfb, 0xe6, 0x59, 0x5e, 0xfb, 0xf2, 0x79, 0x7e, 0xe1, 0xeb, 0xe7, 0xf9, 0x85, 0xbf, 0x3d, 0xcf,
+	0x2f, 0xfc, 0x74, 0x74, 0xd6, 0x24, 0x3d, 0x3e, 0x6a, 0x0e, 0x85, 0xf7, 0x85, 0x78, 0x31, 0x6f,
+	0xd6, 0x96, 0xc5, 0xa8, 0xfe, 0xe6, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x6a, 0xdf, 0xc0, 0x38,
+	0x76, 0x19, 0x00, 0x00,
+}
+
+func (this *VFBCPair) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*VFBCPair)
+	if !ok {
+		that2, ok := that.(VFBCPair)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.ContractAddress != that1.ContractAddress {
+		return false
+	}
+	if this.MinDenom != that1.MinDenom {
+		return false
+	}
+	if this.Enabled != that1.Enabled {
+		return false
+	}
+	return true
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1446,6 +1978,14 @@ type QueryClient interface {
 	// BaseFee queries the base fee of the parent block of the current block,
 	// it's similar to feemarket module's method, but also checks london hardfork status.
 	BaseFee(ctx context.Context, in *QueryBaseFeeRequest, opts ...grpc.CallOption) (*QueryBaseFeeResponse, error)
+	// ListVirtualFrontierContracts returns Json array of information of virtual frontier contracts.
+	ListVirtualFrontierContracts(ctx context.Context, in *QueryVirtualFrontierContractsRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierContractsResponse, error)
+	// VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
+	VirtualFrontierContractByAddress(ctx context.Context, in *QueryVirtualFrontierContractByAddressRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierContractByAddressResponse, error)
+	// VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
+	VirtualFrontierBankContractByDenom(ctx context.Context, in *QueryVirtualFrontierBankContractByDenomRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierBankContractByDenomResponse, error)
+	// ListVirtualFrontierBankContracts returns the list of bank contract
+	ListVirtualFrontierBankContracts(ctx context.Context, in *QueryVirtualFrontierBankContractsRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierBankContractsResponse, error)
 }
 
 type queryClient struct {
@@ -1564,6 +2104,42 @@ func (c *queryClient) BaseFee(ctx context.Context, in *QueryBaseFeeRequest, opts
 	return out, nil
 }
 
+func (c *queryClient) ListVirtualFrontierContracts(ctx context.Context, in *QueryVirtualFrontierContractsRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierContractsResponse, error) {
+	out := new(QueryVirtualFrontierContractsResponse)
+	err := c.cc.Invoke(ctx, "/ethermint.evm.v1.Query/ListVirtualFrontierContracts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VirtualFrontierContractByAddress(ctx context.Context, in *QueryVirtualFrontierContractByAddressRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierContractByAddressResponse, error) {
+	out := new(QueryVirtualFrontierContractByAddressResponse)
+	err := c.cc.Invoke(ctx, "/ethermint.evm.v1.Query/VirtualFrontierContractByAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VirtualFrontierBankContractByDenom(ctx context.Context, in *QueryVirtualFrontierBankContractByDenomRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierBankContractByDenomResponse, error) {
+	out := new(QueryVirtualFrontierBankContractByDenomResponse)
+	err := c.cc.Invoke(ctx, "/ethermint.evm.v1.Query/VirtualFrontierBankContractByDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ListVirtualFrontierBankContracts(ctx context.Context, in *QueryVirtualFrontierBankContractsRequest, opts ...grpc.CallOption) (*QueryVirtualFrontierBankContractsResponse, error) {
+	out := new(QueryVirtualFrontierBankContractsResponse)
+	err := c.cc.Invoke(ctx, "/ethermint.evm.v1.Query/ListVirtualFrontierBankContracts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Account queries an Ethereum account.
@@ -1593,6 +2169,14 @@ type QueryServer interface {
 	// BaseFee queries the base fee of the parent block of the current block,
 	// it's similar to feemarket module's method, but also checks london hardfork status.
 	BaseFee(context.Context, *QueryBaseFeeRequest) (*QueryBaseFeeResponse, error)
+	// ListVirtualFrontierContracts returns Json array of information of virtual frontier contracts.
+	ListVirtualFrontierContracts(context.Context, *QueryVirtualFrontierContractsRequest) (*QueryVirtualFrontierContractsResponse, error)
+	// VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
+	VirtualFrontierContractByAddress(context.Context, *QueryVirtualFrontierContractByAddressRequest) (*QueryVirtualFrontierContractByAddressResponse, error)
+	// VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
+	VirtualFrontierBankContractByDenom(context.Context, *QueryVirtualFrontierBankContractByDenomRequest) (*QueryVirtualFrontierBankContractByDenomResponse, error)
+	// ListVirtualFrontierBankContracts returns the list of bank contract
+	ListVirtualFrontierBankContracts(context.Context, *QueryVirtualFrontierBankContractsRequest) (*QueryVirtualFrontierBankContractsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1634,6 +2218,18 @@ func (*UnimplementedQueryServer) TraceBlock(ctx context.Context, req *QueryTrace
 }
 func (*UnimplementedQueryServer) BaseFee(ctx context.Context, req *QueryBaseFeeRequest) (*QueryBaseFeeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BaseFee not implemented")
+}
+func (*UnimplementedQueryServer) ListVirtualFrontierContracts(ctx context.Context, req *QueryVirtualFrontierContractsRequest) (*QueryVirtualFrontierContractsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListVirtualFrontierContracts not implemented")
+}
+func (*UnimplementedQueryServer) VirtualFrontierContractByAddress(ctx context.Context, req *QueryVirtualFrontierContractByAddressRequest) (*QueryVirtualFrontierContractByAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VirtualFrontierContractByAddress not implemented")
+}
+func (*UnimplementedQueryServer) VirtualFrontierBankContractByDenom(ctx context.Context, req *QueryVirtualFrontierBankContractByDenomRequest) (*QueryVirtualFrontierBankContractByDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VirtualFrontierBankContractByDenom not implemented")
+}
+func (*UnimplementedQueryServer) ListVirtualFrontierBankContracts(ctx context.Context, req *QueryVirtualFrontierBankContractsRequest) (*QueryVirtualFrontierBankContractsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListVirtualFrontierBankContracts not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1856,6 +2452,78 @@ func _Query_BaseFee_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ListVirtualFrontierContracts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVirtualFrontierContractsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ListVirtualFrontierContracts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ethermint.evm.v1.Query/ListVirtualFrontierContracts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ListVirtualFrontierContracts(ctx, req.(*QueryVirtualFrontierContractsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VirtualFrontierContractByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVirtualFrontierContractByAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VirtualFrontierContractByAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ethermint.evm.v1.Query/VirtualFrontierContractByAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VirtualFrontierContractByAddress(ctx, req.(*QueryVirtualFrontierContractByAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VirtualFrontierBankContractByDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVirtualFrontierBankContractByDenomRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VirtualFrontierBankContractByDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ethermint.evm.v1.Query/VirtualFrontierBankContractByDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VirtualFrontierBankContractByDenom(ctx, req.(*QueryVirtualFrontierBankContractByDenomRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ListVirtualFrontierBankContracts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVirtualFrontierBankContractsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ListVirtualFrontierBankContracts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ethermint.evm.v1.Query/ListVirtualFrontierBankContracts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ListVirtualFrontierBankContracts(ctx, req.(*QueryVirtualFrontierBankContractsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ethermint.evm.v1.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1907,6 +2575,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BaseFee",
 			Handler:    _Query_BaseFee_Handler,
+		},
+		{
+			MethodName: "ListVirtualFrontierContracts",
+			Handler:    _Query_ListVirtualFrontierContracts_Handler,
+		},
+		{
+			MethodName: "VirtualFrontierContractByAddress",
+			Handler:    _Query_VirtualFrontierContractByAddress_Handler,
+		},
+		{
+			MethodName: "VirtualFrontierBankContractByDenom",
+			Handler:    _Query_VirtualFrontierBankContractByDenom_Handler,
+		},
+		{
+			MethodName: "ListVirtualFrontierBankContracts",
+			Handler:    _Query_ListVirtualFrontierBankContracts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2826,6 +3510,341 @@ func (m *QueryBaseFeeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryVirtualFrontierContractsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierContractsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierContractsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierContractsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierContractsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierContractsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VirtualFrontierContractsJson) > 0 {
+		for iNdEx := len(m.VirtualFrontierContractsJson) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.VirtualFrontierContractsJson[iNdEx])
+			copy(dAtA[i:], m.VirtualFrontierContractsJson[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.VirtualFrontierContractsJson[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MinDenom) > 0 {
+		i -= len(m.MinDenom)
+		copy(dAtA[i:], m.MinDenom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.MinDenom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pair != nil {
+		{
+			size, err := m.Pair.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierContractByAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierContractByAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierContractByAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierContractByAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierContractByAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierContractByAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.VirtualFrontierContractJson) > 0 {
+		i -= len(m.VirtualFrontierContractJson)
+		copy(dAtA[i:], m.VirtualFrontierContractJson)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.VirtualFrontierContractJson)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierBankContractsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierBankContractsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierBankContractsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVirtualFrontierBankContractsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVirtualFrontierBankContractsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVirtualFrontierBankContractsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Pairs) > 0 {
+		for iNdEx := len(m.Pairs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Pairs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *VFBCPair) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VFBCPair) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VFBCPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Enabled {
+		i--
+		if m.Enabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.MinDenom) > 0 {
+		i -= len(m.MinDenom)
+		copy(dAtA[i:], m.MinDenom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.MinDenom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ContractAddress) > 0 {
+		i -= len(m.ContractAddress)
+		copy(dAtA[i:], m.ContractAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ContractAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -3225,6 +4244,142 @@ func (m *QueryBaseFeeResponse) Size() (n int) {
 	if m.BaseFee != nil {
 		l = m.BaseFee.Size()
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierContractsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierContractsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.VirtualFrontierContractsJson) > 0 {
+		for _, s := range m.VirtualFrontierContractsJson {
+			l = len(s)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MinDenom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierBankContractByDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pair != nil {
+		l = m.Pair.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierContractByAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierContractByAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VirtualFrontierContractJson)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierBankContractsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVirtualFrontierBankContractsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Pairs) > 0 {
+		for _, e := range m.Pairs {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *VFBCPair) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ContractAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.MinDenom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Enabled {
+		n += 2
 	}
 	return n
 }
@@ -5809,6 +6964,882 @@ func (m *QueryBaseFeeResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierContractsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierContractsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VirtualFrontierContractsJson", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VirtualFrontierContractsJson = append(m.VirtualFrontierContractsJson, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierBankContractByDenomRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractByDenomRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractByDenomRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierBankContractByDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractByDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractByDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pair", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pair == nil {
+				m.Pair = &VFBCPair{}
+			}
+			if err := m.Pair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierContractByAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractByAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractByAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierContractByAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractByAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierContractByAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VirtualFrontierContractJson", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VirtualFrontierContractJson = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierBankContractsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVirtualFrontierBankContractsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVirtualFrontierBankContractsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pairs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pairs = append(m.Pairs, &VFBCPair{})
+			if err := m.Pairs[len(m.Pairs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VFBCPair) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VFBCPair: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VFBCPair: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

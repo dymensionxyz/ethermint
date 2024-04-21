@@ -26,6 +26,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 // revision is the identifier of a version of state.
@@ -452,6 +453,14 @@ func (s *StateDB) RevertToSnapshot(revid int) {
 // the StateDB object should be discarded after committed.
 func (s *StateDB) Commit() error {
 	for _, addr := range s.journal.sortedDirties() {
+		if s.keeper.IsVirtualFrontierContract(s.ctx, addr) {
+			// regular EVM state transition should not be able to access or make change to the virtual frontier contract
+			return errorsmod.Wrapf(
+				evmtypes.ErrProhibitedAccessingVirtualFrontierContract,
+				"can not access or make change to frontier contract address %s", addr,
+			)
+		}
+
 		obj := s.stateObjects[addr]
 		if obj.suicided {
 			if err := s.keeper.DeleteAccount(s.ctx, obj.Address()); err != nil {

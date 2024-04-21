@@ -375,3 +375,59 @@ func (issd EthIncrementSenderSequenceDecorator) AnteHandle(ctx sdk.Context, tx s
 
 	return next(ctx, tx, simulate)
 }
+
+// VirtualFrontierContractDecorator denies any transaction that tries to transfer funds to the virtual frontier contract address.
+type VirtualFrontierContractDecorator struct {
+	evmKeeper EVMKeeper
+}
+
+// NewVirtualFrontierContractDecorator creates a new VirtualFrontierContractDecorator instance.
+func NewVirtualFrontierContractDecorator(evmKeeper EVMKeeper) VirtualFrontierContractDecorator {
+	return VirtualFrontierContractDecorator{
+		evmKeeper: evmKeeper,
+	}
+}
+
+// AnteHandle checks if the transaction tries to transfer funds to the virtual frontier contract address.
+func (ctd VirtualFrontierContractDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+	for _, msg := range tx.GetMsgs() {
+		msgEthTx, ok := msg.(*evmtypes.MsgEthereumTx)
+		if !ok {
+			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid message type %T, expected %T", msg, (*evmtypes.MsgEthereumTx)(nil))
+		}
+
+		ethTx := msgEthTx.AsTransaction()
+
+		if ethTx.To() == nil {
+			// contract creation tx => none of business
+			continue
+		}
+
+		to := *ethTx.To()
+
+		if !ctd.evmKeeper.IsVirtualFrontierContract(ctx, to) {
+			// not a VF contract => none of business
+			continue
+		}
+
+		// reject if message value is not zero
+		if ethTx.Value().Sign() != 0 {
+			return ctx, errorsmod.Wrapf(
+				evmtypes.ErrProhibitedAccessingVirtualFrontierContract,
+				"virtual frontier contract does not accept funds",
+			)
+		}
+
+		// can only call to VF contract
+		if len(ethTx.Data()) < 4 /*at least 4 bytes sig*/ {
+			return ctx, errorsmod.Wrapf(
+				evmtypes.ErrProhibitedAccessingVirtualFrontierContract,
+				"can not transfer directly to virtual frontier contract address %s", to,
+			)
+		}
+
+		// all check passed, it is safe to call the contract
+	}
+
+	return next(ctx, tx, simulate)
+}

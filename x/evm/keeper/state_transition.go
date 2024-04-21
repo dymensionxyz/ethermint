@@ -16,7 +16,9 @@
 package keeper
 
 import (
+	"github.com/evmos/ethermint/x/evm/vm/geth"
 	"math/big"
+	"time"
 
 	tmtypes "github.com/tendermint/tendermint/types"
 
@@ -378,7 +380,7 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		ret, _, leftoverGas, vmErr = evm.Create(sender, msg.Data(), leftoverGas, msg.Value())
 		stateDB.SetNonce(sender.Address(), msg.Nonce()+1)
 	} else {
-		ret, leftoverGas, vmErr = evm.Call(sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
+		ret, leftoverGas, vmErr = k.proxiedEvmCall(ctx, evm, stateDB, sender, *msg.To(), msg.Data(), leftoverGas, msg.Value())
 	}
 
 	refundQuotient := params.RefundQuotient
@@ -435,4 +437,63 @@ func (k *Keeper) ApplyMessageWithConfig(ctx sdk.Context,
 		Logs:    types.NewLogsFromEth(stateDB.Logs()),
 		Hash:    txConfig.TxHash.Hex(),
 	}, nil
+}
+
+// proxiedEvmCall is the proxied method of the EVM::Call method.
+// It is used to intercept the call request, make decision before actual invoking call to the EVM::Call.
+// If the target is a Virtual Frontier Contract, the call will be redirected to corresponding handler,
+// instead of invoking actual EVM execution.
+func (k *Keeper) proxiedEvmCall(ctx sdk.Context, evm evm.EVM, stateDB vm.StateDB, caller vm.ContractRef, addr common.Address, input []byte, gas uint64, value *big.Int) (ret []byte, leftOverGas uint64, vmErr error) {
+	var vfcExecResult *types.VFCExecutionResult
+
+	defer func(startGas uint64, startTime time.Time) {
+		// when having VFC exec result, we build the result based on the VFC exec result
+		if vfcExecResult != nil {
+			// CONTRACT: all the named return value must not be set before this
+			// and can only be set by the following statement
+			_, ret, _, leftOverGas, vmErr = vfcExecResult.GetDetailedResult(startGas)
+
+			// capture end tracing if debugging is enabled
+			vmCfg := evm.Config()
+			if vmCfg.Debug {
+				vmCfg.Tracer.CaptureEnd(ret, startGas-leftOverGas, time.Since(startTime), vmErr)
+				// Note: calls to CaptureStart had been added bellow.
+			}
+		}
+	}(gas, time.Now())
+
+	if k.IsVirtualFrontierContract(ctx, addr) {
+		vfContract := k.GetVirtualFrontierContract(ctx, addr)
+
+		// simulate the top call frame when tracing a VFC call
+		vmCfg := evm.Config()
+		if vmCfg.Debug {
+			vmCfg.Tracer.CaptureStart(evm.(*geth.EVM).EVM, caller.Address(), addr, false, input, gas, value)
+		}
+
+		if vfContract == nil {
+			vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("virtual frontier contract %s could not be found", addr.String()))
+		} else if !vfContract.Active {
+			vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("the virtual frontier contract %s is not active", addr.String()))
+		} else {
+			switch vfContract.Type {
+			case types.VFC_TYPE_BANK:
+				vfcExecResult = k.evmCallVirtualFrontierBankContract(ctx, stateDB, caller.Address(), vfContract, input, gas, value)
+
+				break
+			default:
+				vfcExecResult = types.NewExecVFCError(types.ErrVMExecution.Wrapf("virtual frontier contract type %d is not supported", vfContract.Type))
+
+				break
+			}
+		}
+
+		return
+	}
+
+	if vfcExecResult != nil {
+		panic("invalid state: falling to EVM call from Virtual Frontier Contract call")
+	}
+
+	return evm.Call(caller, addr, input, gas, value)
 }

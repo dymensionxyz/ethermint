@@ -74,6 +74,26 @@ service Query {
   rpc BaseFee(QueryBaseFeeRequest) returns (QueryBaseFeeResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/base_fee";
   }
+
+  // ListVirtualFrontierContracts returns Json array of information of virtual frontier contracts.
+  rpc ListVirtualFrontierContracts(QueryVirtualFrontierContractsRequest) returns (QueryVirtualFrontierContractsResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts";
+  }
+
+  // VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
+  rpc VirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest) returns (QueryVirtualFrontierContractByAddressResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts/{address}";
+  }
+
+  // VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
+  rpc VirtualFrontierBankContractByDenom(QueryVirtualFrontierBankContractByDenomRequest) returns (QueryVirtualFrontierBankContractByDenomResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contract/by_denom/{min_denom}";
+  }
+
+  // ListVirtualFrontierBankContracts returns the list of bank contract
+  rpc ListVirtualFrontierBankContracts(QueryVirtualFrontierBankContractsRequest) returns (QueryVirtualFrontierBankContractsResponse) {
+    option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contracts";
+  }
 }
 
 // QueryAccountRequest is the request type for the Query/Account RPC method.
@@ -295,4 +315,63 @@ message QueryBaseFeeRequest {}
 message QueryBaseFeeResponse {
   // base_fee is the EIP1559 base fee
   string base_fee = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+}
+
+// QueryVirtualFrontierContractsRequest defines the request for querying virtual frontier contract list
+message QueryVirtualFrontierContractsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryVirtualFrontierContractsResponse returns the list of the virtual frontier contract
+message QueryVirtualFrontierContractsResponse {
+  repeated string virtual_frontier_contracts_json = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVirtualFrontierBankContractByDenomRequest defines the request for querying virtual frontier bank contract by it min denom
+message QueryVirtualFrontierBankContractByDenomRequest {
+  string min_denom = 1;
+}
+
+// QueryVirtualFrontierBankContractByDenomResponse returns the bank contract of the corresponding min denom
+message QueryVirtualFrontierBankContractByDenomResponse {
+  VFBCPair pair = 1;
+}
+
+// QueryVirtualFrontierContractByAddressRequest defines the request for querying virtual frontier contract by it address
+message QueryVirtualFrontierContractByAddressRequest {
+  string address = 1;
+}
+
+// QueryVirtualFrontierContractByAddressResponse returns the virtual frontier contract corresponding to the address
+message QueryVirtualFrontierContractByAddressResponse {
+  string virtual_frontier_contract_json = 1;
+}
+
+// QueryVirtualFrontierBankContractsRequest defines the request for querying all virtual frontier bank contracts
+message QueryVirtualFrontierBankContractsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryVirtualFrontierBankContractsResponse returns all virtual frontier bank contracts
+message QueryVirtualFrontierBankContractsResponse {
+  // pairs is list of available virtual frontier bank contracts
+  repeated VFBCPair pairs = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// VFBCPair is a pair of a native Cosmos token (base) with an ERC20 virtual frontier bank contract address.
+message VFBCPair {
+  option (gogoproto.equal) = true;
+  // contract_address is the hex address of the contract
+  string contract_address = 1;
+  // min_denom defines the cosmos base denomination
+  string min_denom = 2;
+  // enabled is status of the contract, whether it is enabled or not
+  bool enabled = 3;
 }

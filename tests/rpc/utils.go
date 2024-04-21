@@ -185,8 +185,6 @@ func SendTestTransaction(t *testing.T, addr []byte) hexutil.Bytes {
 
 // deployTestContract deploys a contract that emits an event in the constructor
 func DeployTestContract(t *testing.T, addr []byte) (hexutil.Bytes, map[string]interface{}) {
-	t.SkipNow()
-
 	param := make([]map[string]string, 1)
 	param[0] = make(map[string]string)
 	param[0]["from"] = "0x" + fmt.Sprintf("%x", addr)
@@ -211,8 +209,6 @@ func DeployTestContract(t *testing.T, addr []byte) (hexutil.Bytes, map[string]in
 }
 
 func DeployTestContractWithFunction(t *testing.T, addr []byte) hexutil.Bytes {
-	t.SkipNow()
-
 	// pragma solidity ^0.5.1;
 
 	// contract Test {

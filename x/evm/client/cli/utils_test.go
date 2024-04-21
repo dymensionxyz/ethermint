@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"github.com/evmos/ethermint/x/evm/types"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -99,4 +101,67 @@ func TestAddressToCosmosAddress(t *testing.T) {
 	ethFormatted, err = cosmosAddressFromArg(ethAddr.Hex()[2:])
 	require.NoError(t, err)
 	require.Equal(t, baseAddr, ethFormatted)
+}
+
+func TestParseUpdateVirtualFrontierBankContractsProposal(t *testing.T) {
+	testCases := []struct {
+		name          string
+		metadataFile  string
+		wantErr       bool
+		wantContracts []types.VirtualFrontierBankContractProposalContent
+	}{
+		{
+			name:         "fail - invalid file name",
+			metadataFile: "",
+			wantErr:      true,
+		},
+		{
+			name:         "fail - invalid content",
+			metadataFile: "test_proposals/invalid_update_vfc_proposal_test.json",
+			wantErr:      true,
+		},
+		{
+			name:         "pass - update single contract",
+			metadataFile: "test_proposals/update_single_vfc_proposal_test.json",
+			wantErr:      false,
+			wantContracts: []types.VirtualFrontierBankContractProposalContent{
+				{
+					ContractAddress: "0x0000000000000000000000000000000000001001",
+					Active:          true,
+				},
+			},
+		},
+		{
+			name:         "pass - update multiple contracts",
+			metadataFile: "test_proposals/update_multiple_vfc_proposal_test.json",
+			wantErr:      false,
+			wantContracts: []types.VirtualFrontierBankContractProposalContent{
+				{
+					ContractAddress: "0x0000000000000000000000000000000000001001",
+					Active:          true,
+				},
+				{
+					ContractAddress: "0x0000000000000000000000000000000000001002",
+					Active:          false,
+				},
+				{
+					ContractAddress: "0x0000000000000000000000000000000000001003",
+					Active:          true,
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			proposal, err := parseUpdateVirtualFrontierBankContractsProposal(types.AminoCdc, tc.metadataFile)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Len(t, proposal.Contracts, len(tc.wantContracts))
+			require.True(t, reflect.DeepEqual(tc.wantContracts, proposal.Contracts))
+		})
+	}
 }

@@ -18,7 +18,7 @@ func TestParamsValidate(t *testing.T) {
 		{"default", DefaultParams(), false},
 		{
 			"valid",
-			NewParams("ara", false, false, true, DefaultChainConfig(), extraEips),
+			NewParams("ara", false, true, true, DefaultChainConfig(), extraEips),
 			false,
 		},
 		{
@@ -41,12 +41,6 @@ func TestParamsValidate(t *testing.T) {
 			},
 			true,
 		},
-		//FIXME
-		// {
-		// 	"creation not allowed",
-		// 	NewParams("ara", false, true, true, DefaultChainConfig(), extraEips),
-		// 	true,
-		// },
 	}
 
 	for _, tc := range testCases {

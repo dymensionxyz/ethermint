@@ -18,10 +18,15 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
@@ -40,7 +45,11 @@ func GetTxCmd() *cobra.Command {
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-	cmd.AddCommand(NewRawTxCmd())
+
+	cmd.AddCommand(
+		NewRawTxCmd(),
+	)
+
 	return cmd
 }
 
@@ -122,5 +131,96 @@ func NewRawTxCmd() *cobra.Command {
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewUpdateVirtualFrontierBankContractCmd implements the command to submit an update proposal that make change to the virtual frontier bank contract
+func NewUpdateVirtualFrontierBankContractCmd() *cobra.Command {
+	cmdCode := "update-vfc-bank"
+	cmd := &cobra.Command{
+		Use:   fmt.Sprintf("%s PROPOSAL_FILE", cmdCode),
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit a proposal that toggle enable/disable of the virtual frontier bank contract",
+		Long:  `Submit a proposal that toggle enable/disable of the virtual frontier bank contract. The proposal details must be provided via a JSON file.`,
+		Example: fmt.Sprintf(`$ %s tx gov submit-legacy-proposal %s proposal_file.json --from=<key_or_address>
+
+Sample proposal file content:
+// all fields are required
+{
+  "contracts": [{
+      "contract_address": "0x1...1",
+      "active": true
+  },{
+      "contract_address": "0x2...2",
+      "active": false
+  }]
+}`,
+			version.AppName,
+			cmdCode,
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			title, err := cmd.Flags().GetString(cli.FlagTitle)
+			if err != nil {
+				return err
+			}
+
+			description, err := cmd.Flags().GetString(cli.FlagDescription)
+			if err != nil {
+				return err
+			}
+
+			depositStr, err := cmd.Flags().GetString(cli.FlagDeposit)
+			if err != nil {
+				return err
+			}
+
+			deposit, err := sdk.ParseCoinsNormalized(depositStr)
+			if err != nil {
+				return err
+			}
+
+			proposal, err := parseUpdateVirtualFrontierBankContractsProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
+			}
+
+			from := clientCtx.GetFromAddress()
+
+			content := types.NewUpdateVirtualFrontierBankContractsProposal(title, description, proposal.Contracts...)
+
+			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
+			if err != nil {
+				return err
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(cli.FlagTitle, "", "title of proposal")
+	if err := cmd.MarkFlagRequired(cli.FlagTitle); err != nil {
+		panic(err)
+	}
+
+	cmd.Flags().String(cli.FlagDescription, "", "description of proposal")
+	if err := cmd.MarkFlagRequired(cli.FlagDescription); err != nil {
+		panic(err)
+	}
+
+	cmd.Flags().String(cli.FlagDeposit, "1000aphoton", "deposit of proposal")
+	if err := cmd.MarkFlagRequired(cli.FlagDeposit); err != nil {
+		panic(err)
+	}
+
 	return cmd
 }

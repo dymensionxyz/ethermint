@@ -26,10 +26,11 @@ The `x/evm` is part of the [ethermint library](https://pkg.go.dev/github.com/evm
 3. **[State Transitions](03_state_transitions.md)**
 4. **[Transactions](04_transactions.md)**
 5. **[ABCI](05_abci.md)**
-6. **[Hooks](05_hooks.md)**
-7. **[Events](06_events.md)**
-8. **[Parameters](07_params.md)**
-9. **[Client](07_client.md)**
+6. **[Hooks](06_hooks.md)**
+7. **[Events](07_events.md)**
+8. **[Parameters](08_params.md)**
+9. **[Client](09_client.md)**
+10. **[Virtual Frontier Contract](10_virtual_frontier_contract.md)**
 
 ## Module Architecture
 

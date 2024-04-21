@@ -21,6 +21,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
@@ -100,6 +101,12 @@ var (
 
 	// TestMessageCall is the compiled message call benchmark contract
 	TestMessageCall CompiledContract
+
+	//go:embed VFBankContract20.json
+	vfBankContract20JSON []byte
+
+	// VFBankContract20 is the compiled virtual frontier bank contract
+	VFBankContract20 CompiledContract
 )
 
 func init() {
@@ -126,7 +133,44 @@ func init() {
 		panic(err)
 	}
 
-	if len(TestMessageCall.Bin) == 0 {
+	if len(SimpleStorageContract.Bin) == 0 {
 		panic("load contract failed")
 	}
+
+	err = json.Unmarshal(vfBankContract20JSON, &VFBankContract20)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(VFBankContract20.Bin) == 0 {
+		panic("load contract failed")
+	}
+}
+
+func (s CompiledContract) PackOutput(methodName string, args ...interface{}) ([]byte, error) {
+	method, exist := s.ABI.Methods[methodName]
+	if !exist {
+		return nil, sdkerrors.ErrPackAny.Wrapf("method '%s' not found in ABI", methodName)
+	}
+
+	bz, err := method.Outputs.Pack(args...)
+	if err != nil {
+		return nil, sdkerrors.ErrPackAny.Wrapf("failed to pack output for method %s()", methodName)
+	}
+
+	return bz, nil
+}
+
+func (s CompiledContract) UnpackInput(methodName string, data []byte) ([]interface{}, error) {
+	method, exist := s.ABI.Methods[methodName]
+	if !exist {
+		return nil, sdkerrors.ErrUnpackAny.Wrapf("method '%s' not found in ABI", methodName)
+	}
+
+	inputs, err := method.Inputs.Unpack(data)
+	if err != nil {
+		return nil, sdkerrors.ErrUnpackAny.Wrapf("failed to unpack input for method %s()", methodName)
+	}
+
+	return inputs, nil
 }

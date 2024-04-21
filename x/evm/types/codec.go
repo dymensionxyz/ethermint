@@ -23,6 +23,7 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	proto "github.com/gogo/protobuf/proto"
 )
 
@@ -64,6 +65,10 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&DynamicFeeTx{},
 		&AccessListTx{},
 		&LegacyTx{},
+	)
+	registry.RegisterImplementations(
+		(*govv1beta1.Content)(nil),
+		&UpdateVirtualFrontierBankContractsProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

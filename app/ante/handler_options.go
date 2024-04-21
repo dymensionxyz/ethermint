@@ -75,6 +75,7 @@ func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		NewEthSigVerificationDecorator(options.EvmKeeper),
 		NewEthAccountVerificationDecorator(options.AccountKeeper, options.EvmKeeper),
 		NewCanTransferDecorator(options.EvmKeeper),
+		NewVirtualFrontierContractDecorator(options.EvmKeeper), // prevent transfer to virtual frontier contract
 		NewEthGasConsumeDecorator(options.EvmKeeper, options.MaxTxGasWanted),
 		NewEthIncrementSenderSequenceDecorator(options.AccountKeeper), // innermost AnteDecorator.
 		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),

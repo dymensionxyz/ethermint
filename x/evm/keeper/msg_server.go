@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/evmos/ethermint/utils"
 	"strconv"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -153,6 +154,13 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if utils.IsOneOfDymensionChains(ctx) {
+		if req.Params.EnableCreate {
+			return nil, errorsmod.Wrap(govtypes.ErrInvalidProposalContent, "Enable Create is not allowed")
+		}
+	}
+
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}

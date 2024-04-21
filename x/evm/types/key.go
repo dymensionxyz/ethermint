@@ -16,12 +16,16 @@
 package types
 
 import (
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
 	// ModuleName string name of module
 	ModuleName = "evm"
+
+	ModuleVirtualFrontierContractDeployerName = ModuleName + "_vfc_deployer"
 
 	// StoreKey key for ethereum storage data, account code (StateDB) or block
 	// related data for Web3.
@@ -41,6 +45,8 @@ const (
 	prefixCode = iota + 1
 	prefixStorage
 	prefixParams
+	prefixVirtualFrontierContract
+	prefixVirtualFrontierBankContractAddressByDenom
 )
 
 // prefix bytes for the EVM transient store
@@ -51,11 +57,20 @@ const (
 	prefixTransientGasUsed
 )
 
+// VirtualFrontierContractDeployerAddress is address for deploying virtual frontier contract
+var VirtualFrontierContractDeployerAddress common.Address
+
+func init() {
+	VirtualFrontierContractDeployerAddress = common.BytesToAddress(authtypes.NewModuleAddress(ModuleVirtualFrontierContractDeployerName).Bytes())
+}
+
 // KVStore key prefixes
 var (
-	KeyPrefixCode    = []byte{prefixCode}
-	KeyPrefixStorage = []byte{prefixStorage}
-	KeyPrefixParams  = []byte{prefixParams}
+	KeyPrefixCode                                      = []byte{prefixCode}
+	KeyPrefixStorage                                   = []byte{prefixStorage}
+	KeyPrefixParams                                    = []byte{prefixParams}
+	KeyPrefixVirtualFrontierContract                   = []byte{prefixVirtualFrontierContract}
+	KeyPrefixVirtualFrontierBankContractAddressByDenom = []byte{prefixVirtualFrontierBankContractAddressByDenom}
 )
 
 // Transient Store key prefixes
@@ -74,4 +89,14 @@ func AddressStoragePrefix(address common.Address) []byte {
 // StateKey defines the full key under which an account state is stored.
 func StateKey(address common.Address, key []byte) []byte {
 	return append(AddressStoragePrefix(address), key...)
+}
+
+// VirtualFrontierContractKey returns a key for specific virtual frontier contract
+func VirtualFrontierContractKey(contractAddress common.Address) []byte {
+	return append(KeyPrefixVirtualFrontierContract, contractAddress.Bytes()...)
+}
+
+// VirtualFrontierBankContractAddressByDenomKey returns a key for specific virtual frontier bank contract by denom
+func VirtualFrontierBankContractAddressByDenomKey(minDenom string) []byte {
+	return append(KeyPrefixVirtualFrontierBankContractAddressByDenom, crypto.Keccak256Hash([]byte(minDenom)).Bytes()...)
 }

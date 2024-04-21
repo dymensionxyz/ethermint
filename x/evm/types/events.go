@@ -36,4 +36,9 @@ const (
 
 	MetricKeyTransitionDB = "transition_db"
 	MetricKeyStaticCall   = "static_call"
+
+	EventTypeVirtualFrontierContract = "virtual_frontier_contract"
+	AttributeKeyVFAction             = "vf_action"
+	AttributeKeyVFType               = "vf_type"
+	AttributeKeyVFAddress            = "vf_address"
 )

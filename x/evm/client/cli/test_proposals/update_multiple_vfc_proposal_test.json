@@ -1,0 +1,16 @@
+{
+  "contracts": [
+    {
+      "contract_address": "0x0000000000000000000000000000000000001001",
+      "active": true
+    },
+    {
+      "contract_address": "0x0000000000000000000000000000000000001002",
+      "active": false
+    },
+    {
+      "contract_address": "0x0000000000000000000000000000000000001003",
+      "active": true
+    }
+  ]
+}

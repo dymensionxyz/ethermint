@@ -18,12 +18,14 @@ package evm
 import (
 	"bytes"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"strings"
 
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
@@ -35,8 +37,13 @@ func InitGenesis(
 	ctx sdk.Context,
 	k *keeper.Keeper,
 	accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
 	data types.GenesisState,
 ) []abci.ValidatorUpdate {
+	if utils.IsOneOfDymensionChains(ctx) && data.Params.EnableCreate {
+		panic(fmt.Errorf("enable create is not allowed on Dymension chains"))
+	}
+
 	k.WithChainID(ctx)
 
 	err := k.SetParams(ctx, data.Params)
@@ -80,6 +87,62 @@ func InitGenesis(
 
 		for _, storage := range account.Storage {
 			k.SetState(ctx, address, common.HexToHash(storage.Key), common.HexToHash(storage.Value).Bytes())
+		}
+	}
+
+	if utils.IsEthermintDevChain(ctx) {
+		// devnet
+
+		denom := data.Params.EvmDenom
+
+		_, found := k.GetVirtualFrontierBankContractAddressByDenom(ctx, denom)
+		if !found {
+			vfBankContractOfNativeMeta := types.VFBankContractMetadata{
+				MinDenom: denom,
+			}
+
+			var bankDenomMetadataOfNative banktypes.Metadata
+
+			bankDenomMetadataOfNative, found := bankKeeper.GetDenomMetaData(ctx, denom)
+			if !found {
+				// if the metadata is not found, we create a new one
+				// and set it to bank denom metadata store upon genesis initialization
+				name := strings.ToUpper(denom[1:])
+				bankDenomMetadataOfNative = banktypes.Metadata{
+					DenomUnits: []*banktypes.DenomUnit{
+						{
+							Denom:    denom,
+							Exponent: 0,
+						},
+						{
+							Denom:    name,
+							Exponent: 18,
+						},
+					},
+					Base:    denom,
+					Display: name,
+					Name:    name,
+					Symbol:  name,
+				}
+				bankKeeper.SetDenomMetaData(ctx, bankDenomMetadataOfNative)
+			}
+
+			denomMetadata, valid := types.CollectMetadataForVirtualFrontierBankContract(bankDenomMetadataOfNative)
+			if !valid {
+				panic(fmt.Sprintf("prepared bank denom metadata for native assets is invalid: %v", bankDenomMetadataOfNative))
+			}
+
+			contract, err := k.DeployNewVirtualFrontierBankContract(ctx,
+				&types.VirtualFrontierContract{
+					Active: true,
+				}, &vfBankContractOfNativeMeta,
+				&denomMetadata,
+			)
+			if err != nil {
+				panic(err)
+			}
+
+			ctx.Logger().Info("deployed virtual frontier bank contract for native token on devnet", "address", contract.String())
 		}
 	}
 

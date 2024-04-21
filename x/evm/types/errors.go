@@ -49,6 +49,7 @@ const (
 	codeErrGasOverflow
 	codeErrInvalidAccount
 	codeErrInvalidGasLimit
+	codeErrProhibitedAccessingVirtualFrontierContract = uint32(40)
 )
 
 var ErrPostTxProcessing = errors.New("failed to execute post processing")
@@ -116,6 +117,9 @@ var (
 
 	// ErrInvalidGasLimit returns an error if gas limit value is invalid
 	ErrInvalidGasLimit = errorsmod.Register(ModuleName, codeErrInvalidGasLimit, "invalid gas limit")
+
+	// ErrProhibitedAccessingVirtualFrontierContract returns an error if tries to access a virtual frontier contract
+	ErrProhibitedAccessingVirtualFrontierContract = errorsmod.Register(ModuleName, codeErrProhibitedAccessingVirtualFrontierContract, "prohibited accessing virtual frontier contract")
 )
 
 // NewExecErrorWithReason unpacks the revert return bytes and returns a wrapped error

@@ -87,11 +87,6 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	//FIXME:
-	// if p.EnableCreate {
-	// 	return fmt.Errorf("contract creation is disabled")
-	// }
-
 	if err := validateBool(p.AllowUnprotectedTxs); err != nil {
 		return err
 	}

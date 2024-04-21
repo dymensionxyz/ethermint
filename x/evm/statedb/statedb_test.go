@@ -1,6 +1,7 @@
 package statedb_test
 
 import (
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"math/big"
 	"testing"
 
@@ -563,6 +564,46 @@ func (suite *StateDBTestSuite) TestIterateStorage() {
 		return false
 	})
 	suite.Require().Equal(1, len(storage))
+}
+
+func (suite *StateDBTestSuite) TestInteractingVirtualFrontierContract() {
+	funcs := []func(db vm.StateDB){
+		func(db vm.StateDB) {
+			db.AddBalance(MockVirtualFrontierContractAddress, common.Big1)
+		},
+		func(db vm.StateDB) {
+			db.SubBalance(MockVirtualFrontierContractAddress, common.Big1)
+		},
+		func(db vm.StateDB) {
+			db.SetNonce(MockVirtualFrontierContractAddress, 1)
+		},
+		func(db vm.StateDB) {
+			db.SetCode(MockVirtualFrontierContractAddress, []byte{0x01})
+		},
+		func(db vm.StateDB) {
+			db.SetState(MockVirtualFrontierContractAddress, common.BigToHash(big.NewInt(1)), common.BigToHash(big.NewInt(2)))
+		},
+		func(db vm.StateDB) {
+			db.SetCode(MockVirtualFrontierContractAddress, []byte{0x01})
+			db.SetState(MockVirtualFrontierContractAddress, common.BigToHash(big.NewInt(1)), common.BigToHash(big.NewInt(2)))
+			marked := db.Suicide(MockVirtualFrontierContractAddress)
+			suite.Require().True(marked)
+		},
+	}
+	for i, f := range funcs {
+		keeper := NewMockKeeper()
+		db := statedb.New(sdk.Context{}, keeper, emptyTxConfig)
+
+		f(db)
+
+		err := db.Commit()
+		suite.Require().Errorf(err, "failed at test %d", i+1)
+		suite.Contains(
+			err.Error(),
+			evmtypes.ErrProhibitedAccessingVirtualFrontierContract.Error(),
+			"commit state should returns error if any attempts to interact with virtual frontier contract",
+		)
+	}
 }
 
 func CollectContractStorage(db vm.StateDB) statedb.Storage {

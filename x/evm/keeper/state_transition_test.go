@@ -1,7 +1,10 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/evmos/ethermint/utils"
 	"math"
 	"math/big"
 
@@ -568,25 +571,44 @@ func (suite *KeeperTestSuite) TestApplyMessage() {
 
 func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 	var (
-		msg             core.Message
-		err             error
-		expectedGasUsed uint64
-		config          *statedb.EVMConfig
-		keeperParams    types.Params
-		signer          ethtypes.Signer
-		vmdb            *statedb.StateDB
-		txConfig        statedb.TxConfig
-		chainCfg        *params.ChainConfig
+		msg          core.Message
+		err          error
+		config       *statedb.EVMConfig
+		keeperParams types.Params
+		signer       ethtypes.Signer
+		vmdb         *statedb.StateDB
+		txConfig     statedb.TxConfig
+		chainCfg     *params.ChainConfig
 	)
 
+	vfbcContractAddr, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(suite.ctx, suite.denom)
+	suite.Require().True(found, "require setup for virtual frontier bank contract of evm native denom")
+
+	randomVFBCSenderAddress := common.BytesToAddress([]byte{0x01, 0x01, 0x39, 0x40})
+	randomVFBCReceiverAddress := common.BytesToAddress([]byte{0x02, 0x02, 0x39, 0x40})
+	vfbcTransferAmount := new(big.Int).Mul(big.NewInt(8), big.NewInt(int64(math.Pow(10, 18)))) // 8 * 10^18
+	vfbcSenderInitialBalance := new(big.Int).SetUint64(math.MaxUint64)
+
+	mintToVFBCSender := func(amount sdkmath.Int) {
+		coins := sdk.NewCoins(sdk.NewCoin(suite.denom, amount))
+		suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
+		suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
+	}
+
+	feeCompute := func(msg core.Message, gasUsed uint64) *big.Int {
+		// tx fee was designed to be deducted in AnteHandler so this place does not cost fee
+		return common.Big0
+	}
+
 	testCases := []struct {
-		name     string
-		malleate func()
-		expErr   bool
+		name           string
+		malleate       func()
+		expErr         bool
+		testOnNonError func(core.Message, *types.MsgEthereumTxResponse)
 	}{
 		{
-			"messsage applied ok",
-			func() {
+			name: "message applied ok",
+			malleate: func() {
 				msg, err = newNativeMessage(
 					vmdb.GetNonce(suite.address),
 					suite.ctx.BlockHeight(),
@@ -600,11 +622,15 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 				)
 				suite.Require().NoError(err)
 			},
-			false,
+			expErr: false,
+			testOnNonError: func(_ core.Message, res *types.MsgEthereumTxResponse) {
+				suite.Require().False(res.Failed())
+				suite.Require().Equal(params.TxGas, res.GasUsed)
+			},
 		},
 		{
-			"call contract tx with config param EnableCall = false",
-			func() {
+			name: "call contract tx with config param EnableCall = false",
+			malleate: func() {
 				config.Params.EnableCall = false
 				msg, err = newNativeMessage(
 					vmdb.GetNonce(suite.address),
@@ -619,20 +645,20 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 				)
 				suite.Require().NoError(err)
 			},
-			true,
+			expErr: true,
 		},
 		{
-			"create contract tx with config param EnableCreate = false",
-			func() {
+			name: "create contract tx with config param EnableCreate = false",
+			malleate: func() {
 				msg, err = suite.createContractGethMsg(vmdb.GetNonce(suite.address), signer, chainCfg, big.NewInt(1))
 				suite.Require().NoError(err)
 				config.Params.EnableCreate = false
 			},
-			true,
+			expErr: true,
 		},
 		{
-			"fix panic when minimumGasUsed is not uint64",
-			func() {
+			name: "fix panic when minimumGasUsed is not uint64",
+			malleate: func() {
 				msg, err = newNativeMessage(
 					vmdb.GetNonce(suite.address),
 					suite.ctx.BlockHeight(),
@@ -650,15 +676,65 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 				err = suite.app.FeeMarketKeeper.SetParams(suite.ctx, params)
 				suite.Require().NoError(err)
 			},
-			true,
+			expErr: true,
+		},
+		{
+			name: "message transfer native via VFBC",
+			malleate: func() {
+				mintToVFBCSender(sdkmath.NewIntFromBigInt(vfbcSenderInitialBalance))
+
+				callData := append(
+					// transfer 1 to random receiver
+					[]byte{0xa9, 0x05, 0x9c, 0xbb},
+					append(
+						common.BytesToHash(randomVFBCReceiverAddress.Bytes()).Bytes(),
+						common.BytesToHash(vfbcTransferAmount.Bytes()).Bytes()...,
+					)...,
+				)
+
+				msg = ethtypes.NewMessage(
+					randomVFBCSenderAddress,                // from
+					&vfbcContractAddr,                      // to
+					vmdb.GetNonce(randomVFBCSenderAddress), // nonce
+					nil,                                    // amount
+					40_000,                                 // gas limit
+					big.NewInt(7*int64(math.Pow(10, 9))),   // gas price
+					big.NewInt(1),                          // gas fee cap
+					big.NewInt(1),                          // gas tip cap
+					callData,                               // call data
+					nil,                                    // access list
+					false,                                  // is fake
+				)
+			},
+			expErr: false,
+			testOnNonError: func(msg core.Message, res *types.MsgEthereumTxResponse) {
+				if !suite.False(res.Failed()) {
+					fmt.Printf("expect pass but got %s, desc %s\n", res.VmError, utils.MustAbiDecodeString(res.Ret[4:]))
+					return
+				}
+				if suite.Len(res.Logs, 1, "should fire the Transfer event") {
+					suite.Equal("0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef", res.Logs[0].Topics[0])
+				}
+				suite.Equal(common.BytesToHash([]byte{0x01}).Bytes(), res.Ret) // ABI encoded of the boolean 'true'
+				suite.Empty(res.VmError)
+				if suite.Greater(res.GasUsed, uint64(21000)) {
+					suite.Equal(uint64(35140), res.GasUsed)
+				}
+
+				receiverBalance := suite.app.EvmKeeper.GetBalance(suite.ctx, randomVFBCReceiverAddress)
+				suite.Equal(vfbcTransferAmount, receiverBalance)
+
+				senderFinalBalance := suite.app.EvmKeeper.GetBalance(suite.ctx, randomVFBCSenderAddress)
+
+				deductedFromSender := new(big.Int).Sub(vfbcSenderInitialBalance, senderFinalBalance)
+				suite.Equal(vfbcTransferAmount, new(big.Int).Sub(deductedFromSender, feeCompute(msg, res.GasUsed)))
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			suite.SetupTest()
-			expectedGasUsed = params.TxGas
-
 			proposerAddress := suite.ctx.BlockHeader().ProposerAddress
 			config, err = suite.app.EvmKeeper.EVMConfig(suite.ctx, proposerAddress, big.NewInt(9000))
 			suite.Require().NoError(err)
@@ -678,8 +754,8 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 			}
 
 			suite.Require().NoError(err)
-			suite.Require().False(res.Failed())
-			suite.Require().Equal(expectedGasUsed, res.GasUsed)
+			suite.Require().NotNil(tc.testOnNonError, "test is required")
+			tc.testOnNonError(msg, res)
 		})
 	}
 }

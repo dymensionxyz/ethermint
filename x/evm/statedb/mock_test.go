@@ -25,12 +25,18 @@ type MockAcount struct {
 type MockKeeper struct {
 	accounts map[common.Address]MockAcount
 	codes    map[common.Hash][]byte
+	vfcs     map[common.Address]bool
 }
+
+var MockVirtualFrontierContractAddress = common.HexToAddress("0xBD8EFF67cA469dF5cd89f7a9b2890f043188d695")
 
 func NewMockKeeper() *MockKeeper {
 	return &MockKeeper{
 		accounts: make(map[common.Address]MockAcount),
 		codes:    make(map[common.Hash][]byte),
+		vfcs: map[common.Address]bool{
+			MockVirtualFrontierContractAddress: true,
+		},
 	}
 }
 
@@ -101,6 +107,11 @@ func (k MockKeeper) DeleteAccount(ctx sdk.Context, addr common.Address) error {
 	return nil
 }
 
+func (k MockKeeper) IsVirtualFrontierContract(_ sdk.Context, addr common.Address) bool {
+	_, found := k.vfcs[addr]
+	return found
+}
+
 func (k MockKeeper) Clone() *MockKeeper {
 	accounts := make(map[common.Address]MockAcount, len(k.accounts))
 	for k, v := range k.accounts {
@@ -110,5 +121,9 @@ func (k MockKeeper) Clone() *MockKeeper {
 	for k, v := range k.codes {
 		codes[k] = v
 	}
-	return &MockKeeper{accounts, codes}
+	vfcs := make(map[common.Address]bool, len(k.vfcs))
+	for k, _ := range k.vfcs {
+		vfcs[k] = true
+	}
+	return &MockKeeper{accounts, codes, vfcs}
 }

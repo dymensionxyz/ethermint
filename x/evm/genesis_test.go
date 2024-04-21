@@ -1,6 +1,8 @@
 package evm_test
 
 import (
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -149,15 +151,75 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 			if tc.expPanic {
 				suite.Require().Panics(
 					func() {
-						_ = evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, *tc.genState)
+						_ = evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, *tc.genState)
 					},
 				)
 			} else {
 				suite.Require().NotPanics(
 					func() {
-						_ = evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, *tc.genState)
+						_ = evm.InitGenesis(suite.ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, *tc.genState)
 					},
 				)
+			}
+		})
+	}
+
+	originalCtx := suite.ctx
+	testCasesProhibitEnableCreate := []struct {
+		name      string
+		chainId   string
+		wantPanic bool
+	}{
+		{
+			name:      "Dymension Mainnet",
+			chainId:   "dymension_1100-1",
+			wantPanic: true,
+		},
+		{
+			name:      "Dymension Testnet Blumbus",
+			chainId:   "blumbus_111-1",
+			wantPanic: true,
+		},
+		{
+			name:      "Dymension Devnet Froopyland",
+			chainId:   "froopyland_100-1",
+			wantPanic: true,
+		},
+		{
+			name:      "Ethermint Devnet",
+			chainId:   "ethermint_9000-1",
+			wantPanic: false,
+		},
+	}
+	for _, tt := range testCasesProhibitEnableCreate {
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.ctx = suite.ctx.WithChainID(tt.chainId)
+
+			genesisState := types.DefaultGenesisState()
+			suite.Require().True(genesisState.Params.EnableCreate, "Enable create must be enabled by default")
+
+			var ctx sdk.Context
+			if tt.chainId != "" {
+				ctx = suite.ctx.WithChainID(tt.chainId)
+			} else {
+				ctx = originalCtx
+			}
+
+			init := func() {
+				_ = evm.InitGenesis(ctx, suite.app.EvmKeeper, suite.app.AccountKeeper, suite.app.BankKeeper, *genesisState)
+			}
+
+			if tt.wantPanic {
+				defer func() {
+					err := recover()
+					suite.Require().NotNil(err, "expected panic")
+					suite.Require().Contains(fmt.Sprintf("%v", err), "enable create is not allowed on Dymension chains")
+				}()
+
+				init()
+			} else {
+				suite.Require().NotPanics(init)
 			}
 		})
 	}

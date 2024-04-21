@@ -259,7 +259,6 @@ func (suite *EvmTestSuite) TestHandleMsgEthereumTx() {
 }
 
 func (suite *EvmTestSuite) TestHandlerLogs() {
-	suite.T().SkipNow()
 	// Test contract:
 
 	// pragma solidity ^0.5.1;
@@ -299,8 +298,6 @@ func (suite *EvmTestSuite) TestHandlerLogs() {
 }
 
 func (suite *EvmTestSuite) TestDeployAndCallContract() {
-	suite.T().SkipNow()
-
 	// Test contract:
 	//http://remix.ethereum.org/#optimize=false&evmVersion=istanbul&version=soljson-v0.5.15+commit.6a57276f.js
 	//2_Owner.sol
@@ -420,8 +417,6 @@ func (suite *EvmTestSuite) TestSendTransaction() {
 }
 
 func (suite *EvmTestSuite) TestOutOfGasWhenDeployContract() {
-	suite.T().SkipNow()
-
 	// Test contract:
 	//http://remix.ethereum.org/#optimize=false&evmVersion=istanbul&version=soljson-v0.5.15+commit.6a57276f.js
 	//2_Owner.sol
@@ -498,8 +493,6 @@ func (suite *EvmTestSuite) TestOutOfGasWhenDeployContract() {
 }
 
 func (suite *EvmTestSuite) TestErrorWhenDeployContract() {
-	suite.T().SkipNow()
-
 	gasLimit := uint64(1000000)
 	gasPrice := big.NewInt(10000)
 
@@ -519,8 +512,6 @@ func (suite *EvmTestSuite) TestErrorWhenDeployContract() {
 }
 
 func (suite *EvmTestSuite) deployERC20Contract() common.Address {
-	suite.T().SkipNow()
-
 	k := suite.app.EvmKeeper
 	nonce := k.GetNonce(suite.ctx, suite.from)
 	ctorArgs, err := types.ERC20Contract.ABI.Pack("", suite.from, big.NewInt(10000000000))
@@ -650,8 +641,6 @@ func (suite *EvmTestSuite) TestERC20TransferReverted() {
 }
 
 func (suite *EvmTestSuite) TestContractDeploymentRevert() {
-	suite.T().SkipNow()
-
 	intrinsicGas := uint64(134180)
 	testCases := []struct {
 		msg      string

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -83,8 +84,11 @@ func (suite *KeeperTestSuite) TestEthereumTx() {
 }
 
 func (suite *KeeperTestSuite) TestUpdateParams() {
+	originalCtx := suite.ctx
+
 	testCases := []struct {
 		name      string
+		chainId   string
 		request   *types.MsgUpdateParams
 		expectErr bool
 	}{
@@ -101,12 +105,56 @@ func (suite *KeeperTestSuite) TestUpdateParams() {
 			},
 			expectErr: false,
 		},
+		{
+			name:    "fail - valid Update msg but EnableCreate must be disabled on Dymension chain",
+			chainId: "dymension_1100-1",
+			request: &types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params:    types.DefaultParams(),
+			},
+			expectErr: true,
+		},
+		{
+			name:    "fail - valid Update msg but EnableCreate must be disabled on Blumbus chain",
+			chainId: "blumbus_111-1",
+			request: &types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params:    types.DefaultParams(),
+			},
+			expectErr: true,
+		},
+		{
+			name:    "fail - valid Update msg but EnableCreate must be disabled on Froopyland chain",
+			chainId: "froopyland_100-1",
+			request: &types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params:    types.DefaultParams(),
+			},
+			expectErr: true,
+		},
+		{
+			name:    "pass - valid Update msg, can enable create on Ethermint dev chain",
+			chainId: "ethermint_9000-1",
+			request: &types.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Params:    types.DefaultParams(),
+			},
+			expectErr: false,
+		},
 	}
 
 	for _, tc := range testCases {
 		tc := tc
 		suite.Run("MsgUpdateParams", func() {
-			_, err := suite.app.EvmKeeper.UpdateParams(suite.ctx, tc.request)
+			var ctx sdk.Context
+
+			if tc.chainId != "" {
+				ctx = suite.ctx.WithChainID(tc.chainId)
+			} else {
+				ctx = originalCtx
+			}
+
+			_, err := suite.app.EvmKeeper.UpdateParams(ctx, tc.request)
 			if tc.expectErr {
 				suite.Require().Error(err)
 			} else {
