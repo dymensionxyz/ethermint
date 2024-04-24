@@ -711,9 +711,9 @@ func (app *EthermintApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted u
 		MaxTxGasWanted:         maxGasWanted,
 		ExtensionOptionChecker: ethermint.HasDynamicFeeExtensionOption,
 		TxFeeChecker:           ante.NewDynamicFeeChecker(app.EvmKeeper),
-		DisabledAuthzMsgs: []string{
-			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+		DisabledCosmosMsgs: []string{
+			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // Ethereum transactions are not allowed to be sent as Cosmos messages
+			// Additional blocked txs can be added here (e.g Vesting, etc)
 		},
 	})
 	if err != nil {
