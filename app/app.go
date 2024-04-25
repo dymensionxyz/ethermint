@@ -713,7 +713,9 @@ func (app *EthermintApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted u
 		TxFeeChecker:           ante.NewDynamicFeeChecker(app.EvmKeeper),
 		DisabledAuthzMsgs: []string{
 			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+			// sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+			// sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
+			// sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
 		},
 	})
 	if err != nil {
