@@ -17,8 +17,9 @@ package types
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/params"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/core/vm"
