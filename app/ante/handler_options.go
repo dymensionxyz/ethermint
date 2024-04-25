@@ -39,12 +39,12 @@ type HandlerOptions struct {
 	FeeMarketKeeper        FeeMarketKeeper
 	EvmKeeper              EVMKeeper
 	FeegrantKeeper         ante.FeegrantKeeper
-	ExtensionOptionChecker ante.ExtensionOptionChecker
 	SignModeHandler        authsigning.SignModeHandler
 	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params authtypes.Params) error
 	MaxTxGasWanted         uint64
+	ExtensionOptionChecker ante.ExtensionOptionChecker
 	TxFeeChecker           ante.TxFeeChecker
-	DisabledCosmosMsgs     []string
+	DisabledAuthzMsgs      []string
 }
 
 func (options HandlerOptions) validate() error {
@@ -85,9 +85,9 @@ func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 
 func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
-		NewRejectMessagesDecorator(options.DisabledCosmosMsgs),
+		RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		// disable the Msg types that cannot be included on an authz.MsgExec msgs field
-		NewAuthzLimiterDecorator(options.DisabledCosmosMsgs),
+		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs),
 		ante.NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
