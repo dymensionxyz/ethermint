@@ -40,7 +40,7 @@ const (
 // Ethereum or SDK transaction to an internal ante handler for performing
 // transaction-level processing (e.g. fee payment, signature verification) before
 // being passed onto it's respective handler.
-func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
+func NewAnteHandler(options HandlerOptions, anteDecorators []sdk.AnteDecorator) (sdk.AnteHandler, error) {
 	if err := options.validate(); err != nil {
 		return nil, err
 	}
@@ -62,10 +62,10 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 					anteHandler = newEthAnteHandler(options)
 				case "/ethermint.types.v1.ExtensionOptionsWeb3Tx":
 					// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
-					anteHandler = NewLegacyCosmosAnteHandlerEip712(options)
+					anteHandler = NewLegacyCosmosAnteHandlerEip712(options, anteDecorators)
 				case "/ethermint.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
-					anteHandler = newCosmosAnteHandler(options)
+					anteHandler = newCosmosAnteHandler(options, anteDecorators)
 				default:
 					return ctx, errorsmod.Wrapf(
 						errortypes.ErrUnknownExtensionOptions,
@@ -80,7 +80,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
-			anteHandler = newCosmosAnteHandler(options)
+			anteHandler = newCosmosAnteHandler(options, anteDecorators)
 		default:
 			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
 		}

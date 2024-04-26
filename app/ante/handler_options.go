@@ -83,8 +83,8 @@ func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	)
 }
 
-func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
-	return sdk.ChainAnteDecorators(
+func newCosmosAnteHandler(options HandlerOptions, anteDecorators []sdk.AnteDecorator) sdk.AnteHandler {
+	anteDecorators = append(anteDecorators,
 		RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		// disable the Msg types that cannot be included on an authz.MsgExec msgs field
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs),
@@ -105,4 +105,5 @@ func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
 		NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	)
+	return sdk.ChainAnteDecorators(anteDecorators...)
 }

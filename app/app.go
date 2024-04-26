@@ -675,7 +675,7 @@ func (app *EthermintApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted u
 			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
 		},
-	})
+	}, []sdk.AnteDecorator{})
 	if err != nil {
 		panic(err)
 	}
