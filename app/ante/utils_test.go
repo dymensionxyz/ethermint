@@ -145,7 +145,7 @@ func (suite *AnteTestSuite) SetupTest() {
 			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
 		},
-	}, []sdk.AnteDecorator{})
+	})
 	suite.Require().NoError(err)
 
 	suite.anteHandler = anteHandler
