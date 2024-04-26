@@ -31,12 +31,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctesting "github.com/cosmos/ibc-go/v6/testing"
-	"github.com/evmos/ethermint/encoding"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	"github.com/evmos/ethermint/encoding"
+	teststypes "github.com/evmos/ethermint/testutil/types"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -116,7 +118,7 @@ func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(teststypes.BaseDenom, sdk.NewInt(100000000000000))),
 	}
 
 	genesisState := NewDefaultGenesisState()
@@ -162,7 +164,9 @@ func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
 		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
 	}
 	// set validators and delegations
-	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)
+	params := stakingtypes.DefaultParams()
+	params.BondDenom = teststypes.BaseDenom
+	stakingGenesis := stakingtypes.NewGenesisState(params, validators, delegations)
 	genesisState[stakingtypes.ModuleName] = codec.MustMarshalJSON(stakingGenesis)
 
 	totalSupply := sdk.NewCoins()
@@ -173,13 +177,13 @@ func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
 
 	for range delegations {
 		// add delegated tokens to total supply
-		totalSupply = totalSupply.Add(sdk.NewCoin(sdk.DefaultBondDenom, bondAmt))
+		totalSupply = totalSupply.Add(sdk.NewCoin(teststypes.BaseDenom, bondAmt))
 	}
 
 	// add bonded amount to bonded pool module account
 	balances = append(balances, banktypes.Balance{
 		Address: authtypes.NewModuleAddress(stakingtypes.BondedPoolName).String(),
-		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, bondAmt)},
+		Coins:   sdk.Coins{sdk.NewCoin(teststypes.BaseDenom, bondAmt)},
 	})
 
 	// update total supply
