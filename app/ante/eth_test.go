@@ -1,11 +1,13 @@
 package ante_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/testutil"
 	"math"
 	"math/big"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/evmos/ethermint/testutil"
 
 	"github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/server/config"
@@ -173,7 +175,8 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 	ethCfg := suite.app.EvmKeeper.GetParams(suite.ctx).
 		ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 	baseFee := suite.app.EvmKeeper.GetBaseFee(suite.ctx, ethCfg)
-	suite.Require().Equal(int64(1000000000), baseFee.Int64())
+	// Note that the baseFee is not 10_000_000_000 anymore but updates to 8_750_000_000 because of the s.Commit
+	suite.Require().Equal(int64(875000000), baseFee.Int64())
 
 	gasPrice := new(big.Int).Add(baseFee, evmtypes.DefaultPriorityReduction.BigInt())
 
@@ -186,7 +189,7 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 	tx3 := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx3GasLimit, gasPrice, nil, nil, nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})
 
 	dynamicFeeTx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx2GasLimit,
-		nil,                                                                                // gasPrice
+		nil, // gasPrice
 		new(big.Int).Add(baseFee, big.NewInt(evmtypes.DefaultPriorityReduction.Int64()*2)), // gasFeeCap
 		evmtypes.DefaultPriorityReduction.BigInt(),                                         // gasTipCap
 		nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})

@@ -11,6 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/stretchr/testify/suite"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
@@ -27,6 +28,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	ethparams "github.com/ethereum/go-ethereum/params"
+
 	"github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/evmos/ethermint/tests"
@@ -933,7 +935,11 @@ func (suite AnteTestSuite) TestAnteHandler() {
 		suite.Run(tc.name, func() {
 			setup()
 
-			suite.ctx = suite.ctx.WithIsCheckTx(tc.checkTx).WithIsReCheckTx(tc.reCheckTx)
+			blockParams := abci.BlockParams{
+				MaxGas: 100000,
+			}
+			consParams := abci.ConsensusParams{Block: &blockParams}
+			suite.ctx = suite.ctx.WithIsCheckTx(tc.checkTx).WithIsReCheckTx(tc.reCheckTx).WithConsensusParams(&consParams)
 
 			// expConsumed := params.TxGasContractCreation + params.TxGas
 			_, err := suite.anteHandler(suite.ctx, tc.txFn(), false)
@@ -1203,7 +1209,12 @@ func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 			suite.Require().NoError(acc.SetSequence(1))
 			suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-			suite.ctx = suite.ctx.WithIsCheckTx(tc.checkTx).WithIsReCheckTx(tc.reCheckTx)
+			blockParams := abci.BlockParams{
+				MaxGas:   100000,
+				MaxBytes: 10,
+			}
+			consParams := abci.ConsensusParams{Block: &blockParams}
+			suite.ctx = suite.ctx.WithIsCheckTx(tc.checkTx).WithIsReCheckTx(tc.reCheckTx).WithConsensusParams(&consParams)
 			suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt((ethparams.InitialBaseFee+10)*100000))
 			_, err := suite.anteHandler(suite.ctx, tc.txFn(), false)
 			if tc.expPass {
@@ -1333,7 +1344,12 @@ func (suite AnteTestSuite) TestAnteHandlerWithParams() {
 			suite.Require().NoError(acc.SetSequence(1))
 			suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-			suite.ctx = suite.ctx.WithIsCheckTx(true)
+			blockParams := abci.BlockParams{
+				MaxGas:   100000,
+				MaxBytes: 10,
+			}
+			consParams := abci.ConsensusParams{Block: &blockParams}
+			suite.ctx = suite.ctx.WithIsCheckTx(true).WithConsensusParams(&consParams)
 			suite.app.EvmKeeper.SetBalance(suite.ctx, addr, big.NewInt((ethparams.InitialBaseFee+10)*100000))
 			_, err := suite.anteHandler(suite.ctx, tc.txFn(), false)
 			if tc.expErr == nil {
