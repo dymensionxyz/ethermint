@@ -3,6 +3,7 @@ package demo
 //goland:noinspection SpellCheckingInspection
 import (
 	"encoding/json"
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -10,7 +11,6 @@ import (
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	"github.com/evmos/ethermint/rpc/namespaces/ethereum/eth"
 	"github.com/stretchr/testify/suite"
-	"github.com/tendermint/tendermint/libs/log"
 	"testing"
 )
 

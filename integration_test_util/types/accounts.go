@@ -3,6 +3,8 @@ package types
 //goland:noinspection SpellCheckingInspection
 import (
 	"crypto/ed25519"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
+	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cosmosed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -12,8 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 )
 
 type TestAccount struct {

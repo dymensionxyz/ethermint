@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	tmtypes "github.com/tendermint/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"path"
 	"strings"
 )

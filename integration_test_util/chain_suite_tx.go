@@ -6,6 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"encoding/hex"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,7 +17,6 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // PrepareEthTx signs the transaction with the provided MsgEthereumTx.

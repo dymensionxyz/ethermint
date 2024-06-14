@@ -2,16 +2,17 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	chainapp "github.com/evmos/ethermint/app"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 var _ ChainApp = &chainAppImp{}
+var _ ibctesting.TestingApp = &chainAppImp{}
 
 type chainAppImp struct {
 	app *chainapp.EthermintApp
@@ -39,4 +40,12 @@ func (c chainAppImp) FundAccount(ctx sdk.Context, account *TestAccount, amounts 
 	}
 
 	return c.BankKeeper().SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account.GetCosmosAddress(), amounts)
+}
+
+func (c chainAppImp) PrepareProposal(proposal abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return c.app.PrepareProposal(proposal)
+}
+
+func (c chainAppImp) ProcessProposal(proposal abci.RequestProcessProposal) abci.ResponseProcessProposal {
+	return c.app.ProcessProposal(proposal)
 }

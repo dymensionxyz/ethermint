@@ -2,14 +2,14 @@ package types
 
 import (
 	cdb "github.com/cometbft/cometbft-db"
-	tdb "github.com/tendermint/tm-db"
+	tdb "github.com/cometbft/cometbft-db"
 )
 
 var _ cdb.DB = (*MemDB)(nil)
 
 // MemDB is a wrapper of Tendermint/CometBFT DB that is backward-compatible with CometBFT chains pre-rename package.
 //
-// (eg: replace github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.29)
+// (eg: replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.34.29)
 type MemDB struct {
 	tmDb tdb.DB
 }

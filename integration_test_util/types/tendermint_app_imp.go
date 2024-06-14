@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	nm "github.com/tendermint/tendermint/node"
+	nm "github.com/cometbft/cometbft/node"
 	"strings"
 )
 

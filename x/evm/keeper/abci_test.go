@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
+	"github.com/cometbft/cometbft/abci/types"
 	"github.com/evmos/ethermint/testutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/tendermint/tendermint/abci/types"
 	"math"
 )
 

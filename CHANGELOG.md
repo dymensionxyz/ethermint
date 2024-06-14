@@ -35,18 +35,26 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## Dymension changes
+## Unreleased
 
 ### State Machine Breaking
+
+- (deps) [#27](https://github.com/dymensionxyz/ethermint/pull/27) Bump dependencies cosmos-sdk `v0.47.10` and ibc-go `v7.4.1`
+
+## [v0.22.0-dymension-v0.4.1] - 2024-03-15
+
+### State Machine Breaking
+
 - (evm) [#3](https://github.com/dymensionxyz/ethermint/pull/3) Disabled contract creation
 - (evm) [#11](https://github.com/dymensionxyz/ethermint/pull/11) Disabled contract creation for Dymension chains only (adjust the absolute logic in [#3](https://github.com/dymensionxyz/ethermint/pull/3))
 - (evm) [#11](https://github.com/dymensionxyz/ethermint/pull/11) Virtual Frontier Contract
 - (evm) [#15](https://github.com/dymensionxyz/ethermint/pull/15) VFBC deployment no longer revert changes on error while contract deployment
 
 ### Bug Fixes
+
 - (rpc) [#6](https://github.com/dymensionxyz/ethermint/pull/6) Zero gas config for tracing methods
 
-## Unreleased
+## Legacy Ethermint
 
 ### State Machine Breaking
 

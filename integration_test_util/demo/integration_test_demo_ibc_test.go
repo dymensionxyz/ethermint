@@ -4,9 +4,9 @@ package demo
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	"github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	ibcconntypes "github.com/cosmos/ibc-go/v6/modules/core/03-connection/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	"github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibcconntypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	"github.com/evmos/ethermint/integration_test_util"
 	"math"
 )

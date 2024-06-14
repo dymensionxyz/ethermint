@@ -8,8 +8,8 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 )
@@ -51,5 +51,5 @@ func (c chainAppImp) SlashingKeeper() *slashingkeeper.Keeper {
 }
 
 func (c chainAppImp) StakingKeeper() *stakingkeeper.Keeper {
-	return &c.app.StakingKeeper
+	return c.app.StakingKeeper
 }

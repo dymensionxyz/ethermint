@@ -5,19 +5,19 @@ import (
 	"context"
 	"fmt"
 	cdb "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmcrypto "github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/libs/log"
+	nm "github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/proxy"
+	tmcorestypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmgrpc "github.com/cometbft/cometbft/rpc/grpc"
+	tmrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	rpctest "github.com/cometbft/cometbft/rpc/test"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/google/uuid"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmcrypto "github.com/tendermint/tendermint/crypto"
-	"github.com/tendermint/tendermint/libs/log"
-	nm "github.com/tendermint/tendermint/node"
-	"github.com/tendermint/tendermint/p2p"
-	"github.com/tendermint/tendermint/privval"
-	"github.com/tendermint/tendermint/proxy"
-	tmcorestypes "github.com/tendermint/tendermint/rpc/core/types"
-	tmgrpc "github.com/tendermint/tendermint/rpc/grpc"
-	tmrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	rpctest "github.com/tendermint/tendermint/rpc/test"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"time"
 )
 
@@ -90,7 +90,7 @@ func StartTendermintNode(app abci.Application, genesis *tmtypes.GenesisDoc, db c
 			return db, nil
 		},
 		nm.DefaultMetricsProvider(config.Instrumentation), // metrics provider
-		logger, // logger
+		logger,                                            // logger
 	)
 	if err != nil {
 		panic(err)

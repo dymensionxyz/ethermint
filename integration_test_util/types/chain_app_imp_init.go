@@ -3,15 +3,20 @@ package types
 //goland:noinspection SpellCheckingInspection
 import (
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/params"
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmosed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,26 +32,22 @@ import (
 	evmostypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"strings"
 	"time"
 )
 
 var defaultConsensusParams = &tmproto.ConsensusParams{
-	Block: tmproto.BlockParams{
-		MaxBytes:   200000,
-		MaxGas:     40000000, // 40m
-		TimeIotaMs: 499,
+	Block: &tmproto.BlockParams{
+		MaxBytes: 200000,
+		MaxGas:   40000000, // 40m
+		// TimeIotaMs: 499,
 	},
-	Evidence: tmproto.EvidenceParams{
+	Evidence: &tmproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: tmproto.ValidatorParams{
+	Validator: &tmproto.ValidatorParams{
 		PubKeyTypes: []string{
 			tmtypes.ABCIPubKeyTypeEd25519,
 		},
@@ -121,6 +122,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 		0,                 // invCheckPeriod
 		encCfg,            // encodingConfig
 		disableCrisisInvariantsChecking{},
+		baseapp.SetChainID(chainCfg.CosmosChainId), // baseAppOptions
 	)
 
 	// init chain must be called to stop deliverState from being nil
@@ -138,13 +140,29 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	}
 
 	genesisDoc := tmtypes.GenesisDoc{
-		GenesisTime:     time.Time{},
-		ChainID:         chainCfg.CosmosChainId,
-		InitialHeight:   0,
-		ConsensusParams: defaultConsensusParams,
-		Validators:      make([]tmtypes.GenesisValidator, len(valSet.Validators)),
-		AppHash:         nil,
-		AppState:        stateBytes,
+		GenesisTime:   time.Time{},
+		ChainID:       chainCfg.CosmosChainId,
+		InitialHeight: 0,
+		ConsensusParams: &tmtypes.ConsensusParams{
+			Block: tmtypes.BlockParams{
+				MaxBytes: defaultConsensusParams.Block.MaxBytes,
+				MaxGas:   defaultConsensusParams.Block.MaxGas,
+			},
+			Evidence: tmtypes.EvidenceParams{
+				MaxAgeNumBlocks: defaultConsensusParams.Evidence.MaxAgeNumBlocks,
+				MaxAgeDuration:  defaultConsensusParams.Evidence.MaxAgeDuration,
+				MaxBytes:        defaultConsensusParams.Evidence.MaxBytes,
+			},
+			Validator: tmtypes.ValidatorParams{
+				PubKeyTypes: defaultConsensusParams.Validator.PubKeyTypes,
+			},
+			Version: tmtypes.VersionParams{
+				App: 0,
+			},
+		},
+		Validators: make([]tmtypes.GenesisValidator, len(valSet.Validators)),
+		AppHash:    nil,
+		AppState:   stateBytes,
 	}
 
 	for i, validator := range valSet.Validators {
@@ -160,13 +178,13 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	if chainCfg.DisableTendermint {
 		app.InitChain(abci.RequestInitChain{
 			ChainId: chainCfg.CosmosChainId,
-			ConsensusParams: &abci.ConsensusParams{
-				Block: &abci.BlockParams{
+			ConsensusParams: &tmproto.ConsensusParams{
+				Block: &tmproto.BlockParams{
 					MaxBytes: defaultConsensusParams.Block.MaxBytes,
 					MaxGas:   defaultConsensusParams.Block.MaxGas,
 				},
-				Evidence:  &defaultConsensusParams.Evidence,
-				Validator: &defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Validator: defaultConsensusParams.Validator,
 			},
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
@@ -290,7 +308,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 	}
 
 	{
-		bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, denomMetadata)
+		bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, denomMetadata, []banktypes.SendEnabled{})
 		genesisState[banktypes.ModuleName] = codec.MustMarshalJSON(bankGenesis)
 	}
 
@@ -320,7 +338,8 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 		var govGenesis *govv1types.GenesisState
 		govGenesis = govv1types.DefaultGenesisState()
 		if govGenesis != nil {
-			govGenesis.DepositParams.MinDeposit = []sdk.Coin{sdk.NewCoin(chainCfg.BaseDenom, sdkmath.NewIntFromUint64(2))}
+			govGenesis.Params.MinDeposit[0].Denom = chainCfg.BaseDenom
+			govGenesis.Params.MinDeposit[0].Amount = sdkmath.NewIntFromUint64(2)
 			var votingPeriod time.Duration
 			if chainCfg.DisableTendermint {
 				votingPeriod = 30 * time.Minute
@@ -328,7 +347,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 				// due to tendermint block time not configurable time jumping, we need to set a low voting period
 				votingPeriod = TendermintGovVotingPeriod
 			}
-			govGenesis.VotingParams.VotingPeriod = &votingPeriod
+			govGenesis.Params.VotingPeriod = &votingPeriod
 			genesisState[govtypes.ModuleName] = codec.MustMarshalJSON(govGenesis)
 		}
 	}

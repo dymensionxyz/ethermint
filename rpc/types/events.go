@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"strconv"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethermint "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 // EventFormat is the format version of the events.
@@ -242,18 +242,18 @@ func (p *ParsedTxs) AccumulativeGasUsed(msgIndex int) (result uint64) {
 
 // fillTxAttribute parse attributes by name, less efficient than hardcode the index, but more stable against event
 // format changes.
-func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
-	switch string(key) {
+func fillTxAttribute(tx *ParsedTx, key string, value string) error {
+	switch key {
 	case evmtypes.AttributeKeyEthereumTxHash:
-		tx.Hash = common.HexToHash(string(value))
+		tx.Hash = common.HexToHash(value)
 	case evmtypes.AttributeKeyTxIndex:
-		txIndex, err := strconv.ParseUint(string(value), 10, 31)
+		txIndex, err := strconv.ParseUint(value, 10, 31)
 		if err != nil {
 			return err
 		}
 		tx.EthTxIndex = int32(txIndex)
 	case evmtypes.AttributeKeyTxGasUsed:
-		gasUsed, err := strconv.ParseUint(string(value), 10, 64)
+		gasUsed, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return err
 		}

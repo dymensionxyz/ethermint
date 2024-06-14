@@ -2,17 +2,29 @@ package integration_test_util
 
 //goland:noinspection SpellCheckingInspection,GoSnakeCaseUsage
 import (
+	"cosmossdk.io/simapp/params"
 	"fmt"
+	tdb "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
+	httpclient "github.com/cometbft/cometbft/rpc/client/http"
+	jsonrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
+	tmstate "github.com/cometbft/cometbft/state"
+	"github.com/cometbft/cometbft/store"
+	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/version"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cosmosclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	cosmostxtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -20,8 +32,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	chainapp "github.com/evmos/ethermint/app"
 	ethermint_hd "github.com/evmos/ethermint/crypto/hd"
@@ -33,17 +45,6 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto/tmhash"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmversion "github.com/tendermint/tendermint/proto/tendermint/version"
-	httpclient "github.com/tendermint/tendermint/rpc/client/http"
-	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
-	tmstate "github.com/tendermint/tendermint/state"
-	"github.com/tendermint/tendermint/store"
-	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/tendermint/tendermint/version"
-	tdb "github.com/tendermint/tm-db"
 	"math"
 	"math/big"
 	"os"
@@ -199,7 +200,7 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 		)
 		require.NoError(t, err)
 
-		val = stakingkeeper.TestingUpdateValidator(*app.StakingKeeper(), ctx, val, true)
+		val = stakingkeeper.TestingUpdateValidator(app.StakingKeeper(), ctx, val, true)
 
 		refKeeper := reflect.ValueOf(app.StakingKeeper())
 		if refKeeper.Kind() == reflect.Ptr {
@@ -414,7 +415,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 	banktypes.RegisterQueryServer(queryHelper, suite.ChainApp.BankKeeper())
 	bankQueryClient := banktypes.NewQueryClient(queryHelper)
 
-	distributiontypes.RegisterQueryServer(queryHelper, suite.ChainApp.DistributionKeeper())
+	distributiontypes.RegisterQueryServer(queryHelper, distributionkeeper.NewQuerier(suite.ChainApp.DistributionKeeper()))
 	distributionQueryClient := distributiontypes.NewQueryClient(queryHelper)
 
 	evmtypes.RegisterQueryServer(queryHelper, suite.ChainApp.EvmKeeper())
@@ -426,7 +427,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 	govv1types.RegisterQueryServer(queryHelper, suite.ChainApp.GovKeeper())
 	govV1QueryClient := govv1types.NewQueryClient(queryHelper)
 
-	govlegacytypes.RegisterQueryServer(queryHelper, govkeeper.NewLegacyQueryServer(*suite.ChainApp.GovKeeper()))
+	govlegacytypes.RegisterQueryServer(queryHelper, govkeeper.NewLegacyQueryServer(suite.ChainApp.GovKeeper()))
 	govLegacyQueryClient := govlegacytypes.NewQueryClient(queryHelper)
 
 	ibctransfertypes.RegisterQueryServer(queryHelper, suite.ChainApp.IbcTransferKeeper())
@@ -435,7 +436,7 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 	slashingtypes.RegisterQueryServer(queryHelper, suite.ChainApp.SlashingKeeper())
 	slashingQueryClient := slashingtypes.NewQueryClient(queryHelper)
 
-	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: *suite.ChainApp.StakingKeeper()})
+	stakingtypes.RegisterQueryServer(queryHelper, stakingkeeper.Querier{Keeper: suite.ChainApp.StakingKeeper()})
 	stakingQueryClient := stakingtypes.NewQueryClient(queryHelper)
 
 	serviceClient := cosmostxtypes.NewServiceClient(queryHelper)
