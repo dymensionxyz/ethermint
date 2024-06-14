@@ -501,7 +501,7 @@ MsgEthereumTxResponse defines the Msg/EthereumTx response type.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `hash` | [string](#string) |  | ethereum transaction hash in hex format. This hash differs from the Tendermint sha256 hash of the transaction bytes. See https://github.com/cometbft/cometbft/issues/6539 for reference |
+| `hash` | [string](#string) |  | ethereum transaction hash in hex format. This hash differs from the Tendermint sha256 hash of the transaction bytes. See https://github.com/tendermint/tendermint/issues/6539 for reference |
 | `logs` | [Log](#ethermint.evm.v1.Log) | repeated | logs contains the transaction hash and the proto-compatible ethereum logs. |
 | `ret` | [bytes](#bytes) |  | returned data from evm function (result or data supplied with revert opcode) |
 | `vm_error` | [string](#string) |  | vm error is the error returned by vm execution |

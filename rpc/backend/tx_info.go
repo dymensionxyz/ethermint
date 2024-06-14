@@ -309,7 +309,7 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNum
 
 // GetTxByEthHash uses `/tx_query` to find transaction by ethereum tx hash
 // TODO: Don't need to convert once hashing is fixed on Tendermint
-// https://github.com/cometbft/cometbft/issues/6539
+// https://github.com/tendermint/tendermint/issues/6539
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, error) {
 	if b.indexer != nil {
 		return b.indexer.GetByTxHash(hash)
