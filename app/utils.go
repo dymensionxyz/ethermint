@@ -17,6 +17,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"time"
 
@@ -74,6 +75,7 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 		5,
 		encoding.MakeConfig(ModuleBasics),
 		simtestutil.EmptyAppOptions{},
+		baseapp.SetChainID("ethermint_9000-1"),
 	)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
