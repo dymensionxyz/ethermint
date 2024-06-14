@@ -2,6 +2,8 @@ package ante_test
 
 import (
 	"fmt"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"math/big"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -226,6 +228,19 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 	_, testAddresses, err := generatePrivKeyAddressPairs(10)
 	suite.Require().NoError(err)
 
+	msgEthereumTx := evmtypes.NewTx(
+		big.NewInt(9000), // chain-id
+		0,                // nonce
+		nil,              // to
+		nil,              // amount
+		100_000,          // gas limit
+		nil,              // gas price
+		suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx), // gas fee cap
+		big.NewInt(1),          // gas tip cap
+		nil,                    // input
+		&ethtypes.AccessList{}, // access list
+	)
+
 	testcases := []struct {
 		name         string
 		msgs         []sdk.Msg
@@ -270,7 +285,7 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 					testAddresses[1],
 					[]sdk.Msg{
 						createMsgSend(testAddresses),
-						&evmtypes.MsgEthereumTx{},
+						msgEthereumTx,
 					},
 				),
 			},
@@ -283,7 +298,7 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 					testAddresses[1],
 					2,
 					[]sdk.Msg{
-						&evmtypes.MsgEthereumTx{},
+						msgEthereumTx,
 					},
 				),
 			},
