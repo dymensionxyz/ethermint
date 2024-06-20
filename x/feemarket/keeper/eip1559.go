@@ -37,6 +37,18 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	}
 
 	consParams := ctx.ConsensusParams()
+	if consParams == nil || consParams.Block == nil {
+		/*
+			During migration, this has empty value, read more: https://github.com/cosmos/cosmos-sdk/issues/16494
+			We need to get the consensus params from the keeper instead of the context.
+		*/
+		var err error
+		consParams, err = k.consensusKeeper.Get(ctx)
+		if err != nil {
+			k.Logger(ctx).Error("failed to get consensus params", "error", err)
+			return nil
+		}
+	}
 
 	// If the current block is the first EIP-1559 block, return the base fee
 	// defined in the parameters (DefaultBaseFee if it hasn't been changed by
