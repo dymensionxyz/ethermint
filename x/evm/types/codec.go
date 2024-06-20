@@ -24,7 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	proto "github.com/gogo/protobuf/proto"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 var (
