@@ -37,6 +37,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## Unreleased
 
+### Improvements
+
+- (cli) [#28](https://github.com/dymensionxyz/ethermint/pull/28) Add local state sync commands
+
 ### State Machine Breaking
 
 - (deps) [#27](https://github.com/dymensionxyz/ethermint/pull/27) Bump dependencies cosmos-sdk `v0.47.10` and ibc-go `v7.4.1`

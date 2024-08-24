@@ -17,6 +17,7 @@ package main
 
 import (
 	"errors"
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/spf13/viper"
 	"io"
@@ -141,6 +142,7 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 		queryCommand(),
 		txCommand(),
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
+		snapshot.Cmd(a.newApp),
 	)
 
 	rootCmd, err := srvflags.AddTxFlags(rootCmd)
