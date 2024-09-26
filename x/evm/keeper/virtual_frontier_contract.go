@@ -5,6 +5,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -322,15 +323,32 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 
 	nonce := deployerModuleAccount.GetSequence()
 	contractAddress = crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, nonce)
-	contractAccount := k.GetAccount(ctx, contractAddress)
-	if contractAccount != nil && contractAccount.IsContract() {
-		err = sdkerrors.ErrInvalidRequest.Wrapf("contract address already exists at %s", contractAddress)
+
+	if k.IsVirtualFrontierContract(ctx, contractAddress) {
+		err = sdkerrors.ErrConflict.Wrapf("virtual frontier contract %s already exists", contractAddress)
 		return
 	}
 
-	if k.IsVirtualFrontierContract(ctx, contractAddress) {
-		err = sdkerrors.ErrInvalidRequest.Wrapf("virtual frontier contract %s already exists", contractAddress)
-		return
+	existingAccount := k.GetAccountWithoutBalance(ctx, contractAddress)
+	if existingAccount != nil {
+		if existingAccount.IsContract() {
+			err = sdkerrors.ErrConflict.Wrapf("contract address already exists at %s", contractAddress)
+			return
+		}
+
+		if existingAccount.Nonce > 0 {
+			// sign of EOA, user used their private key to sent at least one transaction
+			err = sdkerrors.ErrConflict.Wrapf("can not deploy on top of external owned account %s", contractAddress)
+			return
+		}
+	}
+
+	existingCosmosAccount := k.accountKeeper.GetAccount(ctx, contractAddress.Bytes())
+	if existingCosmosAccount != nil {
+		if _, isModuleAccount := existingCosmosAccount.(authtypes.ModuleAccountI); isModuleAccount {
+			err = sdkerrors.ErrConflict.Wrapf("can not deploy on top of module account %s", contractAddress)
+			return
+		}
 	}
 
 	// deploy pseudo bytecode for virtual frontier contract.
@@ -403,7 +421,7 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 			return
 		}
 
-		contractAccount = k.GetAccountWithoutBalance(ctx, contractAddress)
+		contractAccount := k.GetAccountWithoutBalance(ctx, contractAddress)
 		if contractAccount == nil {
 			err = errorsmod.Wrap(types.ErrVMExecution, "contract account not found")
 			return
