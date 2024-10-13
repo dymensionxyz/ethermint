@@ -39,6 +39,8 @@ func GetQueryCmd() *cobra.Command {
 		GetStorageCmd(),
 		GetCodeCmd(),
 		GetParamsCmd(),
+		ListVirtualFrontierBankContractsCmd(),
+		GetVirtualFrontierBankContractByDenomCmd(),
 	)
 	return cmd
 }
@@ -136,6 +138,64 @@ func GetParamsCmd() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			res, err := queryClient.Params(cmd.Context(), &types.QueryParamsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func GetVirtualFrontierBankContractByDenomCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "vfc-erc20-by-denom [denom]",
+		Short:   "Get the virtual frontier bank contract by denom",
+		Example: "dymd query evm vfc-erc20-by-denom <denom>",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryVirtualFrontierBankContractByDenomRequest{
+				MinDenom: args[0],
+			}
+			res, err := queryClient.VirtualFrontierBankContractByDenom(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+	return cmd
+}
+
+func ListVirtualFrontierBankContractsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "vfc-erc20-list",
+		Short:   "List all virtual frontier bank contracts",
+		Example: "dymd query evm vfc-erc20-list",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			req := &types.QueryVirtualFrontierBankContractsRequest{}
+			res, err := queryClient.ListVirtualFrontierBankContracts(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
