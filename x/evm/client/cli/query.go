@@ -152,9 +152,9 @@ func GetParamsCmd() *cobra.Command {
 
 func GetVirtualFrontierBankContractByDenomCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "vfc-by-denom DENOM",
+		Use:     "vfc-erc20-by-denom [denom]",
 		Short:   "Get the virtual frontier bank contract by denom",
-		Example: "dymd query evm vfc-by-denom <denom>",
+		Example: "dymd query evm vfc-erc20-by-denom <denom>",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -182,9 +182,9 @@ func GetVirtualFrontierBankContractByDenomCmd() *cobra.Command {
 
 func ListVirtualFrontierBankContractsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "vfc-list",
+		Use:     "vfc-erc20-list",
 		Short:   "List all virtual frontier bank contracts",
-		Example: "dymd query evm vfc-list",
+		Example: "dymd query evm vfc-erc20-list",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
