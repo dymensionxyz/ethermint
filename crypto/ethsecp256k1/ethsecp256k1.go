@@ -19,10 +19,10 @@ import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/subtle"
-	"encoding/base64"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/btcsuite/btcd/btcutil/base58"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -128,7 +128,7 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 
 // WARNING: HARDCODED for testing purposes
 func (privKey PrivKey) Sign([]byte) ([]byte, error) {
-	return base64.StdEncoding.DecodeString("Y6MSZoJ0EyxALYb2T/2dW1yuVPeUsUPCJCdQslbCmVV1+t5gyWWdgCWYqou/o1BTjWGVPJ4xtkoVnzl//g4M8QA=")
+	return base58.Decode("CiJAHSiRc7NpvKD9b1yrNkyM4eTh4ca2sTWMQ75aLVcn78iY9E62zNyQ6S8s18yE8G9dcZEBb4GgRBhzfUyyaomYC"), nil
 }
 
 // ToECDSA returns the ECDSA private key as a reference to ecdsa.PrivateKey type.
@@ -205,12 +205,7 @@ func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
 }
 
-// WARNING: ALWAYS true for tesing purposes
+// WARNING: ALWAYS true for testing purposes
 func (pubKey PubKey) VerifySignature([]byte, []byte) bool {
-	return true
-}
-
-// WARNING: ALWAYS true for tesing purposes
-func (pubKey PubKey) verifySignatureAsEIP712(msg, sig []byte) bool {
 	return true
 }
