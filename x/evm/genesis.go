@@ -18,14 +18,16 @@ package evm
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/evmos/ethermint/utils"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"strings"
+
+	"github.com/evmos/ethermint/utils"
 
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/keeper"
@@ -49,6 +51,14 @@ func InitGenesis(
 	err := k.SetParams(ctx, data.Params)
 	if err != nil {
 		panic(fmt.Errorf("error setting params %s", err))
+	}
+
+	// ensure evm module accounts are set
+	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
+		panic("the EVM module account has not been set")
+	}
+	if addr := accountKeeper.GetModuleAddress(types.ModuleVirtualFrontierContractDeployerName); addr == nil {
+		panic("the VFC deployer account has not been set")
 	}
 
 	// ensure evm module account is set
@@ -146,6 +156,24 @@ func InitGenesis(
 		}
 	}
 
+	if len(data.VirtualFrontierContracts) > 0 {
+		if err := k.GenesisImportVirtualFrontierContracts(ctx, data.VirtualFrontierContracts); err != nil {
+			panic(err)
+		}
+	}
+
+	{ // ensure deployer sequence number matches number of deployed VFCs
+		var deployedVFCsCount uint64
+		k.IterateVirtualFrontierContracts(ctx, func(_ types.VirtualFrontierContract) bool {
+			deployedVFCsCount++
+			return false
+		})
+		deployerModuleAccount := accountKeeper.GetModuleAccount(ctx, types.ModuleVirtualFrontierContractDeployerName)
+		if deployerModuleAccount.GetSequence() != deployedVFCsCount {
+			panic(fmt.Errorf("invalid sequence number for deployer account, expect sequence %d but got %d", deployedVFCsCount, deployerModuleAccount.GetSequence()))
+		}
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 
@@ -173,8 +201,15 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper, ak types.AccountKeeper) *t
 		return false
 	})
 
+	var vfContracts []types.VirtualFrontierContract
+	k.IterateVirtualFrontierContracts(ctx, func(contract types.VirtualFrontierContract) bool {
+		vfContracts = append(vfContracts, contract)
+		return false
+	})
+
 	return &types.GenesisState{
-		Accounts: ethGenAccounts,
-		Params:   k.GetParams(ctx),
+		Accounts:                 ethGenAccounts,
+		Params:                   k.GetParams(ctx),
+		VirtualFrontierContracts: vfContracts,
 	}
 }

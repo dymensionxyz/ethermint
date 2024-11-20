@@ -1,17 +1,19 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
-	"strings"
 )
 
 // IsVirtualFrontierContract returns true if the address is a virtual frontier contract address
@@ -371,7 +373,9 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 	if ctx.BlockHeight() == 0 {
 		// can not deploy contract code in genesis, so we just store the contract metadata
 		// and increase the sequence number of the deployer account so next deployment will generate different address.
-		deployerModuleAccount.SetSequence(nonce + 1)
+		if err := deployerModuleAccount.SetSequence(nonce + 1); err != nil {
+			panic(err)
+		}
 		k.accountKeeper.SetAccount(ctx, deployerModuleAccount)
 
 		err = k.SetAccount(ctx, contractAddress, statedb.Account{
@@ -453,4 +457,71 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 	)
 
 	return
+}
+
+func (k Keeper) IterateVirtualFrontierContracts(ctx sdk.Context, cb func(vfContract types.VirtualFrontierContract) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixVirtualFrontierContract)
+
+	defer func() {
+		_ = iterator.Close()
+	}()
+	for ; iterator.Valid(); iterator.Next() {
+		var vfContract types.VirtualFrontierContract
+		k.cdc.MustUnmarshal(iterator.Value(), &vfContract)
+
+		if cb(vfContract) {
+			break
+		}
+	}
+}
+
+// GenesisImportVirtualFrontierContracts imports virtual frontier contracts into the store at genesis.
+// NOTE: only call this function during genesis initialization.
+func (k Keeper) GenesisImportVirtualFrontierContracts(ctx sdk.Context, vfContracts []types.VirtualFrontierContract) error {
+	uniqueAddress := make(map[string]struct{})
+	for _, vfContract := range vfContracts {
+		if _, ok := uniqueAddress[vfContract.Address]; ok {
+			return fmt.Errorf("duplicate virtual frontier contract %s", vfContract.Address)
+		}
+		uniqueAddress[vfContract.Address] = struct{}{}
+
+		contractAddress := common.HexToAddress(vfContract.Address)
+		if err := k.SetAccount(ctx, contractAddress, statedb.Account{
+			Nonce:    1,
+			Balance:  common.Big0,
+			CodeHash: types.VFBCCodeHash,
+		}); err != nil {
+			return err
+		}
+		k.SetCode(ctx, types.VFBCCodeHash, types.VFBCCode)
+
+		if err := k.SetVirtualFrontierContract(ctx, contractAddress, &vfContract); err != nil {
+			return err
+		}
+
+		if vfContract.Type == types.VFC_TYPE_BANK {
+			var bankMeta types.VFBankContractMetadata
+			if err := k.cdc.Unmarshal(vfContract.Metadata, &bankMeta); err != nil {
+				return fmt.Errorf("failed to unmarshal bank contract metadata for %s: %s", vfContract.Address, err.Error())
+			}
+			if err := k.SetMappingVirtualFrontierBankContractAddressByDenom(ctx, bankMeta.MinDenom, common.HexToAddress(vfContract.Address)); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("unsupported virtual frontier contract type %s", vfContract.Type)
+		}
+
+		// fire Tendermint events
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeVirtualFrontierContract,
+				sdk.NewAttribute(types.AttributeKeyVFAction, "genesis-import"),
+				sdk.NewAttribute(types.AttributeKeyVFType, vfContract.GetTypeName()),
+				sdk.NewAttribute(types.AttributeKeyVFAddress, strings.ToLower(vfContract.Address)),
+			),
+		)
+	}
+
+	return nil
 }

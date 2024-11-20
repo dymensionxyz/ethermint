@@ -1,19 +1,22 @@
 package keeper_test
 
 import (
+	"math"
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/evmos/ethermint/testutil"
 	ethermint "github.com/evmos/ethermint/types"
+	"github.com/evmos/ethermint/utils"
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
-	"math"
-	"strings"
 )
 
 type virtualFrontierBankContract struct {
@@ -680,5 +683,166 @@ func (suite *KeeperTestSuite) TestDeployNewVirtualFrontierContract() {
 
 		suite.Commit()
 		suite.False(suite.app.EvmKeeper.GetParams(suite.ctx).EnableCreate, "contract creation should still be disabled at this point")
+	})
+}
+
+func (suite *KeeperTestSuite) TestGenesisImportVirtualFrontierContracts() {
+	getDeployerSeq := func() uint64 {
+		deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
+		suite.Require().NotNil(deployerModuleAccount)
+		return deployerModuleAccount.GetSequence()
+	}
+
+	// prepare
+	initialDeployerSeq := getDeployerSeq()
+
+	contractAddress1 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, initialDeployerSeq+0)
+	contractAddress2 := crypto.CreateAddress(types.VirtualFrontierContractDeployerAddress, initialDeployerSeq+1)
+
+	bytecode, err := keeper.PrepareBytecodeForVirtualFrontierBankContractDeployment("TEST", 1)
+	suite.Require().NoError(err)
+	suite.Require().NotEmpty(bytecode)
+
+	addr, err := suite.app.EvmKeeper.DeployNewVirtualFrontierContract(suite.ctx, virtualFrontierBankContract{
+		Active:      false,
+		MinDenom:    "ibc/uatomAABBCC",
+		Exponent:    6,
+		DisplayName: "ATOM",
+	}.convert(suite.appCodec), bytecode)
+	suite.Require().NoError(err)
+	suite.Equal(contractAddress1, addr)
+
+	contractAccount1 := suite.app.EvmKeeper.GetAccount(suite.ctx, addr)
+	suite.Require().NotNil(contractAccount1, "contract account should be created")
+
+	addr, err = suite.app.EvmKeeper.DeployNewVirtualFrontierContract(suite.ctx, virtualFrontierBankContract{
+		Active:      true,
+		MinDenom:    "ibc/uosmoXXYYZZ",
+		Exponent:    6,
+		DisplayName: "OSMO",
+	}.convert(suite.appCodec), bytecode)
+	suite.Require().NoError(err)
+	suite.Equal(contractAddress2, addr)
+
+	contractAccount2 := suite.app.EvmKeeper.GetAccount(suite.ctx, addr)
+	suite.Require().NotNil(contractAccount2, "contract account should be created")
+
+	testAllContracts := func() {
+		contract1 := suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, contractAddress1)
+		suite.Require().NotNil(contract1)
+
+		contract2 := suite.app.EvmKeeper.GetVirtualFrontierContract(suite.ctx, contractAddress2)
+		suite.Require().NotNil(contract2)
+
+		suite.Equal(virtualFrontierBankContract{
+			Address:     strings.ToLower(contractAddress1.String()),
+			Active:      false,
+			MinDenom:    "ibc/uatomAABBCC",
+			Exponent:    6,
+			DisplayName: "ATOM",
+		}.convert(suite.appCodec), contract1)
+
+		suite.Equal(virtualFrontierBankContract{
+			Address:     strings.ToLower(contractAddress2.String()),
+			Active:      true,
+			MinDenom:    "ibc/uosmoXXYYZZ",
+			Exponent:    6,
+			DisplayName: "OSMO",
+		}.convert(suite.appCodec), contract2)
+	}
+
+	suite.Run("after setup, contract should be created correctly", func() {
+		testAllContracts()
+	})
+
+	suite.Run("genesis import", func() {
+		deployerSeq := getDeployerSeq()
+
+		var genesisVFCs []types.VirtualFrontierContract
+		{ // export existing VFCs
+			suite.app.EvmKeeper.IterateVirtualFrontierContracts(suite.ctx, func(contract types.VirtualFrontierContract) bool {
+				genesisVFCs = append(genesisVFCs, contract)
+				return false
+			})
+			suite.Require().NotEmpty(genesisVFCs)
+		}
+
+		// reset state
+		suite.SetupTest()
+
+		{ // disable create, ensure can be deployed regardless enable state
+			currentParams := suite.app.EvmKeeper.GetParams(suite.ctx)
+			currentParams.EnableCreate = false
+			err := suite.app.EvmKeeper.SetParams(suite.ctx, currentParams)
+			suite.Require().NoError(err)
+			suite.Commit()
+		}
+
+		{ // restore deployer seq
+			deployerModuleAccount := suite.app.AccountKeeper.GetModuleAccount(suite.ctx, types.ModuleVirtualFrontierContractDeployerName)
+			suite.Require().NotNil(deployerModuleAccount)
+			err := deployerModuleAccount.SetSequence(deployerSeq)
+			suite.Require().NoError(err)
+			suite.app.AccountKeeper.SetModuleAccount(suite.ctx, deployerModuleAccount)
+		}
+
+		var toDeploy []types.VirtualFrontierContract
+		if utils.IsEthermintDevChain(suite.ctx) { // exclude the native denom contract because it deployed by genesis
+			for _, c := range genesisVFCs {
+				if c.Type == types.VFC_TYPE_BANK {
+					var meta types.VFBankContractMetadata
+					suite.appCodec.MustUnmarshal(c.Metadata, &meta)
+
+					if meta.MinDenom == suite.app.EvmKeeper.GetParams(suite.ctx).EvmDenom {
+						continue
+					}
+				}
+
+				toDeploy = append(toDeploy, c)
+			}
+		} else {
+			toDeploy = genesisVFCs
+		}
+
+		err := suite.app.EvmKeeper.GenesisImportVirtualFrontierContracts(suite.ctx, toDeploy)
+		suite.Require().NoError(err)
+
+		testAllContracts()
+
+		var currentVFCs []types.VirtualFrontierContract
+		suite.app.EvmKeeper.IterateVirtualFrontierContracts(suite.ctx, func(contract types.VirtualFrontierContract) bool {
+			currentVFCs = append(currentVFCs, contract)
+			return false
+		})
+
+		suite.Equal(genesisVFCs, currentVFCs)
+
+		for _, c := range currentVFCs {
+			contractAddr := common.HexToAddress(c.Address)
+
+			suite.Require().True(suite.app.EvmKeeper.IsVirtualFrontierContract(suite.ctx, contractAddr))
+
+			resCode, err := suite.app.EvmKeeper.Code(suite.ctx, &types.QueryCodeRequest{
+				Address: c.Address,
+			})
+			suite.Require().NoError(err)
+			suite.Equal(types.VFBCCode, resCode.Code)
+
+			acc := suite.app.EvmKeeper.GetAccount(suite.ctx, contractAddr)
+			suite.Require().NotNil(acc)
+			suite.Equal(uint64(1), acc.Nonce)
+			suite.Equal(types.VFBCCodeHash, acc.CodeHash)
+
+			if c.Type == types.VFC_TYPE_BANK {
+				var meta types.VFBankContractMetadata
+				suite.appCodec.MustUnmarshal(c.Metadata, &meta)
+
+				ca, found := suite.app.EvmKeeper.GetVirtualFrontierBankContractAddressByDenom(suite.ctx, meta.MinDenom)
+				suite.Require().True(found)
+				suite.Equal(contractAddr, ca)
+			} else {
+				suite.Failf("unexpected type", "type: %s", c.Type)
+			}
+		}
 	})
 }

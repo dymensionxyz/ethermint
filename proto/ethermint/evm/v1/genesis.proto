@@ -2,6 +2,7 @@ syntax = "proto3";
 package ethermint.evm.v1;
 
 import "ethermint/evm/v1/evm.proto";
+import "ethermint/evm/v1/vfc.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/evmos/ethermint/x/evm/types";
@@ -12,6 +13,7 @@ message GenesisState {
   repeated GenesisAccount accounts = 1 [(gogoproto.nullable) = false];
   // params defines all the parameters of the module.
   Params params = 2 [(gogoproto.nullable) = false];
+  repeated VirtualFrontierContract virtual_frontier_contracts = 3 [(gogoproto.nullable) = false];
 }
 
 // GenesisAccount defines an account to be initialized in the genesis state.

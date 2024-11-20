@@ -2,12 +2,12 @@ package evm_test
 
 import (
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	etherminttypes "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm"
@@ -146,7 +146,8 @@ func (suite *EvmTestSuite) TestInitGenesis() {
 			vmdb = suite.StateDB()
 
 			tc.malleate()
-			vmdb.Commit()
+			err := vmdb.Commit()
+			suite.Require().NoError(err)
 
 			if tc.expPanic {
 				suite.Require().Panics(
