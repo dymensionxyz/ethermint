@@ -51,9 +51,12 @@ func InitGenesis(
 		panic(fmt.Errorf("error setting params %s", err))
 	}
 
-	// ensure evm module account is set
+	// ensure evm module accounts are set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the EVM module account has not been set")
+	}
+	if addr := accountKeeper.GetModuleAddress(types.ModuleVirtualFrontierContractDeployerName); addr == nil {
+		panic("the VFC deployer account has not been set")
 	}
 
 	for _, account := range data.Accounts {
@@ -146,6 +149,24 @@ func InitGenesis(
 		}
 	}
 
+	if len(data.VirtualFrontierContracts) > 0 {
+		if err := k.GenesisImportVirtualFrontierContracts(ctx, data.VirtualFrontierContracts); err != nil {
+			panic(err)
+		}
+	}
+
+	{ // ensure deployer sequence number matches number of deployed VFCs
+		var deployedVFCsCount uint64
+		k.IterateVirtualFrontierContracts(ctx, func(_ types.VirtualFrontierContract) bool {
+			deployedVFCsCount++
+			return false
+		})
+		deployerModuleAccount := accountKeeper.GetModuleAccount(ctx, types.ModuleVirtualFrontierContractDeployerName)
+		if deployerModuleAccount.GetSequence() != deployedVFCsCount {
+			panic(fmt.Errorf("invalid sequence number for deployer account, expect sequence %d but got %d", deployedVFCsCount, deployerModuleAccount.GetSequence()))
+		}
+	}
+
 	return []abci.ValidatorUpdate{}
 }
 
@@ -173,8 +194,15 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper, ak types.AccountKeeper) *t
 		return false
 	})
 
+	var vfContracts []types.VirtualFrontierContract
+	k.IterateVirtualFrontierContracts(ctx, func(contract types.VirtualFrontierContract) bool {
+		vfContracts = append(vfContracts, contract)
+		return false
+	})
+
 	return &types.GenesisState{
-		Accounts: ethGenAccounts,
-		Params:   k.GetParams(ctx),
+		Accounts:                 ethGenAccounts,
+		Params:                   k.GetParams(ctx),
+		VirtualFrontierContracts: vfContracts,
 	}
 }
