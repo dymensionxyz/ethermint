@@ -33,8 +33,9 @@ func (ga GenesisAccount) Validate() error {
 // chain config values.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
-		Accounts: []GenesisAccount{},
-		Params:   DefaultParams(),
+		Accounts:                 []GenesisAccount{},
+		Params:                   DefaultParams(),
+		VirtualFrontierContracts: []VirtualFrontierContract{},
 	}
 }
 
