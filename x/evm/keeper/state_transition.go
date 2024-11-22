@@ -16,9 +16,10 @@
 package keeper
 
 import (
-	"github.com/evmos/ethermint/x/evm/vm/geth"
 	"math/big"
 	"time"
+
+	"github.com/evmos/ethermint/x/evm/vm/geth"
 
 	tmtypes "github.com/cometbft/cometbft/types"
 
@@ -240,7 +241,6 @@ func (k *Keeper) ApplyTransaction(ctx sdk.Context, msgEth *types.MsgEthereumTx) 
 			commit()
 			// Since the post-processing can alter the log, we need to update the result
 			res.Logs = types.NewLogsFromEth(receipt.Logs)
-			ctx.EventManager().EmitEvents(tmpCtx.EventManager().Events())
 		}
 	}
 
