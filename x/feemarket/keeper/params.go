@@ -85,3 +85,9 @@ func (k Keeper) SetBaseFee(ctx sdk.Context, baseFee *big.Int) {
 		return
 	}
 }
+
+// GetMinGasPrice gets the min gas price from the store
+func (k Keeper) GetMinGasPrice(ctx sdk.Context) sdk.Dec {
+	params := k.GetParams(ctx)
+	return params.MinGasPrice
+}
