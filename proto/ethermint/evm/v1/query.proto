@@ -7,6 +7,7 @@ import "ethermint/evm/v1/tx.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 option go_package = "github.com/evmos/ethermint/x/evm/types";
 
@@ -15,84 +16,132 @@ service Query {
   // Account queries an Ethereum account.
   rpc Account(QueryAccountRequest) returns (QueryAccountResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/account/{address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // CosmosAccount queries an Ethereum account's Cosmos Address.
   rpc CosmosAccount(QueryCosmosAccountRequest) returns (QueryCosmosAccountResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/cosmos_account/{address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // ValidatorAccount queries an Ethereum account's from a validator consensus
   // Address.
   rpc ValidatorAccount(QueryValidatorAccountRequest) returns (QueryValidatorAccountResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/validator_account/{cons_address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // Balance queries the balance of a the EVM denomination for a single
   // EthAccount.
   rpc Balance(QueryBalanceRequest) returns (QueryBalanceResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/balances/{address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // Storage queries the balance of all coins for a single account.
   rpc Storage(QueryStorageRequest) returns (QueryStorageResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/storage/{address}/{key}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // Code queries the balance of all coins for a single account.
   rpc Code(QueryCodeRequest) returns (QueryCodeResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/codes/{address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // Params queries the parameters of x/evm module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/params";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // EthCall implements the `eth_call` rpc api
   rpc EthCall(EthCallRequest) returns (MsgEthereumTxResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/eth_call";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // EstimateGas implements the `eth_estimateGas` rpc api
   rpc EstimateGas(EthCallRequest) returns (EstimateGasResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/estimate_gas";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // TraceTx implements the `debug_traceTransaction` rpc api
   rpc TraceTx(QueryTraceTxRequest) returns (QueryTraceTxResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/trace_tx";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // TraceBlock implements the `debug_traceBlockByNumber` and `debug_traceBlockByHash` rpc api
   rpc TraceBlock(QueryTraceBlockRequest) returns (QueryTraceBlockResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/trace_block";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // BaseFee queries the base fee of the parent block of the current block,
   // it's similar to feemarket module's method, but also checks london hardfork status.
   rpc BaseFee(QueryBaseFeeRequest) returns (QueryBaseFeeResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/base_fee";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // ListVirtualFrontierContracts returns Json array of information of virtual frontier contracts.
   rpc ListVirtualFrontierContracts(QueryVirtualFrontierContractsRequest) returns (QueryVirtualFrontierContractsResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
   rpc VirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest) returns (QueryVirtualFrontierContractByAddressResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts/{address}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
   rpc VirtualFrontierBankContractByDenom(QueryVirtualFrontierBankContractByDenomRequest) returns (QueryVirtualFrontierBankContractByDenomResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contract/by_denom/{min_denom}";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 
   // ListVirtualFrontierBankContracts returns the list of bank contract
   rpc ListVirtualFrontierBankContracts(QueryVirtualFrontierBankContractsRequest) returns (QueryVirtualFrontierBankContractsResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contracts";
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      tags: ["evm"]
+    };
   }
 }
 
