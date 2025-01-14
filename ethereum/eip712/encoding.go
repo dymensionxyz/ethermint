@@ -19,12 +19,12 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txTypes "github.com/cosmos/cosmos-sdk/types/tx"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	apitypes "github.com/ethereum/go-ethereum/signer/core/apitypes"
 	"github.com/evmos/ethermint/types"
 

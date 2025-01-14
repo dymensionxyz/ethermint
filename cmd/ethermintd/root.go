@@ -17,11 +17,12 @@ package main
 
 import (
 	"errors"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/spf13/viper"
 	"io"
 	"os"
 	"path/filepath"
+
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/spf13/viper"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -32,6 +33,7 @@ import (
 	tmlog "github.com/cometbft/cometbft/libs/log"
 
 	"cosmossdk.io/simapp/params"
+	"cosmossdk.io/store"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,7 +44,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"

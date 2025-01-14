@@ -2,8 +2,19 @@ package integration_test_util
 
 //goland:noinspection SpellCheckingInspection,GoSnakeCaseUsage
 import (
-	"cosmossdk.io/simapp/params"
 	"fmt"
+	"math"
+	"math/big"
+	"os"
+	"reflect"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+	"unsafe"
+
+	"cosmossdk.io/simapp/params"
 	tdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
@@ -32,8 +43,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibcclienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	chainapp "github.com/evmos/ethermint/app"
 	ethermint_hd "github.com/evmos/ethermint/crypto/hd"
@@ -45,16 +56,6 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
-	"math"
-	"math/big"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-	"sync"
-	"testing"
-	"time"
-	"unsafe"
 )
 
 // ChainIntegrationTestSuite is a helper for Chain integration test.
