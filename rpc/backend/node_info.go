@@ -21,7 +21,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -150,7 +150,7 @@ func (b *Backend) SetEtherbase(etherbase common.Address) bool {
 	txFactory = txFactory.WithGas(gas)
 
 	value := new(big.Int).SetUint64(gas * minGasPriceValue.Ceil().TruncateInt().Uint64())
-	fees := sdk.Coins{sdk.NewCoin(denom, sdkmath.NewIntFromBigInt(value))}
+	fees := sdk.Coins{sdk.NewCoin(denom, math.NewIntFromBigInt(value))}
 	builder.SetFeeAmount(fees)
 	builder.SetGasLimit(gas)
 
@@ -286,7 +286,7 @@ func (b *Backend) SetGasPrice(gasPrice hexutil.Big) bool {
 		unit = minGasPrices[0].Denom
 	}
 
-	c := sdk.NewDecCoin(unit, sdk.NewIntFromBigInt(gasPrice.ToInt()))
+	c := sdk.NewDecCoin(unit, math.NewIntFromBigInt(gasPrice.ToInt()))
 
 	appConf.SetMinGasPrices(sdk.DecCoins{c})
 	sdkconfig.WriteConfigFile(b.clientCtx.Viper.ConfigFileUsed(), appConf)

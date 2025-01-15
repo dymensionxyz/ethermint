@@ -30,7 +30,7 @@ import (
 	"testing"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmflags "github.com/cometbft/cometbft/libs/cli/flags"
@@ -106,9 +106,9 @@ type Config struct {
 	AppConstructor    AppConstructor      // the ABCI application constructor
 	GenesisState      simapp.GenesisState // custom gensis state to provide
 	TimeoutCommit     time.Duration       // the consensus commitment timeout
-	AccountTokens     sdkmath.Int         // the amount of unique validator tokens (e.g. 1000node0)
-	StakingTokens     sdkmath.Int         // the amount of tokens each validator has available to stake
-	BondedTokens      sdkmath.Int         // the amount of tokens each validator stakes
+	AccountTokens     math.Int            // the amount of unique validator tokens (e.g. 1000node0)
+	StakingTokens     math.Int            // the amount of tokens each validator has available to stake
+	BondedTokens      math.Int            // the amount of tokens each validator stakes
 	NumValidators     int                 // the total number of validators to create and bond
 	ChainID           string              // the network chain-id
 	BondDenom         string              // the staking bond denomination
@@ -456,7 +456,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		}
 
 		memo := fmt.Sprintf("%s@%s:%s", nodeIDs[i], p2pURL.Hostname(), p2pURL.Port())
-		fee := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, sdkmath.NewInt(0)))
+		fee := sdk.NewCoins(sdk.NewCoin(cfg.BondDenom, math.NewInt(0)))
 		txBuilder := cfg.TxConfig.NewTxBuilder()
 		err = txBuilder.SetMsgs(createValMsg)
 		if err != nil {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/evmos/ethermint/x/feemarket/types"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/params"
@@ -66,7 +66,7 @@ func NewParams(
 		NoBaseFee:                noBaseFee,
 		BaseFeeChangeDenominator: baseFeeChangeDenom,
 		ElasticityMultiplier:     elasticityMultiplier,
-		BaseFee:                  sdkmath.NewIntFromUint64(baseFee),
+		BaseFee:                  math.NewIntFromUint64(baseFee),
 		EnableHeight:             enableHeight,
 		MinGasPrice:              minGasPrice,
 		MinGasMultiplier:         minGasPriceMultiplier,
@@ -79,7 +79,7 @@ func DefaultParams() Params {
 		NoBaseFee:                DefaultNoBaseFee,
 		BaseFeeChangeDenominator: params.BaseFeeChangeDenominator,
 		ElasticityMultiplier:     params.ElasticityMultiplier,
-		BaseFee:                  sdkmath.NewIntFromUint64(params.InitialBaseFee),
+		BaseFee:                  math.NewIntFromUint64(params.InitialBaseFee),
 		EnableHeight:             DefaultEnableHeight,
 		MinGasPrice:              DefaultMinGasPrice,
 		MinGasMultiplier:         DefaultMinGasMultiplier,
@@ -137,7 +137,7 @@ func validateElasticityMultiplier(i interface{}) error {
 }
 
 func validateBaseFee(i interface{}) error {
-	value, ok := i.(sdkmath.Int)
+	value, ok := i.(math.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

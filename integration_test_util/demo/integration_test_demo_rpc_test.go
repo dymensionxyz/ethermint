@@ -1,7 +1,7 @@
 package demo
 
 import (
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -21,7 +21,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance() {
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
-	balance, ok := sdkmath.NewIntFromString(res.Balance)
+	balance, ok := math.NewIntFromString(res.Balance)
 	suite.Require().True(ok)
 	suite.True(balance.GT(sdk.ZeroInt()))
 	suite.Equal(suite.CITS.TestConfig.InitBalanceAmount, balance)
@@ -39,7 +39,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance_At_Different_Blocks() {
 	)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	senderBalanceBefore, _ := sdkmath.NewIntFromString(res.Balance)
+	senderBalanceBefore, _ := math.NewIntFromString(res.Balance)
 
 	suite.Require().Truef(senderBalanceBefore.GT(sdk.ZeroInt()), "sender must have balance")
 
@@ -51,7 +51,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance_At_Different_Blocks() {
 	)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	receiverBalanceBefore, _ := sdkmath.NewIntFromString(res.Balance)
+	receiverBalanceBefore, _ := math.NewIntFromString(res.Balance)
 
 	err = suite.CITS.TxSend(sender, receiver, 0.1)
 	suite.Commit()
@@ -65,7 +65,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance_At_Different_Blocks() {
 	)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	senderBalanceAfter, _ := sdkmath.NewIntFromString(res.Balance)
+	senderBalanceAfter, _ := math.NewIntFromString(res.Balance)
 
 	res, err = suite.CITS.QueryClients.Rpc.Balance(
 		rpctypes.ContextWithHeight(0),
@@ -75,7 +75,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance_At_Different_Blocks() {
 	)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
-	receiverBalanceAfter, _ := sdkmath.NewIntFromString(res.Balance)
+	receiverBalanceAfter, _ := math.NewIntFromString(res.Balance)
 
 	suite.NotEqualf(senderBalanceBefore.String(), senderBalanceAfter.String(), "sender balance must be reduced")
 	suite.Require().Truef(senderBalanceAfter.LT(senderBalanceBefore), "sender balance must be reduced")

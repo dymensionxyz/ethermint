@@ -19,7 +19,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -203,7 +203,7 @@ func (tx *DynamicFeeTx) SetSignatureValues(chainID, v, r, s *big.Int) {
 		tx.S = s.Bytes()
 	}
 	if chainID != nil {
-		chainIDInt := sdkmath.NewIntFromBigInt(chainID)
+		chainIDInt := math.NewIntFromBigInt(chainID)
 		tx.ChainID = &chainIDInt
 	}
 }

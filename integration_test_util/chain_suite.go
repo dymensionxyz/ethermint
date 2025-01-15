@@ -130,8 +130,8 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 				Exponent: 8,
 			},
 		},
-		InitBalanceAmount:        sdk.NewInt(int64(balancePerAccount * math.Pow10(18))),
-		DefaultFeeAmount:         sdk.NewInt(int64(math.Pow10(16))),
+		InitBalanceAmount:        math.NewInt(int64(balancePerAccount * math.Pow10(18))),
+		DefaultFeeAmount:         math.NewInt(int64(math.Pow10(16))),
 		DisableTendermint:        chainCfg.DisableTendermint,
 		DisabledContractCreation: chainCfg.DisabledContractCreation,
 	}

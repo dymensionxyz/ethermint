@@ -14,7 +14,7 @@ import (
 func (suite *ChainIntegrationTestSuite) TxFullGov(proposer *itutiltypes.TestAccount, newProposalContent govtypeslegacy.Content) uint64 {
 	suite.Require().NotNil(proposer)
 
-	depositAmount := sdk.NewInt(int64(0.1 * math.Pow10(18)))
+	depositAmount := math.NewInt(int64(0.1 * math.Pow10(18)))
 	msg, err := govtypeslegacy.NewMsgSubmitProposal(newProposalContent, sdk.NewCoins(
 		sdk.NewCoin(suite.ChainConstantsConfig.GetMinDenom(), depositAmount),
 	), proposer.GetCosmosAddress())

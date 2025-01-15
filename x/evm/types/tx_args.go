@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -71,14 +71,14 @@ func (args *TransactionArgs) String() string {
 // This assumes that setTxDefaults has been called.
 func (args *TransactionArgs) ToTransaction() *MsgEthereumTx {
 	var (
-		chainID, value, gasPrice, maxFeePerGas, maxPriorityFeePerGas sdkmath.Int
+		chainID, value, gasPrice, maxFeePerGas, maxPriorityFeePerGas math.Int
 		gas, nonce                                                   uint64
 		from, to                                                     string
 	)
 
 	// Set sender address or use zero address if none specified.
 	if args.ChainID != nil {
-		chainID = sdkmath.NewIntFromBigInt(args.ChainID.ToInt())
+		chainID = math.NewIntFromBigInt(args.ChainID.ToInt())
 	}
 
 	if args.Nonce != nil {
@@ -90,19 +90,19 @@ func (args *TransactionArgs) ToTransaction() *MsgEthereumTx {
 	}
 
 	if args.GasPrice != nil {
-		gasPrice = sdkmath.NewIntFromBigInt(args.GasPrice.ToInt())
+		gasPrice = math.NewIntFromBigInt(args.GasPrice.ToInt())
 	}
 
 	if args.MaxFeePerGas != nil {
-		maxFeePerGas = sdkmath.NewIntFromBigInt(args.MaxFeePerGas.ToInt())
+		maxFeePerGas = math.NewIntFromBigInt(args.MaxFeePerGas.ToInt())
 	}
 
 	if args.MaxPriorityFeePerGas != nil {
-		maxPriorityFeePerGas = sdkmath.NewIntFromBigInt(args.MaxPriorityFeePerGas.ToInt())
+		maxPriorityFeePerGas = math.NewIntFromBigInt(args.MaxPriorityFeePerGas.ToInt())
 	}
 
 	if args.Value != nil {
-		value = sdkmath.NewIntFromBigInt(args.Value.ToInt())
+		value = math.NewIntFromBigInt(args.Value.ToInt())
 	}
 
 	if args.To != nil {

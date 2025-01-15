@@ -17,11 +17,12 @@ package ante
 
 import (
 	"errors"
-	"github.com/evmos/ethermint/utils"
 	"strconv"
 
+	"github.com/evmos/ethermint/utils"
+
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -189,7 +190,7 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 			return ctx, errorsmod.Wrap(ethtypes.ErrTxTypeNotSupported, "dynamic fee tx not supported")
 		}
 
-		txFee = txFee.Add(sdk.Coin{Denom: evmDenom, Amount: sdkmath.NewIntFromBigInt(txData.Fee())})
+		txFee = txFee.Add(sdk.Coin{Denom: evmDenom, Amount: math.NewIntFromBigInt(txData.Fee())})
 	}
 
 	if !authInfo.Fee.Amount.IsEqual(txFee) {

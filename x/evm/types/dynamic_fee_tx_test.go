@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -17,14 +17,14 @@ import (
 type TxDataTestSuite struct {
 	suite.Suite
 
-	sdkInt         sdkmath.Int
+	sdkInt         math.Int
 	uint64         uint64
 	hexUint64      hexutil.Uint64
 	bigInt         *big.Int
 	hexBigInt      hexutil.Big
 	overflowBigInt *big.Int
-	sdkZeroInt     sdkmath.Int
-	sdkMinusOneInt sdkmath.Int
+	sdkZeroInt     math.Int
+	sdkMinusOneInt math.Int
 	invalidAddr    string
 	addr           common.Address
 	hexAddr        string
@@ -33,14 +33,14 @@ type TxDataTestSuite struct {
 }
 
 func (suite *TxDataTestSuite) SetupTest() {
-	suite.sdkInt = sdkmath.NewInt(100)
+	suite.sdkInt = math.NewInt(100)
 	suite.uint64 = suite.sdkInt.Uint64()
 	suite.hexUint64 = hexutil.Uint64(100)
 	suite.bigInt = big.NewInt(1)
 	suite.hexBigInt = hexutil.Big(*big.NewInt(1))
 	suite.overflowBigInt = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(256), nil)
 	suite.sdkZeroInt = sdk.ZeroInt()
-	suite.sdkMinusOneInt = sdkmath.NewInt(-1)
+	suite.sdkMinusOneInt = math.NewInt(-1)
 	suite.invalidAddr = "123456"
 	suite.addr = tests.GenerateAddress()
 	suite.hexAddr = suite.addr.Hex()

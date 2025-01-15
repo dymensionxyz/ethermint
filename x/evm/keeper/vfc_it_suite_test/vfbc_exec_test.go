@@ -398,8 +398,8 @@ func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {
 
 		const originalBalance = 10_000_000
 
-		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcAtom.Base, sdk.NewInt(originalBalance)))
-		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcTia.Base, sdk.NewInt(originalBalance)))
+		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcAtom.Base, math.NewInt(originalBalance)))
+		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcTia.Base, math.NewInt(originalBalance)))
 
 		suite.CITS.WaitNextBlockOrCommit()
 

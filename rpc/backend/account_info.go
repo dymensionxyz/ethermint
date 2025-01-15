@@ -21,7 +21,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -116,7 +116,7 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 		return nil, err
 	}
 
-	balance, ok := sdkmath.NewIntFromString(res.Balance)
+	balance, ok := math.NewIntFromString(res.Balance)
 	if !ok {
 		return nil, errors.New("invalid balance")
 	}
@@ -174,7 +174,7 @@ func (b *Backend) GetBalance(address common.Address, blockNrOrHash rpctypes.Bloc
 		return nil, err
 	}
 
-	val, ok := sdkmath.NewIntFromString(res.Balance)
+	val, ok := math.NewIntFromString(res.Balance)
 	if !ok {
 		return nil, errors.New("invalid balance")
 	}

@@ -163,7 +163,7 @@ func (m *ExtraEIPs) GetEIPs() []int64 {
 	return nil
 }
 
-// V4ChainConfig defines the Ethereum V4ChainConfig parameters using *sdk.Int values
+// V4ChainConfig defines the Ethereum V4ChainConfig parameters using *math.Int values
 // instead of *big.Int.
 type V4ChainConfig struct {
 	// homestead_block switch (nil no fork, 0 = already homestead)

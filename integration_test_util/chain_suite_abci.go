@@ -3,9 +3,11 @@ package integration_test_util
 //goland:noinspection SpellCheckingInspection
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
 	"fmt"
+	"time"
+
+	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -18,7 +20,6 @@ import (
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	"time"
 )
 
 // commitAndCreateNewCtx commits a block at a given time, creating and return a new ctx for the next block
@@ -58,7 +59,7 @@ func (suite *ChainIntegrationTestSuite) createNewContext(oldCtx sdk.Context, hea
 func (suite *ChainIntegrationTestSuite) DeliverTx(
 	ctx sdk.Context,
 	signer *itutiltypes.TestAccount,
-	gasPrice *sdkmath.Int,
+	gasPrice *math.Int,
 	msgs ...sdk.Msg,
 ) (authsigning.Tx, abci.ResponseDeliverTx, error) {
 	suite.Require().NotNil(signer)
@@ -83,7 +84,7 @@ func (suite *ChainIntegrationTestSuite) DeliverTx(
 func (suite *ChainIntegrationTestSuite) DeliverTxAsync(
 	ctx sdk.Context,
 	signer *itutiltypes.TestAccount,
-	gasPrice *sdkmath.Int,
+	gasPrice *math.Int,
 	msgs ...sdk.Msg,
 ) (*coretypes.ResultBroadcastTx, error) {
 	suite.Require().NotNil(signer)

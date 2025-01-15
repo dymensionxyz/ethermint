@@ -2,8 +2,10 @@ package keeper_test
 
 import (
 	"encoding/json"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"math/big"
+
+	"cosmossdk.io/math"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -55,7 +57,7 @@ var _ = Describe("Feemarket", func() {
 				// 100_000`. With the fee calculation `Fee = (baseFee + tip) * gasLimit`,
 				// a `minGasPrices = 5_000_000_000` results in `minGlobalFee =
 				// 500_000_000_000_000`
-				privKey, _ = setupTestWithContext("1", sdk.NewDec(minGasPrices), sdk.NewInt(baseFee))
+				privKey, _ = setupTestWithContext("1", math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -129,7 +131,7 @@ var _ = Describe("Feemarket", func() {
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
-func setupTestWithContext(valMinGasPrice string, minGasPrice sdk.Dec, baseFee sdk.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+func setupTestWithContext(valMinGasPrice string, minGasPrice sdk.Dec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
 	privKey, msg := setupTest(valMinGasPrice + s.denom)
 	params := types.DefaultParams()
 	params.MinGasPrice = minGasPrice
@@ -144,7 +146,7 @@ func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSe
 	setupChain(localMinGasPrices)
 
 	privKey, address := generateKey()
-	amount, ok := sdk.NewIntFromString("10000000000000000000")
+	amount, ok := math.NewIntFromString("10000000000000000000")
 	s.Require().True(ok)
 	initBalance := sdk.Coins{sdk.Coin{
 		Denom:  s.denom,
@@ -157,7 +159,7 @@ func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSe
 		ToAddress:   address.String(),
 		Amount: sdk.Coins{sdk.Coin{
 			Denom:  s.denom,
-			Amount: sdk.NewInt(10000),
+			Amount: math.NewInt(10000),
 		}},
 	}
 	s.Commit()
@@ -265,7 +267,7 @@ func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 	s.Require().NoError(err)
 
 	evmDenom := s.app.EvmKeeper.GetParams(s.ctx).EvmDenom
-	fees := sdk.Coins{{Denom: evmDenom, Amount: sdk.NewIntFromBigInt(txData.Fee())}}
+	fees := sdk.Coins{{Denom: evmDenom, Amount: math.NewIntFromBigInt(txData.Fee())}}
 	builder.SetFeeAmount(fees)
 	builder.SetGasLimit(msgEthereumTx.GetGas())
 

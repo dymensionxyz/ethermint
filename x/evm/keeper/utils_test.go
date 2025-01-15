@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -13,21 +13,21 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestCheckSenderBalance() {
-	hundredInt := sdkmath.NewInt(100)
+	hundredInt := math.NewInt(100)
 	zeroInt := sdk.ZeroInt()
 	oneInt := sdk.OneInt()
-	fiveInt := sdkmath.NewInt(5)
-	fiftyInt := sdkmath.NewInt(50)
-	negInt := sdkmath.NewInt(-10)
+	fiveInt := math.NewInt(5)
+	fiftyInt := math.NewInt(50)
+	negInt := math.NewInt(-10)
 
 	testCases := []struct {
 		name            string
 		to              string
 		gasLimit        uint64
-		gasPrice        *sdkmath.Int
+		gasPrice        *math.Int
 		gasFeeCap       *big.Int
 		gasTipCap       *big.Int
-		cost            *sdkmath.Int
+		cost            *math.Int
 		from            string
 		accessList      *ethtypes.AccessList
 		expectPass      bool
@@ -239,7 +239,7 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 
 			acct := suite.app.EvmKeeper.GetAccountOrEmpty(suite.ctx, suite.address)
 			err := keeper.CheckSenderBalance(
-				sdkmath.NewIntFromBigInt(acct.Balance),
+				math.NewIntFromBigInt(acct.Balance),
 				txData,
 			)
 
@@ -259,22 +259,22 @@ func (suite *KeeperTestSuite) TestCheckSenderBalance() {
 // in one function and share a lot of the same setup.
 // In practice, the two tested functions will also be sequentially executed.
 func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
-	hundredInt := sdkmath.NewInt(100)
+	hundredInt := math.NewInt(100)
 	zeroInt := sdk.ZeroInt()
-	oneInt := sdkmath.NewInt(1)
-	fiveInt := sdkmath.NewInt(5)
-	fiftyInt := sdkmath.NewInt(50)
+	oneInt := math.NewInt(1)
+	fiveInt := math.NewInt(5)
+	fiftyInt := math.NewInt(50)
 
 	// should be enough to cover all test cases
-	initBalance := sdkmath.NewInt((ethparams.InitialBaseFee + 10) * 105)
+	initBalance := math.NewInt((ethparams.InitialBaseFee + 10) * 105)
 
 	testCases := []struct {
 		name             string
 		gasLimit         uint64
-		gasPrice         *sdkmath.Int
+		gasPrice         *math.Int
 		gasFeeCap        *big.Int
 		gasTipCap        *big.Int
-		cost             *sdkmath.Int
+		cost             *math.Int
 		accessList       *ethtypes.AccessList
 		expectPassVerify bool
 		expectPassDeduct bool
@@ -488,7 +488,7 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 					suite.Require().Equal(
 						fees,
 						sdk.NewCoins(
-							sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewIntFromBigInt(txData.EffectiveFee(baseFee))),
+							sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewIntFromBigInt(txData.EffectiveFee(baseFee))),
 						),
 						"valid test %d failed, fee value is wrong  - '%s'", i, tc.name,
 					)
@@ -497,7 +497,7 @@ func (suite *KeeperTestSuite) TestVerifyFeeAndDeductTxCostsFromUserBalance() {
 					suite.Require().Equal(
 						fees,
 						sdk.NewCoins(
-							sdk.NewCoin(evmtypes.DefaultEVMDenom, tc.gasPrice.Mul(sdkmath.NewIntFromUint64(tc.gasLimit))),
+							sdk.NewCoin(evmtypes.DefaultEVMDenom, tc.gasPrice.Mul(math.NewIntFromUint64(tc.gasLimit))),
 						),
 						"valid test %d failed, fee value is wrong  - '%s'", i, tc.name,
 					)

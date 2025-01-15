@@ -149,7 +149,7 @@ func (k Keeper) PostTxProcessing(
   // NOTE: assume that if they are burning the token that has been registered as a pair, they want to mint a Cosmos coin
 
   // create the corresponding sdk.Coin that is paired with ERC20
-  coins := sdk.Coins{{Denom: pair.Denom, Amount: sdk.NewIntFromBigInt(tokens)}}
+  coins := sdk.Coins{{Denom: pair.Denom, Amount: math.NewIntFromBigInt(tokens)}}
 
   // Mint the coin only if ERC20 is external
   switch pair.ContractOwner {

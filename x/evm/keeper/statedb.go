@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
@@ -95,7 +95,7 @@ func (k *Keeper) SetBalance(ctx sdk.Context, addr common.Address, amount *big.In
 	switch delta.Sign() {
 	case 1:
 		// mint
-		coins := sdk.NewCoins(sdk.NewCoin(params.EvmDenom, sdkmath.NewIntFromBigInt(delta)))
+		coins := sdk.NewCoins(sdk.NewCoin(params.EvmDenom, math.NewIntFromBigInt(delta)))
 		if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins); err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (k *Keeper) SetBalance(ctx sdk.Context, addr common.Address, amount *big.In
 		}
 	case -1:
 		// burn
-		coins := sdk.NewCoins(sdk.NewCoin(params.EvmDenom, sdkmath.NewIntFromBigInt(new(big.Int).Neg(delta))))
+		coins := sdk.NewCoins(sdk.NewCoin(params.EvmDenom, math.NewIntFromBigInt(new(big.Int).Neg(delta))))
 		if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, cosmosAddr, types.ModuleName, coins); err != nil {
 			return err
 		}

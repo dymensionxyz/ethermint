@@ -2,9 +2,10 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
-	sdkmath "cosmossdk.io/math"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"math/big"
+
+	math "cosmossdk.io/math"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type ChainConfig struct {
@@ -19,8 +20,8 @@ type ChainConfig struct {
 
 type TestConfig struct {
 	SecondaryDenomUnits      []banktypes.DenomUnit
-	InitBalanceAmount        sdkmath.Int
-	DefaultFeeAmount         sdkmath.Int
+	InitBalanceAmount        math.Int
+	DefaultFeeAmount         math.Int
 	DisableTendermint        bool
 	DisabledContractCreation bool
 }

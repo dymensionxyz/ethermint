@@ -3,9 +3,10 @@ package integration_test_util
 //goland:noinspection SpellCheckingInspection
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
 	"encoding/hex"
+
+	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -40,7 +41,7 @@ func (suite *ChainIntegrationTestSuite) PrepareEthTx(
 	ethMsg.From = ""
 
 	txGasLimit += ethMsg.GetGas()
-	txFee = txFee.Add(sdk.Coin{Denom: suite.ChainConstantsConfig.GetMinDenom(), Amount: sdkmath.NewIntFromBigInt(ethMsg.GetFee())})
+	txFee = txFee.Add(sdk.Coin{Denom: suite.ChainConstantsConfig.GetMinDenom(), Amount: math.NewIntFromBigInt(ethMsg.GetFee())})
 
 	if err := txBuilder.SetMsgs(ethMsg); err != nil {
 		return nil, err
@@ -71,7 +72,7 @@ type CosmosTxArgs struct {
 	// Gas to be used on the tx
 	Gas uint64
 	// GasPrice to use on tx
-	GasPrice *sdkmath.Int
+	GasPrice *math.Int
 	// Fees is the fee to be used on the tx (amount and denom)
 	Fees sdk.Coins
 	// FeeGranter is the account address of the fee granter

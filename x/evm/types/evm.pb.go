@@ -117,7 +117,7 @@ func (m *Params) GetAllowUnprotectedTxs() bool {
 	return false
 }
 
-// ChainConfig defines the Ethereum ChainConfig parameters using *sdk.Int values
+// ChainConfig defines the Ethereum ChainConfig parameters using *math.Int values
 // instead of *big.Int.
 type ChainConfig struct {
 	// homestead_block switch (nil no fork, 0 = already homestead)

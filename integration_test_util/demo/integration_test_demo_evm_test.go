@@ -1,7 +1,7 @@
 package demo
 
 import (
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -46,7 +46,7 @@ func (suite *DemoTestSuite) Test_QC_Evm_Balance_At_Different_Blocks() {
 	suite.Equal(receiverBalanceBefore.String(), historicalReceiverBalanceAfter.String(), "mis-match sender balance at historical height")
 }
 
-func (suite *DemoTestSuite) queryEvmBalance(height int64, evmAddress string) sdkmath.Int {
+func (suite *DemoTestSuite) queryEvmBalance(height int64, evmAddress string) math.Int {
 	res, err := suite.CITS.QueryClientsAt(height).EVM.Balance(
 		rpctypes.ContextWithHeight(height),
 		&evmtypes.QueryBalanceRequest{
@@ -56,9 +56,9 @@ func (suite *DemoTestSuite) queryEvmBalance(height int64, evmAddress string) sdk
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	if res.Balance == "0" {
-		return sdkmath.ZeroInt()
+		return math.ZeroInt()
 	}
-	bal, ok := sdkmath.NewIntFromString(res.Balance)
+	bal, ok := math.NewIntFromString(res.Balance)
 	suite.Require().True(ok)
 	return bal
 }

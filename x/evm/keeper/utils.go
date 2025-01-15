@@ -23,7 +23,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -124,13 +124,13 @@ func VerifyFee(
 		return sdk.Coins{}, nil
 	}
 
-	return sdk.Coins{{Denom: denom, Amount: sdkmath.NewIntFromBigInt(feeAmt)}}, nil
+	return sdk.Coins{{Denom: denom, Amount: math.NewIntFromBigInt(feeAmt)}}, nil
 }
 
 // CheckSenderBalance validates that the tx cost value is positive and that the
 // sender has enough funds to pay for the fees and value of the transaction.
 func CheckSenderBalance(
-	balance sdkmath.Int,
+	balance math.Int,
 	txData types.TxData,
 ) error {
 	cost := txData.Cost()

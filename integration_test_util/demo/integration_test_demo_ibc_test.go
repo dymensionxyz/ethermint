@@ -4,7 +4,7 @@ package demo
 import (
 	"math"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -76,7 +76,7 @@ func (suite *DemoTestSuite) Test_Ibc_Transfer() {
 	}
 
 	denomUnit := fromChain.TestConfig.SecondaryDenomUnits[0]
-	intAmt := sdkmath.NewInt(1).Mul(sdkmath.NewInt(int64(math.Pow10(int(denomUnit.Exponent)))))
+	intAmt := math.NewInt(1).Mul(math.NewInt(int64(math.Pow10(int(denomUnit.Exponent)))))
 	transferCoin2 := sdk.NewCoin(denomUnit.Denom, intAmt)
 
 	fromChain.MintCoin(sender, transferCoin2)

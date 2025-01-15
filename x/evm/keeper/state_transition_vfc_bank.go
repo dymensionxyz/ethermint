@@ -241,7 +241,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		senderBalance := k.bankKeeper.GetBalance(ctx, sender.Bytes(), bankContractMetadata.MinDenom)
 
-		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, sdk.NewIntFromBigInt(amount))
+		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, math.NewIntFromBigInt(amount))
 		/*
 			The line above also checks if the amount is negative and if it has more than 256 bits.
 			But let's do explicitly check just for safety, prevent any future issue due to SDK change,

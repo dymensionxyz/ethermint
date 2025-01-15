@@ -2,9 +2,12 @@ package integration_test_util
 
 //goland:noinspection SpellCheckingInspection
 import (
-	sdkmath "cosmossdk.io/math"
 	_ "embed" // embed compiled smart contract
 	"encoding/json"
+	"math"
+	"math/big"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,8 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"math"
-	"math/big"
 )
 
 var (
@@ -439,8 +440,8 @@ func (suite *ChainIntegrationTestSuite) prepareMsgEthereumTx(ctx sdk.Context, se
 }
 
 // computeAmount computes the amount of token to transfer, based on the given amount and decimals.
-func computeAmount(amount uint16, decimals uint8) sdkmath.Int {
-	intDecimal := sdkmath.NewInt(int64(math.Pow10(int(decimals))))
-	intAmount := sdkmath.NewInt(int64(amount))
+func computeAmount(amount uint16, decimals uint8) math.Int {
+	intDecimal := math.NewInt(int64(math.Pow10(int(decimals))))
+	intAmount := math.NewInt(int64(amount))
 	return intAmount.Mul(intDecimal)
 }

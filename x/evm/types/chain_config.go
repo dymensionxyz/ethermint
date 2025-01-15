@@ -19,7 +19,7 @@ import (
 	"math/big"
 	"strings"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,7 +101,7 @@ func DefaultChainConfig() ChainConfig {
 	}
 }
 
-func getBlockValue(block *sdkmath.Int) *big.Int {
+func getBlockValue(block *math.Int) *big.Int {
 	if block == nil || block.IsNegative() {
 		return nil
 	}
@@ -181,7 +181,7 @@ func validateHash(hex string) error {
 	return nil
 }
 
-func validateBlock(block *sdkmath.Int) error {
+func validateBlock(block *math.Int) error {
 	// nil value means that the fork has not yet been applied
 	if block == nil {
 		return nil

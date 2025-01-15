@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -567,7 +567,7 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"contract deployment",
 			func() {
-				ctorArgs, err := types.ERC20Contract.ABI.Pack("", &suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				ctorArgs, err := types.ERC20Contract.ABI.Pack("", &suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Require().NoError(err)
 				data := append(types.ERC20Contract.Bin, ctorArgs...)
 				args = types.TransactionArgs{
@@ -583,7 +583,7 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"erc20 transfer",
 			func() {
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				contractAddr := suite.DeployTestContract(suite.T(), suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Commit()
 				transferData, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 				suite.Require().NoError(err)
@@ -643,7 +643,7 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"contract deployment w/ enableFeemarket",
 			func() {
-				ctorArgs, err := types.ERC20Contract.ABI.Pack("", &suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				ctorArgs, err := types.ERC20Contract.ABI.Pack("", &suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Require().NoError(err)
 				data := append(types.ERC20Contract.Bin, ctorArgs...)
 				args = types.TransactionArgs{
@@ -658,7 +658,7 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"erc20 transfer w/ enableFeemarket",
 			func() {
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				contractAddr := suite.DeployTestContract(suite.T(), suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Commit()
 				transferData, err := types.ERC20Contract.ABI.Pack("transfer", common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), big.NewInt(1000))
 				suite.Require().NoError(err)
@@ -671,7 +671,7 @@ func (suite *KeeperTestSuite) TestEstimateGas() {
 		{
 			"contract creation but 'create' param disabled",
 			func() {
-				ctorArgs, err := types.ERC20Contract.ABI.Pack("", &suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				ctorArgs, err := types.ERC20Contract.ABI.Pack("", &suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Require().NoError(err)
 				data := append(types.ERC20Contract.Bin, ctorArgs...)
 				args = types.TransactionArgs{
@@ -759,7 +759,7 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 		txMsg        *types.MsgEthereumTx
 		traceConfig  *types.TraceConfig
 		predecessors []*types.MsgEthereumTx
-		chainID      *sdkmath.Int
+		chainID      *math.Int
 	)
 
 	testCases := []struct {
@@ -839,11 +839,11 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 				vmdb.SetNonce(suite.address, vmdb.GetNonce(suite.address)+1)
 				suite.Require().NoError(vmdb.Commit())
 
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				contractAddr := suite.DeployTestContract(suite.T(), suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Commit()
 				// Generate token transfer transaction
-				firstTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-				txMsg = suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+				firstTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), math.NewIntWithDecimal(1, 18).BigInt())
+				txMsg = suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), math.NewIntWithDecimal(1, 18).BigInt())
 				suite.Commit()
 
 				predecessors = append(predecessors, firstTx)
@@ -927,7 +927,7 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 			malleate: func() {
 				traceConfig = nil
 				predecessors = []*types.MsgEthereumTx{}
-				tmp := sdkmath.NewInt(1)
+				tmp := math.NewInt(1)
 				chainID = &tmp
 			},
 			expPass: false,
@@ -939,10 +939,10 @@ func (suite *KeeperTestSuite) TestTraceTx() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.SetupTest()
 			// Deploy contract
-			contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+			contractAddr := suite.DeployTestContract(suite.T(), suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 			suite.Commit()
 			// Generate token transfer transaction
-			txMsg = suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+			txMsg = suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), math.NewIntWithDecimal(1, 18).BigInt())
 			suite.Commit()
 
 			tc.malleate()
@@ -985,7 +985,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 	var (
 		txs         []*types.MsgEthereumTx
 		traceConfig *types.TraceConfig
-		chainID     *sdkmath.Int
+		chainID     *math.Int
 	)
 
 	testCases := []struct {
@@ -1059,11 +1059,11 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 				vmdb.SetNonce(suite.address, vmdb.GetNonce(suite.address)+1)
 				suite.Require().NoError(vmdb.Commit())
 
-				contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+				contractAddr := suite.DeployTestContract(suite.T(), suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 				suite.Commit()
 				// create multiple transactions in the same block
-				firstTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
-				secondTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+				firstTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), math.NewIntWithDecimal(1, 18).BigInt())
+				secondTx := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), math.NewIntWithDecimal(1, 18).BigInt())
 				suite.Commit()
 				// overwrite txs to include only the ones on new block
 				txs = append([]*types.MsgEthereumTx{}, firstTx, secondTx)
@@ -1101,7 +1101,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 			msg: "invalid chain id",
 			malleate: func() {
 				traceConfig = nil
-				tmp := sdkmath.NewInt(1)
+				tmp := math.NewInt(1)
 				chainID = &tmp
 			},
 			expPass:       true,
@@ -1115,10 +1115,10 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 			suite.enableFeemarket = tc.enableFeemarket
 			suite.SetupTest()
 			// Deploy contract
-			contractAddr := suite.DeployTestContract(suite.T(), suite.address, sdkmath.NewIntWithDecimal(1000, 18).BigInt())
+			contractAddr := suite.DeployTestContract(suite.T(), suite.address, math.NewIntWithDecimal(1000, 18).BigInt())
 			suite.Commit()
 			// Generate token transfer transaction
-			txMsg := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), sdkmath.NewIntWithDecimal(1, 18).BigInt())
+			txMsg := suite.TransferERC20Token(suite.T(), contractAddr, suite.address, common.HexToAddress("0x378c50D9264C63F3F92B806d4ee56E9D86FfB3Ec"), math.NewIntWithDecimal(1, 18).BigInt())
 			suite.Commit()
 
 			txs = append(txs, txMsg)
@@ -1157,7 +1157,7 @@ func (suite *KeeperTestSuite) TestTraceBlock() {
 func (suite *KeeperTestSuite) TestNonceInQuery() {
 	address := tests.GenerateAddress()
 	suite.Require().Equal(uint64(0), suite.app.EvmKeeper.GetNonce(suite.ctx, address))
-	supply := sdkmath.NewIntWithDecimal(1000, 18).BigInt()
+	supply := math.NewIntWithDecimal(1000, 18).BigInt()
 
 	// accupy nonce 0
 	_ = suite.DeployTestContract(suite.T(), address, supply)
@@ -1190,7 +1190,7 @@ func (suite *KeeperTestSuite) TestNonceInQuery() {
 
 func (suite *KeeperTestSuite) TestQueryBaseFee() {
 	var (
-		aux    sdkmath.Int
+		aux    math.Int
 		expRes *types.QueryBaseFeeResponse
 	)
 
@@ -1204,7 +1204,7 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 		{
 			"pass - default Base Fee",
 			func() {
-				initialBaseFee := sdkmath.NewInt(ethparams.InitialBaseFee)
+				initialBaseFee := math.NewInt(ethparams.InitialBaseFee)
 				expRes = &types.QueryBaseFeeResponse{BaseFee: &initialBaseFee}
 			},
 			true, true, true,
@@ -1215,7 +1215,7 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 				baseFee := sdk.OneInt().BigInt()
 				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, baseFee)
 
-				aux = sdkmath.NewIntFromBigInt(baseFee)
+				aux = math.NewIntFromBigInt(baseFee)
 				expRes = &types.QueryBaseFeeResponse{BaseFee: &aux}
 			},
 			true, true, true,
@@ -1266,7 +1266,7 @@ func (suite *KeeperTestSuite) TestEthCall() {
 
 	address := tests.GenerateAddress()
 	suite.Require().Equal(uint64(0), suite.app.EvmKeeper.GetNonce(suite.ctx, address))
-	supply := sdkmath.NewIntWithDecimal(1000, 18).BigInt()
+	supply := math.NewIntWithDecimal(1000, 18).BigInt()
 
 	hexBigInt := hexutil.Big(*big.NewInt(1))
 	ctorArgs, err := types.ERC20Contract.ABI.Pack("", address, supply)

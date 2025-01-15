@@ -157,7 +157,7 @@ func (h BankSendHook) PostTxProcessing(ctx sdk.Context, txHash common.Hash, logs
     }
     contract := sdk.AccAddress(log.Address.Bytes())
     recipient := sdk.AccAddress(unpacked[0].(common.Address).Bytes())
-    coins := sdk.NewCoins(sdk.NewCoin(unpacked[2].(string), sdk.NewIntFromBigInt(unpacked[1].(*big.Int))))
+    coins := sdk.NewCoins(sdk.NewCoin(unpacked[2].(string), math.NewIntFromBigInt(unpacked[1].(*big.Int))))
     err = h.bankKeeper.SendCoins(ctx, contract, recipient, coins)
     if err != nil {
       return err

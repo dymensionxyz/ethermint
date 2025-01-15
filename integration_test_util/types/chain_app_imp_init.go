@@ -2,12 +2,15 @@ package types
 
 //goland:noinspection SpellCheckingInspection
 import (
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/params"
 	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
+	math "cosmossdk.io/math"
+	"cosmossdk.io/simapp"
+	"cosmossdk.io/simapp/params"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -32,8 +35,6 @@ import (
 	evmostypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-	"strings"
-	"time"
 )
 
 var defaultConsensusParams = &tmproto.ConsensusParams{
@@ -339,7 +340,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 		govGenesis = govv1types.DefaultGenesisState()
 		if govGenesis != nil {
 			govGenesis.Params.MinDeposit[0].Denom = chainCfg.BaseDenom
-			govGenesis.Params.MinDeposit[0].Amount = sdkmath.NewIntFromUint64(2)
+			govGenesis.Params.MinDeposit[0].Amount = math.NewIntFromUint64(2)
 			var votingPeriod time.Duration
 			if chainCfg.DisableTendermint {
 				votingPeriod = 30 * time.Minute

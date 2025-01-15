@@ -3,7 +3,8 @@ package types
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +42,7 @@ func (suite *ParamsTestSuite) TestParamsValidate() {
 		},
 		{
 			"invalid: min gas price negative",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecFromInt(sdkmath.NewInt(-1)), DefaultMinGasMultiplier),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecFromInt(math.NewInt(-1)), DefaultMinGasMultiplier),
 			true,
 		},
 		{
@@ -56,7 +57,7 @@ func (suite *ParamsTestSuite) TestParamsValidate() {
 		},
 		{
 			"invalid: min gas multiplier bigger than 1",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecWithPrec(20, 4), sdk.NewDec(2)),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecWithPrec(20, 4), math.LegacyNewDec(2)),
 			true,
 		},
 	}
@@ -82,13 +83,13 @@ func (suite *ParamsTestSuite) TestParamsValidatePriv() {
 	suite.Require().NoError(validateElasticityMultiplier(uint32(2)))
 	suite.Require().Error(validateBaseFee(""))
 	suite.Require().Error(validateBaseFee(int64(2000000000)))
-	suite.Require().Error(validateBaseFee(sdkmath.NewInt(-2000000000)))
-	suite.Require().NoError(validateBaseFee(sdkmath.NewInt(2000000000)))
+	suite.Require().Error(validateBaseFee(math.NewInt(-2000000000)))
+	suite.Require().NoError(validateBaseFee(math.NewInt(2000000000)))
 	suite.Require().Error(validateEnableHeight(""))
 	suite.Require().Error(validateEnableHeight(int64(-544435345345435345)))
 	suite.Require().NoError(validateEnableHeight(int64(544435345345435345)))
 	suite.Require().Error(validateMinGasPrice(sdk.Dec{}))
-	suite.Require().Error(validateMinGasMultiplier(sdk.NewDec(-5)))
+	suite.Require().Error(validateMinGasMultiplier(math.LegacyNewDec(-5)))
 	suite.Require().Error(validateMinGasMultiplier(sdk.Dec{}))
 	suite.Require().Error(validateMinGasMultiplier(""))
 }
@@ -100,13 +101,13 @@ func (suite *ParamsTestSuite) TestParamsValidateMinGasPrice() {
 		expError bool
 	}{
 		{"default", DefaultParams().MinGasPrice, false},
-		{"valid", sdk.NewDecFromInt(sdkmath.NewInt(1)), false},
+		{"valid", sdk.NewDecFromInt(math.NewInt(1)), false},
 		{"invalid - wrong type - bool", false, true},
 		{"invalid - wrong type - string", "", true},
 		{"invalid - wrong type - int64", int64(123), true},
-		{"invalid - wrong type - sdkmath.Int", sdkmath.NewInt(1), true},
+		{"invalid - wrong type - math.Int", math.NewInt(1), true},
 		{"invalid - is nil", nil, true},
-		{"invalid - is negative", sdk.NewDecFromInt(sdkmath.NewInt(-1)), true},
+		{"invalid - is negative", sdk.NewDecFromInt(math.NewInt(-1)), true},
 	}
 
 	for _, tc := range testCases {
