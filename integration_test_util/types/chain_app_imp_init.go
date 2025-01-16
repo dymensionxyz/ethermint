@@ -244,7 +244,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
+			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
 			MinSelfDelegation: sdk.OneInt(),
 		}
 		validators = append(validators, validator)

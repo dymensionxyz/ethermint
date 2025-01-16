@@ -27,9 +27,9 @@ var (
 
 var (
 	// DefaultMinGasMultiplier is 0.5 or 50%
-	DefaultMinGasMultiplier = sdk.NewDecWithPrec(50, 2)
+	DefaultMinGasMultiplier = math.LegacyNewDecWithPrec(50, 2)
 	// DefaultMinGasPrice is 0 (i.e disabled)
-	DefaultMinGasPrice  = sdk.ZeroDec()
+	DefaultMinGasPrice  = math.LegacyZeroDec()
 	DefaultEnableHeight = int64(0)
 	DefaultNoBaseFee    = false
 )
@@ -59,8 +59,8 @@ func NewParams(
 	elasticityMultiplier uint32,
 	baseFee uint64,
 	enableHeight int64,
-	minGasPrice sdk.Dec,
-	minGasPriceMultiplier sdk.Dec,
+	minGasPrice math.LegacyDec,
+	minGasPriceMultiplier math.LegacyDec,
 ) Params {
 	return Params{
 		NoBaseFee:                noBaseFee,

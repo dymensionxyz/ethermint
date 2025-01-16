@@ -2,7 +2,6 @@ package demo
 
 import (
 	math "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
@@ -23,7 +22,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance() {
 
 	balance, ok := math.NewIntFromString(res.Balance)
 	suite.Require().True(ok)
-	suite.True(balance.GT(sdk.ZeroInt()))
+	suite.True(balance.GT(math.ZeroInt()))
 	suite.Equal(suite.CITS.TestConfig.InitBalanceAmount, balance)
 }
 
@@ -41,7 +40,7 @@ func (suite *DemoTestSuite) Test_QC_Rpc_Balance_At_Different_Blocks() {
 	suite.Require().NotNil(res)
 	senderBalanceBefore, _ := math.NewIntFromString(res.Balance)
 
-	suite.Require().Truef(senderBalanceBefore.GT(sdk.ZeroInt()), "sender must have balance")
+	suite.Require().Truef(senderBalanceBefore.GT(math.ZeroInt()), "sender must have balance")
 
 	res, err = suite.CITS.QueryClients.Rpc.Balance(
 		rpctypes.ContextWithHeight(0),

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	math "cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	rpc "github.com/evmos/ethermint/rpc/types"
@@ -297,7 +298,7 @@ func (suite *BackendTestSuite) TestGlobalMinGasPrice() {
 				feeMarketCleint := suite.backend.queryClient.FeeMarket.(*mocks.FeeMarketQueryClient)
 				RegisterFeeMarketParamsError(feeMarketCleint, int64(1))
 			},
-			sdk.ZeroDec(),
+			math.LegacyZeroDec(),
 			false,
 		},
 	}

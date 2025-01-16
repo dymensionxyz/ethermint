@@ -44,7 +44,7 @@ var _ = Describe("Feemarket", func() {
 	Describe("Performing Cosmos transactions", func() {
 		Context("with min-gas-prices (local) < MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext("1", math.LegacyNewDec(3), sdk.ZeroInt())
+				privKey, msg = setupTestWithContext("1", math.LegacyNewDec(3), math.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -86,7 +86,7 @@ var _ = Describe("Feemarket", func() {
 
 		Context("with min-gas-prices (local) == MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext("3", math.LegacyNewDec(3), sdk.ZeroInt())
+				privKey, msg = setupTestWithContext("3", math.LegacyNewDec(3), math.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -446,7 +446,7 @@ var _ = Describe("Feemarket", func() {
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
-func setupTestWithContext(valMinGasPrice string, minGasPrice sdk.Dec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
 	privKey, msg := setupTest(valMinGasPrice + s.denom)
 	params := types.DefaultParams()
 	params.MinGasPrice = minGasPrice

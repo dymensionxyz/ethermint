@@ -19,6 +19,7 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
+	math "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -358,7 +359,7 @@ func (k Keeper) GetMinGasMultiplier(ctx sdk.Context) sdk.Dec {
 	fmkParmas := k.feeMarketKeeper.GetParams(ctx)
 	if fmkParmas.MinGasMultiplier.IsNil() {
 		// in case we are executing eth_call on a legacy block, returns a zero value.
-		return sdk.ZeroDec()
+		return math.LegacyZeroDec()
 	}
 	return fmkParmas.MinGasMultiplier
 }

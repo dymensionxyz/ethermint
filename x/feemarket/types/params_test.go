@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	math "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +26,7 @@ func (suite *ParamsTestSuite) TestParamsValidate() {
 		{"default", DefaultParams(), false},
 		{
 			"valid",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecWithPrec(20, 4), DefaultMinGasMultiplier),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), math.LegacyNewDecWithPrec(20, 4), DefaultMinGasMultiplier),
 			false,
 		},
 		{
@@ -37,27 +36,27 @@ func (suite *ParamsTestSuite) TestParamsValidate() {
 		},
 		{
 			"base fee change denominator is 0 ",
-			NewParams(true, 0, 3, 2000000000, int64(544435345345435345), sdk.NewDecWithPrec(20, 4), DefaultMinGasMultiplier),
+			NewParams(true, 0, 3, 2000000000, int64(544435345345435345), math.LegacyNewDecWithPrec(20, 4), DefaultMinGasMultiplier),
 			true,
 		},
 		{
 			"invalid: min gas price negative",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecFromInt(math.NewInt(-1)), DefaultMinGasMultiplier),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), math.LegacyNewDecFromInt(math.NewInt(-1)), DefaultMinGasMultiplier),
 			true,
 		},
 		{
 			"valid: min gas multiplier zero",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), DefaultMinGasPrice, sdk.ZeroDec()),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), DefaultMinGasPrice, math.LegacyZeroDec()),
 			false,
 		},
 		{
 			"invalid: min gas multiplier is negative",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), DefaultMinGasPrice, sdk.NewDecWithPrec(-5, 1)),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), DefaultMinGasPrice, math.LegacyNewDecWithPrec(-5, 1)),
 			true,
 		},
 		{
 			"invalid: min gas multiplier bigger than 1",
-			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), sdk.NewDecWithPrec(20, 4), math.LegacyNewDec(2)),
+			NewParams(true, 7, 3, 2000000000, int64(544435345345435345), math.LegacyNewDecWithPrec(20, 4), math.LegacyNewDec(2)),
 			true,
 		},
 	}
@@ -101,13 +100,13 @@ func (suite *ParamsTestSuite) TestParamsValidateMinGasPrice() {
 		expError bool
 	}{
 		{"default", DefaultParams().MinGasPrice, false},
-		{"valid", sdk.NewDecFromInt(math.NewInt(1)), false},
+		{"valid", math.LegacyNewDecFromInt(math.NewInt(1)), false},
 		{"invalid - wrong type - bool", false, true},
 		{"invalid - wrong type - string", "", true},
 		{"invalid - wrong type - int64", int64(123), true},
 		{"invalid - wrong type - math.Int", math.NewInt(1), true},
 		{"invalid - is nil", nil, true},
-		{"invalid - is negative", sdk.NewDecFromInt(math.NewInt(-1)), true},
+		{"invalid - is negative", math.LegacyNewDecFromInt(math.NewInt(-1)), true},
 	}
 
 	for _, tc := range testCases {

@@ -131,7 +131,7 @@ var _ = Describe("Feemarket", func() {
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
-func setupTestWithContext(valMinGasPrice string, minGasPrice sdk.Dec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
 	privKey, msg := setupTest(valMinGasPrice + s.denom)
 	params := types.DefaultParams()
 	params.MinGasPrice = minGasPrice

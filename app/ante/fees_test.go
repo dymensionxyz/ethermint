@@ -50,7 +50,7 @@ func (s AnteTestSuite) TestMinGasPriceDecorator() {
 			"valid cosmos tx with MinGasPrices = 0, gasPrice = 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 
 				txBuilder := s.CreateTestCosmosTxBuilder(math.NewInt(0), denom, &testMsg)
@@ -64,7 +64,7 @@ func (s AnteTestSuite) TestMinGasPriceDecorator() {
 			"valid cosmos tx with MinGasPrices = 0, gasPrice > 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 
 				txBuilder := s.CreateTestCosmosTxBuilder(math.NewInt(10), denom, &testMsg)
@@ -181,7 +181,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 			"valid: invalid tx type with MinGasPrices = 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 				return &invalidTx{}
 			},
@@ -192,7 +192,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 			"valid legacy tx with MinGasPrices = 0, gasPrice = 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 
 				msg := s.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(0), nil, nil, nil)
@@ -205,7 +205,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 			"valid legacy tx with MinGasPrices = 0, gasPrice > 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 
 				msg := s.BuildTestEthTx(from, to, nil, make([]byte, 0), big.NewInt(10), nil, nil, nil)
@@ -244,7 +244,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 			"valid dynamic tx with MinGasPrices = 0, EffectivePrice = 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 
 				msg := s.BuildTestEthTx(from, to, nil, make([]byte, 0), nil, big.NewInt(0), big.NewInt(0), &emptyAccessList)
@@ -257,7 +257,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 			"valid dynamic tx with MinGasPrices = 0, EffectivePrice > 0",
 			func() sdk.Tx {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
-				params.MinGasPrice = sdk.ZeroDec()
+				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 
 				msg := s.BuildTestEthTx(from, to, nil, make([]byte, 0), nil, big.NewInt(100), big.NewInt(50), &emptyAccessList)

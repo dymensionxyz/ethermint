@@ -17,7 +17,6 @@ package backend
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"

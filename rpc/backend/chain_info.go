@@ -18,9 +18,11 @@ package backend
 import (
 	"errors"
 	"fmt"
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	"math/big"
 	"strconv"
+
+	math "cosmossdk.io/math"
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,10 +67,10 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 }
 
 // GlobalMinGasPrice returns MinGasPrice param from FeeMarket
-func (b *Backend) GlobalMinGasPrice() (sdk.Dec, error) {
+func (b *Backend) GlobalMinGasPrice() (math.LegacyDec, error) {
 	res, err := b.queryClient.FeeMarket.Params(b.ctx, &feemarkettypes.QueryParamsRequest{})
 	if err != nil {
-		return sdk.ZeroDec(), err
+		return math.LegacyZeroDec(), err
 	}
 	return res.Params.MinGasPrice, nil
 }

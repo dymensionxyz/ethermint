@@ -24,7 +24,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			true,
 			0,
 			0,
-			sdk.ZeroDec(),
+			math.LegacyZeroDec(),
 			nil,
 		},
 		{
@@ -32,7 +32,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			false,
 			0,
 			0,
-			sdk.ZeroDec(),
+			math.LegacyZeroDec(),
 			suite.app.FeeMarketKeeper.GetParams(suite.ctx).BaseFee.BigInt(),
 		},
 		{
@@ -40,7 +40,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			false,
 			1,
 			50,
-			sdk.ZeroDec(),
+			math.LegacyZeroDec(),
 			suite.app.FeeMarketKeeper.GetParams(suite.ctx).BaseFee.BigInt(),
 		},
 		{
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			false,
 			1,
 			100,
-			sdk.ZeroDec(),
+			math.LegacyZeroDec(),
 			big.NewInt(1125000000),
 		},
 		{
@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestCalculateBaseFee() {
 			false,
 			1,
 			25,
-			sdk.ZeroDec(),
+			math.LegacyZeroDec(),
 			big.NewInt(937500000),
 		},
 		{
