@@ -21,6 +21,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/types/module"
+
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -29,7 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/evmos/ethermint/x/feemarket/client/cli"
@@ -119,15 +121,11 @@ type AppModule struct {
 	legacySubspace types.Subspace
 }
 
-// IsAppModule implements appmodule.AppModule.
-func (am AppModule) IsAppModule() {
-	panic("unimplemented")
-}
-
 // IsOnePerModuleType implements appmodule.AppModule.
-func (am AppModule) IsOnePerModuleType() {
-	panic("unimplemented")
-}
+func (am AppModule) IsOnePerModuleType() {}
+
+// IsAppModule implements appmodule.AppModule.
+func (am AppModule) IsAppModule() {}
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(k keeper.Keeper, ss types.Subspace) AppModule {
@@ -152,11 +150,6 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	types.RegisterMsgServer(cfg.MsgServer(), &am.keeper)
-
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
-		panic(err)
-	}
 }
 
 // BeginBlock returns the begin block for the fee market module.

@@ -18,6 +18,7 @@ package keeper
 import (
 	"math/big"
 
+	"cosmossdk.io/math"
 	"github.com/evmos/ethermint/x/feemarket/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -87,7 +88,7 @@ func (k Keeper) SetBaseFee(ctx sdk.Context, baseFee *big.Int) {
 }
 
 // GetMinGasPrice gets the min gas price from the store
-func (k Keeper) GetMinGasPrice(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetMinGasPrice(ctx sdk.Context) math.LegacyDec {
 	params := k.GetParams(ctx)
 	return params.MinGasPrice
 }

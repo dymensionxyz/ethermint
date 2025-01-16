@@ -5,8 +5,6 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type ParamsTestSuite struct {
@@ -87,9 +85,9 @@ func (suite *ParamsTestSuite) TestParamsValidatePriv() {
 	suite.Require().Error(validateEnableHeight(""))
 	suite.Require().Error(validateEnableHeight(int64(-544435345345435345)))
 	suite.Require().NoError(validateEnableHeight(int64(544435345345435345)))
-	suite.Require().Error(validateMinGasPrice(sdk.Dec{}))
+	suite.Require().Error(validateMinGasPrice(math.LegacyDec{}))
 	suite.Require().Error(validateMinGasMultiplier(math.LegacyNewDec(-5)))
-	suite.Require().Error(validateMinGasMultiplier(sdk.Dec{}))
+	suite.Require().Error(validateMinGasMultiplier(math.LegacyDec{}))
 	suite.Require().Error(validateMinGasMultiplier(""))
 }
 

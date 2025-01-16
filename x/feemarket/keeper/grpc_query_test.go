@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	math "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethparams "github.com/ethereum/go-ethereum/params"
 	"github.com/evmos/ethermint/x/feemarket/types"
 )
@@ -53,7 +52,7 @@ func (suite *KeeperTestSuite) TestQueryBaseFee() {
 		{
 			"pass - non-nil Base Fee",
 			func() {
-				baseFee := sdk.OneInt().BigInt()
+				baseFee := math.OneInt().BigInt()
 				suite.app.FeeMarketKeeper.SetBaseFee(suite.ctx, baseFee)
 
 				aux = math.NewIntFromBigInt(baseFee)

@@ -67,7 +67,7 @@ func (k *Keeper) EndBlock(ctx sdk.Context) {
 	// more info here https://github.com/evmos/ethermint/pull/1105#discussion_r888798925
 	minGasMultiplier := k.GetParams(ctx).MinGasMultiplier
 	limitedGasWanted := math.LegacyNewDec(int64(gasWanted)).Mul(minGasMultiplier)
-	gasWanted = sdk.MaxDec(limitedGasWanted, math.LegacyNewDec(int64(gasUsed))).TruncateInt().Uint64()
+	gasWanted = math.LegacyMaxDec(limitedGasWanted, math.LegacyNewDec(int64(gasUsed))).TruncateInt().Uint64()
 	k.SetBlockGasWanted(ctx, gasWanted)
 
 	defer func() {
