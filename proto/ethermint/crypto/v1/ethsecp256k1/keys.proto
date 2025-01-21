@@ -9,6 +9,8 @@ option go_package = "github.com/evmos/ethermint/crypto/ethsecp256k1";
 // Tendermint's PubKey interface. It represents the 33-byte compressed public
 // key format.
 message PubKey {
+  option (gogoproto.goproto_stringer) = false;
+
   // key is the public key in byte form
   bytes key = 1;
 }
