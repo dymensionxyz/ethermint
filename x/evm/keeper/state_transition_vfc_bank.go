@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -10,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	"math/big"
 )
 
 // evmCallVirtualFrontierBankContract handles EVM call to a virtual frontier bank contract.

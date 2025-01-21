@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"math/big"
 
-	math "cosmossdk.io/math"
+	protov2 "google.golang.org/protobuf/proto"
+
+	sdkmath "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -28,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -35,7 +38,6 @@ import (
 	"github.com/evmos/ethermint/types"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
@@ -54,6 +56,14 @@ const (
 	// TypeMsgEthereumTx defines the type string of an Ethereum transaction
 	TypeMsgEthereumTx = "ethereum_tx"
 )
+
+// FIXME:review
+/*
+var MsgEthereumTxCustomGetSigner = txsigning.CustomGetSigner{
+	MsgType: protov2.MessageName(&evmapi.MsgEthereumTx{}),
+	Fn:      evmapi.GetSigners,
+}
+*/
 
 // NewTx returns a reference to a new Ethereum transaction message.
 func NewTx(
@@ -82,7 +92,7 @@ func newMsgEthereumTx(
 	gasLimit uint64, gasPrice, gasFeeCap, gasTipCap *big.Int, input []byte, accesses *ethtypes.AccessList,
 ) *MsgEthereumTx {
 	var (
-		cid, amt, gp *math.Int
+		cid, amt, gp *sdkmath.Int
 		toAddr       string
 		txData       TxData
 	)
@@ -92,24 +102,24 @@ func newMsgEthereumTx(
 	}
 
 	if amount != nil {
-		amountInt := math.NewIntFromBigInt(amount)
+		amountInt := sdkmath.NewIntFromBigInt(amount)
 		amt = &amountInt
 	}
 
 	if chainID != nil {
-		chainIDInt := math.NewIntFromBigInt(chainID)
+		chainIDInt := sdkmath.NewIntFromBigInt(chainID)
 		cid = &chainIDInt
 	}
 
 	if gasPrice != nil {
-		gasPriceInt := math.NewIntFromBigInt(gasPrice)
+		gasPriceInt := sdkmath.NewIntFromBigInt(gasPrice)
 		gp = &gasPriceInt
 	}
 
 	switch {
 	case gasTipCap != nil && gasFeeCap != nil:
-		gasTipCap := math.NewIntFromBigInt(gasTipCap)
-		gasFeeCap := math.NewIntFromBigInt(gasFeeCap)
+		gasTipCap := sdkmath.NewIntFromBigInt(gasTipCap)
+		gasFeeCap := sdkmath.NewIntFromBigInt(gasFeeCap)
 
 		txData = &DynamicFeeTx{
 			ChainID:   cid,
@@ -230,32 +240,8 @@ func (msg *MsgEthereumTx) GetMsgs() []sdk.Msg {
 	return []sdk.Msg{msg}
 }
 
-// GetSigners returns the expected signers for an Ethereum transaction message.
-// For such a message, there should exist only a single 'signer'.
-//
-// NOTE: This method panics if 'Sign' hasn't been called first.
-func (msg *MsgEthereumTx) GetSigners() []sdk.AccAddress {
-	data, err := UnpackTxData(msg.Data)
-	if err != nil {
-		panic(err)
-	}
-
-	sender, err := msg.GetSender(data.GetChainID())
-	if err != nil {
-		panic(err)
-	}
-
-	signer := sdk.AccAddress(sender.Bytes())
-	return []sdk.AccAddress{signer}
-}
-
-// GetSignBytes returns the Amino bytes of an Ethereum transaction message used
-// for signing.
-//
-// NOTE: This method cannot be used as a chain ID is needed to create valid bytes
-// to sign over. Use 'RLPSignBytes' instead.
-func (msg MsgEthereumTx) GetSignBytes() []byte {
-	panic("must use 'RLPSignBytes' with a chain ID to get the valid bytes to sign")
+func (msg *MsgEthereumTx) GetMsgsV2() ([]protov2.Message, error) {
+	return nil, errors.New("not implemented")
 }
 
 // Sign calculates a secp256k1 ECDSA signature and signs the transaction. It
@@ -274,7 +260,8 @@ func (msg *MsgEthereumTx) Sign(ethSigner ethtypes.Signer, keyringSigner keyring.
 	tx := msg.AsTransaction()
 	txHash := ethSigner.Hash(tx)
 
-	sig, _, err := keyringSigner.SignByAddress(from, txHash.Bytes())
+	// FIXME: review the signibng mode
+	sig, _, err := keyringSigner.SignByAddress(from, txHash.Bytes(), signingtypes.SignMode_SIGN_MODE_TEXTUAL)
 	if err != nil {
 		return err
 	}
@@ -336,42 +323,53 @@ func (msg MsgEthereumTx) AsTransaction() *ethtypes.Transaction {
 
 // AsMessage creates an Ethereum core.Message from the msg fields
 func (msg MsgEthereumTx) AsMessage(signer ethtypes.Signer, baseFee *big.Int) (core.Message, error) {
-	txData, err := UnpackTxData(msg.Data)
-	if err != nil {
-		return nil, err
-	}
+	return msg.AsTransaction().AsMessage(signer, baseFee)
+	/*
+	   txData, err := UnpackTxData(msg.Data)
 
-	gasPrice, gasFeeCap, gasTipCap := txData.GetGasPrice(), txData.GetGasFeeCap(), txData.GetGasTipCap()
-	if baseFee != nil {
-		gasPrice = math.BigMin(gasPrice.Add(gasTipCap, baseFee), gasFeeCap)
-	}
-	var from common.Address
-	if len(msg.From) > 0 {
-		// user can't set arbitrary value in `From` field in transaction,
-		// the SigVerify ante handler will verify the signature and recover
-		// the sender address and populate the `From` field, so the other code can
-		// use it directly when available.
-		from = common.HexToAddress(msg.From)
-	} else {
-		// heavy path
-		from, err = signer.Sender(msg.AsTransaction())
-		if err != nil {
-			return nil, err
-		}
-	}
-	ethMsg := ethtypes.NewMessage(
-		from,
-		txData.GetTo(),
-		txData.GetNonce(),
-		txData.GetValue(),
-		txData.GetGas(),
-		gasPrice, gasFeeCap, gasTipCap,
-		txData.GetData(),
-		txData.GetAccessList(),
-		false,
-	)
+	   	if err != nil {
+	   		return nil, err
+	   	}
 
-	return ethMsg, nil
+	   gasPrice, gasFeeCap, gasTipCap := txData.GetGasPrice(), txData.GetGasFeeCap(), txData.GetGasTipCap()
+
+	   	if baseFee != nil {
+	   		gasPrice = ethmath.BigMin(gasPrice.Add(gasTipCap, baseFee), gasFeeCap)
+	   	}
+
+	   var from common.Address
+
+	   	if len(msg.From) > 0 {
+	   		// user can't set arbitrary value in `From` field in transaction,
+	   		// the SigVerify ante handler will verify the signature and recover
+	   		// the sender address and populate the `From` field, so the other code can
+	   		// use it directly when available.
+	   		from = common.HexToAddress(msg.From)
+	   	} else {
+
+	   		// heavy path
+	   		from, err = signer.Sender(msg.AsTransaction())
+	   		if err != nil {
+	   			return nil, err
+	   		}
+	   	}
+
+	   ethMsg := ethtypes.NewMessage(
+
+	   	from,
+	   	txData.GetTo(),
+	   	txData.GetNonce(),
+	   	txData.GetValue(),
+	   	txData.GetGas(),
+	   	gasPrice, gasFeeCap, gasTipCap,
+	   	txData.GetData(),
+	   	txData.GetAccessList(),
+	   	false,
+
+	   )
+
+	   return ethMsg, nil
+	*/
 }
 
 // GetSender extracts the sender address from the signature values using the latest signer for the given chainID.
@@ -416,10 +414,11 @@ func (msg *MsgEthereumTx) BuildTx(b client.TxBuilder, evmDenom string) (signing.
 	if err != nil {
 		return nil, err
 	}
-	fees := make(sdk.Coins, 0)
-	feeAmt := math.NewIntFromBigInt(txData.Fee())
+	fees := make(sdk.Coins, 0, 1)
+	feeAmt := sdkmath.NewIntFromBigInt(txData.Fee())
 	if feeAmt.Sign() > 0 {
 		fees = append(fees, sdk.NewCoin(evmDenom, feeAmt))
+		// fees = ConvertCoinsFrom18Decimals(fees)
 	}
 
 	builder.SetExtensionOptions(option)
@@ -437,13 +436,6 @@ func (msg *MsgEthereumTx) BuildTx(b client.TxBuilder, evmDenom string) (signing.
 	return tx, nil
 }
 
-// GetSigners returns the expected signers for a MsgUpdateParams message.
-func (m MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	//#nosec G703 -- gosec raises a warning about a non-handled error which we deliberately ignore here
-	addr, _ := sdk.AccAddressFromBech32(m.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 // ValidateBasic does a sanity check of the provided data
 func (m *MsgUpdateParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
@@ -451,9 +443,4 @@ func (m *MsgUpdateParams) ValidateBasic() error {
 	}
 
 	return m.Params.Validate()
-}
-
-// GetSignBytes implements the LegacyMsg interface.
-func (m MsgUpdateParams) GetSignBytes() []byte {
-	return sdk.MustSortJSON(AminoCdc.MustMarshalJSON(&m))
 }

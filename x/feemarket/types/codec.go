@@ -7,11 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-const (
-	// Amino names
-	updateParamsName = "ethermint/feemarket/MsgUpdateParams"
-)
-
 // RegisterInterfaces registers the client interfaces to protobuf Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
@@ -23,5 +18,5 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 
 // RegisterLegacyAminoCodec required for EIP-712
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgUpdateParams{}, updateParamsName, nil)
+	cdc.RegisterConcrete(&MsgUpdateParams{}, "ethermint/feemarket/MsgUpdateParams", nil)
 }

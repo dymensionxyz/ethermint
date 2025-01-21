@@ -2,10 +2,10 @@ package types
 
 import (
 	"fmt"
-	govcdc "github.com/cosmos/cosmos-sdk/x/gov/codec"
+	"strings"
+
 	v1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/ethereum/go-ethereum/common"
-	"strings"
 )
 
 // constants
@@ -17,11 +17,6 @@ const (
 var (
 	_ v1beta1.Content = &UpdateVirtualFrontierBankContractsProposal{}
 )
-
-func init() {
-	v1beta1.RegisterProposalType(ProposalTypeUpdateVirtualFrontierBankContractsProposal)
-	govcdc.ModuleCdc.Amino.RegisterConcrete(&UpdateVirtualFrontierBankContractsProposal{}, "evm/UpdateVirtualFrontierBankContractsProposal", nil)
-}
 
 // NewUpdateVirtualFrontierBankContractsProposal returns new instance of UpdateVirtualFrontierBankContractsProposal
 func NewUpdateVirtualFrontierBankContractsProposal(title, description string, contracts ...VirtualFrontierBankContractProposalContent) v1beta1.Content {
