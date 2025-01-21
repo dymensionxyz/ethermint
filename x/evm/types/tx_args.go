@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"math/big"
 
-	math "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/common/math"
+	ethmath "github.com/ethereum/go-ethereum/common/math"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -181,7 +181,7 @@ func (args *TransactionArgs) ToMessage(globalGasCap uint64, baseFee *big.Int) (e
 	// Set default gas & gas price if none were set
 	gas := globalGasCap
 	if gas == 0 {
-		gas = uint64(math.MaxUint64 / 2)
+		gas = uint64(ethmath.MaxUint64 / 2)
 	}
 	if args.Gas != nil {
 		gas = uint64(*args.Gas)
@@ -220,7 +220,7 @@ func (args *TransactionArgs) ToMessage(globalGasCap uint64, baseFee *big.Int) (e
 			// Backfill the legacy gasPrice for EVM execution, unless we're all zeroes
 			gasPrice = new(big.Int)
 			if gasFeeCap.BitLen() > 0 || gasTipCap.BitLen() > 0 {
-				gasPrice = math.BigMin(new(big.Int).Add(gasTipCap, baseFee), gasFeeCap)
+				gasPrice = ethmath.BigMin(new(big.Int).Add(gasTipCap, baseFee), gasFeeCap)
 			}
 		}
 	}

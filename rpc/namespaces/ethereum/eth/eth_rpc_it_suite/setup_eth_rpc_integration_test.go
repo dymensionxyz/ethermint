@@ -3,7 +3,7 @@ package demo
 //goland:noinspection SpellCheckingInspection
 import (
 	"encoding/json"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"

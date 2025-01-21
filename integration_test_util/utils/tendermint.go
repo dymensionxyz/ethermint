@@ -7,7 +7,7 @@ import (
 	cdb "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	nm "github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"

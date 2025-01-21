@@ -19,11 +19,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"cosmossdk.io/core/appmodule"
 	"github.com/gorilla/mux"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -38,8 +39,15 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic = AppModule{}
+	// _ module.AppModuleSimulation = AppModule{}
+	_ module.HasGenesis    = AppModule{}
+	_ module.HasServices   = AppModule{}
+	_ module.HasInvariants = AppModule{}
+
+	_ appmodule.AppModule       = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.HasEndBlocker   = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the evm module.
@@ -114,6 +122,12 @@ type AppModule struct {
 	legacySubspace types.Subspace
 }
 
+// IsAppModule implements appmodule.AppModule.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType implements appmodule.AppModule.
+func (am AppModule) IsOnePerModuleType() {}
+
 // NewAppModule creates a new AppModule object
 func NewAppModule(k *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, ss types.Subspace) AppModule {
 	return AppModule{
@@ -140,36 +154,28 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-
-	m := keeper.NewMigrator(*am.keeper, am.legacySubspace)
-	err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4)
-	if err != nil {
-		panic(err)
-	}
-
-	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
-		panic(err)
-	}
 }
 
 // BeginBlock returns the begin block for the evm module.
-func (am AppModule) BeginBlock(ctx sdk.Context, req abci.RequestBeginBlock) {
-	am.keeper.BeginBlock(ctx, req)
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	goCtx := sdk.UnwrapSDKContext(ctx)
+	am.keeper.BeginBlock(goCtx)
+	return nil
 }
 
-// EndBlock returns the end blocker for the evm module. It returns no validator
-// updates.
-func (am AppModule) EndBlock(ctx sdk.Context, req abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return am.keeper.EndBlock(ctx, req)
+// EndBlock returns the end blocker for the evm
+func (am AppModule) EndBlock(ctx context.Context) error {
+	goCtx := sdk.UnwrapSDKContext(ctx)
+	am.keeper.EndBlock(goCtx)
+	return nil
 }
 
 // InitGenesis performs genesis initialization for the evm module. It returns
 // no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
 	var genesisState types.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	InitGenesis(ctx, am.keeper, am.ak, am.bk, genesisState)
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the evm
@@ -177,15 +183,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs := ExportGenesis(ctx, am.keeper, am.ak)
 	return cdc.MustMarshalJSON(gs)
-}
-
-// RegisterStoreDecoder registers a decoder for evm module's types
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
 }
 
 // GenerateGenesisState creates a randomized GenState of the evm module.

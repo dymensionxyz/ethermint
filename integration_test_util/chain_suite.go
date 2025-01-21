@@ -17,7 +17,7 @@ import (
 	"cosmossdk.io/simapp/params"
 	tdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
 	httpclient "github.com/cometbft/cometbft/rpc/client/http"
