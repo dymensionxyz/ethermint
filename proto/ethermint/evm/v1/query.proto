@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "ethermint/evm/v1/evm.proto";
 import "ethermint/evm/v1/tx.proto";
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -76,22 +77,27 @@ service Query {
   }
 
   // ListVirtualFrontierContracts returns Json array of information of virtual frontier contracts.
-  rpc ListVirtualFrontierContracts(QueryVirtualFrontierContractsRequest) returns (QueryVirtualFrontierContractsResponse) {
+  rpc ListVirtualFrontierContracts(QueryVirtualFrontierContractsRequest)
+      returns (QueryVirtualFrontierContractsResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts";
   }
 
-  // VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by address
-  rpc VirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest) returns (QueryVirtualFrontierContractByAddressResponse) {
+  // VirtualFrontierContractByAddress returns Json of information of the corresponding virtual frontier contract by
+  // address
+  rpc VirtualFrontierContractByAddress(QueryVirtualFrontierContractByAddressRequest)
+      returns (QueryVirtualFrontierContractByAddressResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_contracts/{address}";
   }
 
   // VirtualFrontierBankContractByDenom returns the bank contract of the corresponding min denom
-  rpc VirtualFrontierBankContractByDenom(QueryVirtualFrontierBankContractByDenomRequest) returns (QueryVirtualFrontierBankContractByDenomResponse) {
+  rpc VirtualFrontierBankContractByDenom(QueryVirtualFrontierBankContractByDenomRequest)
+      returns (QueryVirtualFrontierBankContractByDenomResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contract/by_denom/{min_denom}";
   }
 
   // ListVirtualFrontierBankContracts returns the list of bank contract
-  rpc ListVirtualFrontierBankContracts(QueryVirtualFrontierBankContractsRequest) returns (QueryVirtualFrontierBankContractsResponse) {
+  rpc ListVirtualFrontierBankContracts(QueryVirtualFrontierBankContractsRequest)
+      returns (QueryVirtualFrontierBankContractsResponse) {
     option (google.api.http).get = "/ethermint/evm/v1/virtual_frontier_bank_contracts";
   }
 }
@@ -314,7 +320,7 @@ message QueryBaseFeeRequest {}
 // QueryBaseFeeResponse returns the EIP1559 base fee.
 message QueryBaseFeeResponse {
   // base_fee is the EIP1559 base fee
-  string base_fee = 1 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"];
+  string base_fee = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int"];
 }
 
 // QueryVirtualFrontierContractsRequest defines the request for querying virtual frontier contract list
@@ -331,7 +337,8 @@ message QueryVirtualFrontierContractsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryVirtualFrontierBankContractByDenomRequest defines the request for querying virtual frontier bank contract by it min denom
+// QueryVirtualFrontierBankContractByDenomRequest defines the request for querying virtual frontier bank contract by it
+// min denom
 message QueryVirtualFrontierBankContractByDenomRequest {
   string min_denom = 1;
 }
