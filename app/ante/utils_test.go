@@ -3,7 +3,6 @@ package ante_test
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/big"
 	"time"
 
