@@ -2,9 +2,11 @@ package ante_test
 
 import (
 	"fmt"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"math/big"
 	"time"
+
+	"cosmossdk.io/math"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -409,7 +411,7 @@ func createMsgSend(testAddresses []sdk.AccAddress) *banktypes.MsgSend {
 	return banktypes.NewMsgSend(
 		testAddresses[0],
 		testAddresses[3],
-		sdk.NewCoins(math.NewInt64Coin(evmtypes.DefaultEVMDenom, 1e8)),
+		sdk.NewCoins(sdk.NewInt64Coin(evmtypes.DefaultEVMDenom, 1e8)),
 	)
 }
 

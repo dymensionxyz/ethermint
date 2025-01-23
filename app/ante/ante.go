@@ -19,7 +19,8 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	tmlog "cosmossdk.io/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
@@ -89,7 +90,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}, nil
 }
 
-func Recover(logger tmlog.Logger, err *error) {
+func Recover(logger log.Logger, err *error) {
 	if r := recover(); r != nil {
 		*err = errorsmod.Wrapf(errortypes.ErrPanic, "%v", r)
 
