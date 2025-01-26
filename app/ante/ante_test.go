@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
 
@@ -1385,11 +1386,11 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 		gasConsumed uint64
 		shouldErr   bool
 	}{
-		{"PubKeyEd25519", args{sdk.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
-		{"PubKeyEthSecp256k1", args{sdk.NewInfiniteGasMeter(), nil, pkSet1[0], params}, 21_000, false},
-		{"PubKeySecp256r1", args{sdk.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
-		{"Multisig", args{sdk.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
-		{"unknown key", args{sdk.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
+		{"PubKeyEd25519", args{storetypes.NewInfiniteGasMeter(), nil, ed25519.GenPrivKey().PubKey(), params}, p.SigVerifyCostED25519, true},
+		{"PubKeyEthSecp256k1", args{storetypes.NewInfiniteGasMeter(), nil, pkSet1[0], params}, 21_000, false},
+		{"PubKeySecp256r1", args{storetypes.NewInfiniteGasMeter(), nil, skR1.PubKey(), params}, p.SigVerifyCostSecp256r1(), false},
+		{"Multisig", args{storetypes.NewInfiniteGasMeter(), multisignature1, multisigKey1, params}, expectedCost1, false},
+		{"unknown key", args{storetypes.NewInfiniteGasMeter(), nil, nil, params}, 0, true},
 	}
 	for _, tt := range tests {
 		sigV2 := signing.SignatureV2{

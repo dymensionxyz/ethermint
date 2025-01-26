@@ -16,7 +16,6 @@
 package ante
 
 import (
-	"math"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
