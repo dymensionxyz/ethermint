@@ -20,7 +20,7 @@ import (
 	"math"
 
 	errorsmod "cosmossdk.io/errors"
-	math "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
@@ -60,7 +60,7 @@ func NewDynamicFeeChecker(k DynamicFeeEVMKeeper) authante.TxFeeChecker {
 		}
 
 		// default to `MaxInt64` when there's no extension option.
-		maxPriorityPrice := math.NewInt(math.MaxInt64)
+		maxPriorityPrice := sdkmath.NewInt(math.MaxInt64)
 
 		// get the priority tip cap from the extension option.
 		if hasExtOptsTx, ok := tx.(authante.HasExtensionOptionsTx); ok {
@@ -76,21 +76,21 @@ func NewDynamicFeeChecker(k DynamicFeeEVMKeeper) authante.TxFeeChecker {
 		feeCoins := feeTx.GetFee()
 		fee := feeCoins.AmountOfNoDenomValidation(denom)
 
-		feeCap := fee.Quo(math.NewIntFromUint64(gas))
-		baseFeeInt := math.NewIntFromBigInt(baseFee)
+		feeCap := fee.Quo(sdkmath.NewIntFromUint64(gas))
+		baseFeeInt := sdkmath.NewIntFromBigInt(baseFee)
 
 		if feeCap.LT(baseFeeInt) {
 			return nil, 0, errorsmod.Wrapf(errortypes.ErrInsufficientFee, "insufficient gas prices; got: %s required: %s", feeCap, baseFeeInt)
 		}
 
 		// calculate the effective gas price using the EIP-1559 logic.
-		effectivePrice := math.NewIntFromBigInt(types.EffectiveGasPrice(baseFeeInt.BigInt(), feeCap.BigInt(), maxPriorityPrice.BigInt()))
+		effectivePrice := sdkmath.NewIntFromBigInt(types.EffectiveGasPrice(baseFeeInt.BigInt(), feeCap.BigInt(), maxPriorityPrice.BigInt()))
 
 		// NOTE: create a new coins slice without having to validate the denom
 		effectiveFee := sdk.Coins{
 			{
 				Denom:  denom,
-				Amount: effectivePrice.Mul(math.NewIntFromUint64(gas)),
+				Amount: effectivePrice.Mul(sdkmath.NewIntFromUint64(gas)),
 			},
 		}
 
@@ -120,7 +120,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.FeeTx) (sdk.Coi
 
 		// Determine the required fees by multiplying each required minimum gas
 		// price by the gas limit, where fee = ceil(minGasPrice * gasLimit).
-		glDec := math.LegacyNewDec(int64(gas))
+		glDec := sdkmath.LegacyNewDec(int64(gas))
 
 		for i, gp := range minGasPrices {
 			fee := gp.Amount.Mul(glDec)

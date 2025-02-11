@@ -8,6 +8,7 @@ import (
 
 	math "cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
+	protov2 "google.golang.org/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -701,9 +702,15 @@ func NextFn(ctx sdk.Context, _ sdk.Tx, _ bool) (sdk.Context, error) {
 	return ctx, nil
 }
 
-var _ sdk.Tx = &invalidTx{}
+var _ sdk.Tx = &InvalidTx{}
 
-type invalidTx struct{}
+// InvalidTx defines a type, which satisfies the sdk.Tx interface, but
+// holds no valid transaction information.
+//
+// NOTE: This is used for testing purposes, to serve the edge case of invalid data being passed to functions.
+type InvalidTx struct{}
 
-func (invalidTx) GetMsgs() []sdk.Msg   { return []sdk.Msg{nil} }
-func (invalidTx) ValidateBasic() error { return nil }
+func (InvalidTx) GetMsgs() []sdk.Msg                    { return nil }
+func (InvalidTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+
+func (InvalidTx) ValidateBasic() error { return nil }

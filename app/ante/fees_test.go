@@ -40,7 +40,7 @@ func (s AnteTestSuite) TestMinGasPriceDecorator() {
 		{
 			"invalid cosmos tx type",
 			func() sdk.Tx {
-				return &invalidTx{}
+				return &InvalidTx{}
 			},
 			false,
 			"invalid transaction type",
@@ -155,7 +155,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
 				params.MinGasPrice = math.LegacyNewDec(10)
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
-				return &invalidTx{}
+				return &InvalidTx{}
 			},
 			false,
 			"invalid message type",
@@ -183,7 +183,7 @@ func (s AnteTestSuite) TestEthMinGasPriceDecorator() {
 				params := s.app.FeeMarketKeeper.GetParams(s.ctx)
 				params.MinGasPrice = math.LegacyZeroDec()
 				s.app.FeeMarketKeeper.SetParams(s.ctx, params)
-				return &invalidTx{}
+				return &InvalidTx{}
 			},
 			true,
 			"",
