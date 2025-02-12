@@ -12,6 +12,7 @@ option go_package = "github.com/evmos/ethermint/x/evm/types";
 
 // Msg defines the evm Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // EthereumTx defines a method submitting Ethereum transactions.
   rpc EthereumTx(MsgEthereumTx) returns (MsgEthereumTxResponse) {
     option (google.api.http).post = "/ethermint/evm/v1/ethereum_tx";

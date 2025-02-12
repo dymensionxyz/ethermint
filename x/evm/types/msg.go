@@ -260,7 +260,6 @@ func (msg *MsgEthereumTx) Sign(ethSigner ethtypes.Signer, keyringSigner keyring.
 	tx := msg.AsTransaction()
 	txHash := ethSigner.Hash(tx)
 
-	// FIXME: review the signibng mode
 	sig, _, err := keyringSigner.SignByAddress(from, txHash.Bytes(), signingtypes.SignMode_SIGN_MODE_TEXTUAL)
 	if err != nil {
 		return err
@@ -324,52 +323,6 @@ func (msg MsgEthereumTx) AsTransaction() *ethtypes.Transaction {
 // AsMessage creates an Ethereum core.Message from the msg fields
 func (msg MsgEthereumTx) AsMessage(signer ethtypes.Signer, baseFee *big.Int) (core.Message, error) {
 	return msg.AsTransaction().AsMessage(signer, baseFee)
-	/*
-	   txData, err := UnpackTxData(msg.Data)
-
-	   	if err != nil {
-	   		return nil, err
-	   	}
-
-	   gasPrice, gasFeeCap, gasTipCap := txData.GetGasPrice(), txData.GetGasFeeCap(), txData.GetGasTipCap()
-
-	   	if baseFee != nil {
-	   		gasPrice = ethmath.BigMin(gasPrice.Add(gasTipCap, baseFee), gasFeeCap)
-	   	}
-
-	   var from common.Address
-
-	   	if len(msg.From) > 0 {
-	   		// user can't set arbitrary value in `From` field in transaction,
-	   		// the SigVerify ante handler will verify the signature and recover
-	   		// the sender address and populate the `From` field, so the other code can
-	   		// use it directly when available.
-	   		from = common.HexToAddress(msg.From)
-	   	} else {
-
-	   		// heavy path
-	   		from, err = signer.Sender(msg.AsTransaction())
-	   		if err != nil {
-	   			return nil, err
-	   		}
-	   	}
-
-	   ethMsg := ethtypes.NewMessage(
-
-	   	from,
-	   	txData.GetTo(),
-	   	txData.GetNonce(),
-	   	txData.GetValue(),
-	   	txData.GetGas(),
-	   	gasPrice, gasFeeCap, gasTipCap,
-	   	txData.GetData(),
-	   	txData.GetAccessList(),
-	   	false,
-
-	   )
-
-	   return ethMsg, nil
-	*/
 }
 
 // GetSender extracts the sender address from the signature values using the latest signer for the given chainID.
@@ -384,7 +337,7 @@ func (msg *MsgEthereumTx) GetSender(chainID *big.Int) (common.Address, error) {
 	return from, nil
 }
 
-// UnpackInterfaces implements UnpackInterfacesMesssage.UnpackInterfaces
+// UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (msg MsgEthereumTx) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(msg.Data, new(TxData))
 }
