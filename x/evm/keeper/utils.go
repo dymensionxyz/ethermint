@@ -39,20 +39,11 @@ func (k Keeper) GetCoinbaseAddress(ctx sdk.Context, proposerAddress sdk.ConsAddr
 	if err != nil {
 		return common.Address{}, errorsmod.Wrapf(
 			errors.Join(err, stakingtypes.ErrNoValidatorFound),
-			"failed to retrieve validator from block proposer address %s: %w",
+			"failed to retrieve validator from block proposer address %s",
 			proposerAddress.String(),
 		)
 	}
-
-	addr, err := sdk.AccAddressFromBech32(validator.GetOperator())
-	if err != nil {
-		return common.Address{}, errorsmod.Wrapf(
-			err,
-			"failed to convert validator operator address %s: %w",
-			validator.GetOperator(),
-		)
-	}
-	coinbase := common.BytesToAddress(addr.Bytes())
+	coinbase := common.BytesToAddress([]byte(validator.GetOperator()))
 	return coinbase, nil
 }
 
