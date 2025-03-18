@@ -31,7 +31,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// FIXME: need those global variables???
 var (
 	protoCodec codec.ProtoCodecMarshaler
 	aminoCodec *codec.LegacyAmino
