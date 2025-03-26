@@ -1,7 +1,10 @@
 package vfc_it_suite_test
 
 import (
+	"math/big"
+
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -12,7 +15,6 @@ import (
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	"github.com/evmos/ethermint/testutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"math/big"
 )
 
 func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {

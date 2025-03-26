@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	math "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -958,7 +958,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig_VFC_Ops() {
 
 			// minting
 
-			coins := sdk.NewCoins(sdk.NewCoin(suite.denom, math.NewIntFromBigInt(vfbcSenderInitialBalance)))
+			coins := sdk.NewCoins(sdk.NewCoin(suite.denom, sdkmath.NewIntFromBigInt(vfbcSenderInitialBalance)))
 			suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 			suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
 

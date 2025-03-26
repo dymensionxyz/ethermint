@@ -1,18 +1,13 @@
 package keeper_test
 
 import (
-	"encoding/json"
 	"math/big"
 	"strings"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	"cosmossdk.io/math"
-	math "cosmossdk.io/math"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,20 +16,18 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/tests"
 	"github.com/evmos/ethermint/testutil"
 	"github.com/evmos/ethermint/x/feemarket/types"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"cosmossdk.io/log"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
+var s *KeeperTestSuite
 var _ = Describe("Feemarket", func() {
 	var (
 		privKey *ethsecp256k1.PrivKey
@@ -447,18 +440,13 @@ var _ = Describe("Feemarket", func() {
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
 func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+	s = new(KeeperTestSuite)
+
+	s.app = testutil.Setup(false, nil)
+
 	privKey, msg := setupTest(valMinGasPrice + s.denom)
-	params := types.DefaultParams()
-	params.MinGasPrice = minGasPrice
-	s.app.FeeMarketKeeper.SetParams(s.ctx, params)
-	s.app.FeeMarketKeeper.SetBaseFee(s.ctx, baseFee.BigInt())
-	s.Commit()
 
-	return privKey, msg
-}
-
-func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
-	setupChain(localMinGasPrices)
+	// baseapp.SetMinGasPrices(localMinGasPricesStr),
 
 	privKey, address := generateKey()
 	amount, ok := math.NewIntFromString("10000000000000000000")
@@ -477,46 +465,14 @@ func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSe
 			Amount: math.NewInt(10000),
 		}},
 	}
+
+	params := types.DefaultParams()
+	params.MinGasPrice = minGasPrice
+	s.app.FeeMarketKeeper.SetParams(s.ctx, params)
+	s.app.FeeMarketKeeper.SetBaseFee(s.ctx, baseFee.BigInt())
 	s.Commit()
+
 	return privKey, msg
-}
-
-func setupChain(localMinGasPricesStr string) {
-	// Initialize the app, so we can use SetMinGasPrices to set the
-	// validator-specific min-gas-prices setting
-	db := dbm.NewMemDB()
-	newapp := app.NewEthermintApp(
-		log.NewNopLogger(),
-		db,
-		nil,
-		true,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		5,
-		encoding.MakeConfig(app.ModuleBasics),
-		simtestutil.EmptyAppOptions{},
-		baseapp.SetMinGasPrices(localMinGasPricesStr),
-		baseapp.SetChainID("ethermint_9000-1"),
-	)
-
-	genesisState := app.NewTestGenesisState(newapp.AppCodec())
-	genesisState[types.ModuleName] = newapp.AppCodec().MustMarshalJSON(types.DefaultGenesisState())
-
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
-	s.Require().NoError(err)
-
-	// Initialize the chain
-	newapp.InitChain(
-		abci.RequestInitChain{
-			ChainId:         "ethermint_9000-1",
-			Validators:      []abci.ValidatorUpdate{},
-			AppStateBytes:   stateBytes,
-			ConsensusParams: app.DefaultConsensusParams,
-		},
-	)
-
-	s.app = newapp
-	s.SetupApp(false)
 }
 
 func generateKey() (*ethsecp256k1.PrivKey, sdk.AccAddress) {
@@ -561,7 +517,7 @@ func buildEthTx(
 }
 
 func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	s.Require().NoError(err)
 
@@ -570,7 +526,7 @@ func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 	s.Require().True(ok)
 	builder.SetExtensionOptions(option)
 
-	err = msgEthereumTx.Sign(s.ethSigner, tests.NewSigner(priv))
+	err = msgEthereumTx.Sign(s.ethSigner, txutils.NewSigner(priv))
 	s.Require().NoError(err)
 
 	msgEthereumTx.From = ""
@@ -599,7 +555,7 @@ func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumT
 	return res
 }
 
-func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ResponseDeliverTx {
+func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ExecTxResult {
 	bz := prepareEthTx(priv, msgEthereumTx)
 	req := abci.RequestDeliverTx{Tx: bz}
 	res := s.app.BaseApp.DeliverTx(req)
@@ -607,7 +563,7 @@ func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 }
 
 func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) []byte {
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	accountAddress := sdk.AccAddress(priv.PubKey().Address().Bytes())
 
 	txBuilder := encodingConfig.TxConfig.NewTxBuilder()
@@ -672,7 +628,7 @@ func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) ab
 	return res
 }
 
-func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) abci.ResponseDeliverTx {
+func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) abci.ExecTxResult {
 	bz := prepareCosmosTx(priv, gasPrice, msgs...)
 	req := abci.RequestDeliverTx{Tx: bz}
 	res := s.app.BaseApp.DeliverTx(req)

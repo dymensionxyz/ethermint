@@ -67,7 +67,7 @@ func (suite *KeeperTestSuite) TestEvmHooks() {
 		ctx := suite.ctx
 		txHash := common.BigToHash(big.NewInt(1))
 		vmdb := statedb.New(ctx, k, statedb.NewTxConfig(
-			common.BytesToHash(ctx.HeaderHash().Bytes()),
+			common.BytesToHash(ctx.HeaderHash()),
 			txHash,
 			0,
 			0,

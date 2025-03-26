@@ -5,7 +5,8 @@ import (
 	"math"
 	"math/big"
 
-	math "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/evmos/ethermint/utils"
 
@@ -149,8 +150,8 @@ func (suite *KeeperTestSuite) TestGetCoinbaseAddress() {
 				header.ProposerAddress = valConsAddr.Bytes()
 				suite.ctx = suite.ctx.WithBlockHeader(header)
 
-				_, found := suite.app.StakingKeeper.GetValidatorByConsAddr(suite.ctx, valConsAddr.Bytes())
-				suite.Require().True(found)
+				_, err = suite.app.StakingKeeper.GetValidatorByConsAddr(suite.ctx, valConsAddr.Bytes())
+				suite.NoError(err)
 
 				suite.Require().NotEmpty(suite.ctx.BlockHeader().ProposerAddress)
 			},
@@ -504,7 +505,7 @@ func (suite *KeeperTestSuite) TestResetGasMeterAndConsumeGas() {
 			suite.SetupTest() // reset
 
 			panicF := func() {
-				gm := sdk.NewGasMeter(10)
+				gm := storetypes.NewGasMeter(10)
 				gm.ConsumeGas(tc.gasConsumed, "")
 				ctx := suite.ctx.WithGasMeter(gm)
 				suite.app.EvmKeeper.ResetGasMeterAndConsumeGas(ctx, tc.gasUsed)
@@ -590,7 +591,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 	vfbcTransferAmount := new(big.Int).Mul(big.NewInt(8), big.NewInt(int64(math.Pow(10, 18)))) // 8 * 10^18
 	vfbcSenderInitialBalance := new(big.Int).SetUint64(math.MaxUint64)
 
-	mintToVFBCSender := func(amount math.Int) {
+	mintToVFBCSender := func(amount sdkmath.Int) {
 		coins := sdk.NewCoins(sdk.NewCoin(suite.denom, amount))
 		suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 		suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
@@ -673,7 +674,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 				)
 				suite.Require().NoError(err)
 				params := suite.app.FeeMarketKeeper.GetParams(suite.ctx)
-				params.MinGasMultiplier = math.LegacyNewDec(math.MaxInt64).MulInt64(100)
+				params.MinGasMultiplier = sdkmath.LegacyNewDec(math.MaxInt64).MulInt64(100)
 				err = suite.app.FeeMarketKeeper.SetParams(suite.ctx, params)
 				suite.Require().NoError(err)
 			},
@@ -682,7 +683,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 		{
 			name: "message transfer native via VFBC",
 			malleate: func() {
-				mintToVFBCSender(math.NewIntFromBigInt(vfbcSenderInitialBalance))
+				mintToVFBCSender(sdkmath.NewIntFromBigInt(vfbcSenderInitialBalance))
 
 				callData := append(
 					// transfer 1 to random receiver

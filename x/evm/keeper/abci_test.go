@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	"math"
+
 	"github.com/cometbft/cometbft/abci/types"
 	"github.com/evmos/ethermint/testutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"math"
 )
 
 func (suite *KeeperTestSuite) TestBeginBlock() {
@@ -30,7 +31,7 @@ func (suite *KeeperTestSuite) TestBeginBlock() {
 	suite.Require().False(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid2.Base))
 
 	suite.Require().NotPanics(func() {
-		suite.app.EvmKeeper.BeginBlock(suite.ctx, types.RequestBeginBlock{})
+		suite.app.EvmKeeper.BeginBlock(suite.ctx)
 	})
 
 	suite.True(suite.app.EvmKeeper.HasVirtualFrontierBankContractByDenom(suite.ctx, metaOfValid1.Base), "virtual frontier bank contract for valid metadata should be created")
@@ -43,7 +44,7 @@ func (suite *KeeperTestSuite) TestEndBlock() {
 	em := suite.ctx.EventManager()
 	suite.Require().Equal(0, len(em.Events()))
 
-	res := suite.app.EvmKeeper.EndBlock(suite.ctx, types.RequestEndBlock{})
+	res := suite.app.EvmKeeper.EndBlock(suite.ctx)
 	suite.Require().Equal([]types.ValidatorUpdate{}, res)
 
 	// should emit 1 EventTypeBlockBloom event on EndBlock
