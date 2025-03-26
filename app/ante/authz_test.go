@@ -343,8 +343,8 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 			suite.Require().NoError(err)
 			suite.Require().NotEmpty(bz)
 
-			resCheckTx := suite.app.CheckTx(
-				abci.RequestCheckTx{
+			resCheckTx, err := suite.app.CheckTx(
+				&abci.RequestCheckTx{
 					Tx:   bz,
 					Type: abci.CheckTxType_New,
 				},

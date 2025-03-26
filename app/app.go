@@ -69,6 +69,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -94,7 +95,6 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -118,6 +118,7 @@ import (
 
 	"github.com/evmos/ethermint/app/ante"
 	srvflags "github.com/evmos/ethermint/server/flags"
+	ethermint "github.com/evmos/ethermint/types"
 
 	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/x/evm"
@@ -224,6 +225,7 @@ type EthermintApp struct {
 	// the module manager
 	mm                 *module.Manager
 	BasicModuleManager module.BasicManager
+	sm                 *module.SimulationManager
 
 	// the configurator
 	configurator module.Configurator
@@ -434,10 +436,11 @@ func NewEthermintApp(
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
+		app.IBCKeeper.ChannelKeeper, app.IBCKeeper.ChannelKeeper, app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
 		authAddr,
 	)
+
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
@@ -448,7 +451,7 @@ func NewEthermintApp(
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(a.keys[evidencetypes.StoreKey]), a.StakingKeeper, a.SlashingKeeper, a.AccountKeeper.AddressCodec(), runtime.ProvideCometInfoService(),
+		appCodec, runtime.NewKVStoreService(app.keys[evidencetypes.StoreKey]), app.StakingKeeper, app.SlashingKeeper, app.AccountKeeper.AddressCodec(), runtime.ProvideCometInfoService(),
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
@@ -460,14 +463,12 @@ func NewEthermintApp(
 	app.mm = module.NewManager(
 		// SDK app modules
 		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper,
-			app, app.txConfig,
+			app.AccountKeeper, app.StakingKeeper, app, app.txConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
+		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.GetSubspace(authtypes.ModuleName)),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(&app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
@@ -589,6 +590,13 @@ func NewEthermintApp(
 	// add test gRPC service for testing gRPC queries in isolation
 	// testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
+	/****  Simulations ****/
+	overrideModules := map[string]module.AppModuleSimulation{
+		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
+	}
+	app.sm = module.NewSimulationManagerFromAppModules(app.mm.Modules, overrideModules)
+	app.sm.RegisterStoreDecoders()
+
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
@@ -617,7 +625,7 @@ func NewEthermintApp(
 	// upgrade.
 	app.setPostHandler()
 	app.SetEndBlocker(app.EndBlocker)
-	app.setupUpgradeHandlers()
+	// app.setupUpgradeHandlers()
 
 	// At startup, after all modules have been registered, check that all prot
 	// annotations are correct.
@@ -683,6 +691,11 @@ func (app *EthermintApp) setPostHandler() {
 
 // Name returns the name of the App
 func (app *EthermintApp) Name() string { return app.BaseApp.Name() }
+
+// PreBlocker application updates every pre block
+func (app *EthermintApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return app.mm.PreBlock(ctx)
+}
 
 // BeginBlocker updates every begin block
 func (app *EthermintApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
@@ -782,6 +795,16 @@ func (app *EthermintApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
 func (app *EthermintApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.ParamsKeeper.GetSubspace(moduleName)
 	return subspace
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *EthermintApp) DefaultGenesis() map[string]json.RawMessage {
+	return a.BasicModuleManager.DefaultGenesis(a.appCodec)
+}
+
+// SimulationManager implements the SimulationApp interface
+func (app *EthermintApp) SimulationManager() *module.SimulationManager {
+	return app.sm
 }
 
 // RegisterAPIRoutes registers all application module routes with the provided

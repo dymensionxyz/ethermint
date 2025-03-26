@@ -9,7 +9,6 @@ import (
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
 
 	math "cosmossdk.io/math"
@@ -1354,7 +1353,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	params := authtypes.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	cdc := encodingConfig.Amino
 
 	p := authtypes.DefaultParams()
