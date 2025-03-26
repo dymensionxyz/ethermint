@@ -25,6 +25,7 @@ import (
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -39,7 +40,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/evmos/ethermint/encoding"
+	"github.com/evmos/ethermint/app"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -62,26 +63,22 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 }
 
 // Setup initializes a new EthermintApp. A Nop logger is set in EthermintApp.
-func Setup(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.GenesisState) simapp.GenesisState) *EthermintApp {
+func Setup(isCheckTx bool, patchGenesis func(*app.EthermintApp, simapp.GenesisState) simapp.GenesisState) *app.EthermintApp {
 	return SetupWithDB(isCheckTx, patchGenesis, dbm.NewMemDB())
 }
 
 // SetupWithDB initializes a new EthermintApp. A Nop logger is set in EthermintApp.
-func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.GenesisState) simapp.GenesisState, db dbm.DB) *EthermintApp {
-	app := NewEthermintApp(log.NewNopLogger(),
+func SetupWithDB(isCheckTx bool, patchGenesis func(*app.EthermintApp, simapp.GenesisState) simapp.GenesisState, db dbm.DB) *app.EthermintApp {
+	app := app.NewEthermintApp(log.NewNopLogger(),
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		DefaultNodeHome,
-		5,
-		encoding.MakeConfig(ModuleBasics),
 		simtestutil.EmptyAppOptions{},
-		baseapp.SetChainID("ethermint_9000-1"),
-	)
+		baseapp.SetChainID("ethermint_9000-1"))
+
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := NewTestGenesisState(app.AppCodec())
+		genesisState := app.DefaultGenesis()
 		if patchGenesis != nil {
 			genesisState = patchGenesis(app, genesisState)
 		}
@@ -92,21 +89,24 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*EthermintApp, simapp.Genesis
 		}
 
 		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
+		_, err = app.InitChain(
+			&abci.RequestInitChain{
 				ChainId:         "ethermint_9000-1",
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return app
 }
 
 // NewTestGenesisState generate genesis state with single validator
-func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
+func NewTestGenesisState(app *app.EthermintApp) simapp.GenesisState {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -124,8 +124,8 @@ func NewTestGenesisState(codec codec.Codec) simapp.GenesisState {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 	}
 
-	genesisState := NewDefaultGenesisState()
-	return genesisStateWithValSet(codec, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState := app.DefaultGenesis()
+	return genesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 }
 
 func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
@@ -156,7 +156,7 @@ func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   math.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
@@ -164,7 +164,7 @@ func genesisStateWithValSet(codec codec.Codec, genesisState simapp.GenesisState,
 			MinSelfDelegation: math.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), math.LegacyOneDec()))
 	}
 	// set validators and delegations
 	stakingGenesis := stakingtypes.NewGenesisState(stakingtypes.DefaultParams(), validators, delegations)

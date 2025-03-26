@@ -465,8 +465,7 @@ func (suite *AnteTestSuite) createEIP712Tx(priv cryptotypes.PrivKey, msgs ...sdk
 		suite.ctx,
 		suite.app,
 		utiltx.EIP712TxArgs{
-			CosmosTxArgs:       cosmosTxArgs,
-			UseLegacyExtension: true,
+			CosmosTxArgs: cosmosTxArgs,
 		},
 	)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/server/config"
 	"github.com/evmos/ethermint/tests"
+	txutils "github.com/evmos/ethermint/testutil/tx"
 	ethermint "github.com/evmos/ethermint/types"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -352,7 +353,7 @@ func (suite AnteTestSuite) TestCanTransferDecorator() {
 
 	tx.From = addr.Hex()
 
-	err := tx.Sign(suite.ethSigner, tests.NewSigner(privKey))
+	err := tx.Sign(suite.ethSigner, txutils.NewSigner(privKey))
 	suite.Require().NoError(err)
 
 	var vmdb *statedb.StateDB
@@ -410,18 +411,18 @@ func (suite AnteTestSuite) TestEthIncrementSenderSequenceDecorator() {
 
 	contract := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 0, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	contract.From = addr.Hex()
-	err := contract.Sign(suite.ethSigner, tests.NewSigner(privKey))
+	err := contract.Sign(suite.ethSigner, txutils.NewSigner(privKey))
 	suite.Require().NoError(err)
 
 	to := tests.GenerateAddress()
 	tx := evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 0, &to, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	tx.From = addr.Hex()
-	err = tx.Sign(suite.ethSigner, tests.NewSigner(privKey))
+	err = tx.Sign(suite.ethSigner, txutils.NewSigner(privKey))
 	suite.Require().NoError(err)
 
 	tx2 := evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 1, &to, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	tx2.From = addr.Hex()
-	err = tx2.Sign(suite.ethSigner, tests.NewSigner(privKey))
+	err = tx2.Sign(suite.ethSigner, txutils.NewSigner(privKey))
 	suite.Require().NoError(err)
 
 	testCases := []struct {
