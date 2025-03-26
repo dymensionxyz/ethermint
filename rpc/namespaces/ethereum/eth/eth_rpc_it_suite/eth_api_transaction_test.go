@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"reflect"
 
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -681,7 +682,7 @@ func (suite *EthRpcTestSuite) Test_SendRawTransaction() {
 		msgEvmTx := createMsgEthTx(sender)
 
 		ethTx := msgEvmTx.AsTransaction()
-		sig, _, err := sender.Signer.SignByAddress(msgEvmTx.GetFrom(), suite.CITS.EthSigner.Hash(ethTx).Bytes())
+		sig, _, err := sender.Signer.SignByAddress(msgEvmTx.GetFrom(), suite.CITS.EthSigner.Hash(ethTx).Bytes(), signingtypes.SignMode_SIGN_MODE_TEXTUAL)
 		suite.Require().NoError(err)
 
 		signedEthTx, err := ethTx.WithSignature(suite.CITS.EthSigner, sig)
