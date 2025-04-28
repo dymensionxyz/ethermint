@@ -88,11 +88,6 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdkmath.OneInt())))
 	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(1000000000000000000))
 
-	// Set up account
-	addr := sdk.AccAddress(priv.PubKey().Address().Bytes())
-	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-
 	// Set up fee market params if enabled
 	if suite.enableFeemarket {
 		feemarketParams := feemarkettypes.DefaultParams()

@@ -24,7 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/evmos/ethermint/testutil"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
@@ -43,14 +42,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
-
-	"github.com/cometbft/cometbft/crypto/tmhash"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
-	"github.com/cometbft/cometbft/version"
 )
-
-var testTokens = sdkmath.NewIntWithDecimal(1000, 18)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -90,19 +82,14 @@ func TestKeeperTestSuite(t *testing.T) {
 	RunSpecs(t, "Keeper Suite")
 }
 
+// FIXME: needed??
+func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
+	s.SetupTest()
+}
+
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
-	suite.app = testutil.Setup(checkTx, nil)
-	suite.SetupApp(checkTx)
-}
 
-func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
-	checkTx := false
-	suite.app = testutil.Setup(checkTx, nil)
-	suite.SetupApp(checkTx)
-}
-
-func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 	// account key, use a constant account to keep unit test deterministic.
 	ecdsaPriv, err := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	suite.NoError(err)
@@ -112,57 +99,65 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = txutils.NewSigner(priv)
 
+	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
+		return testutil.NewTestGenesisState(app, priv)
+	})
+	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithChainID("ethermint_9000-1")
+
+	// FIXME: get from genesis validator
 	// consensus key
 	priv, err = ethsecp256k1.GenerateKey()
 	suite.NoError(err)
 	suite.consAddress = sdk.ConsAddress(priv.PubKey().Address())
 
-	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
-		feemarketGenesis := feemarkettypes.DefaultGenesisState()
-		if suite.enableFeemarket {
-			feemarketGenesis.Params.EnableHeight = 1
-			feemarketGenesis.Params.NoBaseFee = false
-		} else {
-			feemarketGenesis.Params.NoBaseFee = true
-		}
-		genesis[feemarkettypes.ModuleName] = app.AppCodec().MustMarshalJSON(feemarketGenesis)
-		if !suite.enableLondonHF {
-			evmGenesis := types.DefaultGenesisState()
-			maxInt := sdkmath.NewInt(math.MaxInt64)
-			evmGenesis.Params.ChainConfig.LondonBlock = &maxInt
-			evmGenesis.Params.ChainConfig.ArrowGlacierBlock = &maxInt
-			evmGenesis.Params.ChainConfig.GrayGlacierBlock = &maxInt
-			evmGenesis.Params.ChainConfig.MergeNetsplitBlock = &maxInt
-			evmGenesis.Params.ChainConfig.ShanghaiBlock = &maxInt
-			evmGenesis.Params.ChainConfig.CancunBlock = &maxInt
-			genesis[types.ModuleName] = app.AppCodec().MustMarshalJSON(evmGenesis)
-		}
-		return genesis
-	})
+	// Set up fee market params if enabled
+	if suite.enableFeemarket {
+		feemarketParams := feemarkettypes.DefaultParams()
+		feemarketParams.EnableHeight = 1
+		feemarketParams.NoBaseFee = false
+		err := suite.app.FeeMarketKeeper.SetParams(suite.ctx, feemarketParams)
+		suite.Require().NoError(err)
+	}
 
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithBlockHeader(tmproto.Header{
-		Height:          1,
-		ChainID:         "ethermint_9000-1",
-		Time:            time.Now().UTC(),
-		ProposerAddress: suite.consAddress.Bytes(),
-		Version: tmversion.Consensus{
-			Block: version.BlockProtocol,
-		},
-		LastBlockId: tmproto.BlockID{
-			Hash: tmhash.Sum([]byte("block_id")),
-			PartSetHeader: tmproto.PartSetHeader{
-				Total: 11,
-				Hash:  tmhash.Sum([]byte("partset_header")),
-			},
-		},
-		AppHash:            tmhash.Sum([]byte("app")),
-		DataHash:           tmhash.Sum([]byte("data")),
-		EvidenceHash:       tmhash.Sum([]byte("evidence")),
-		ValidatorsHash:     tmhash.Sum([]byte("validators")),
-		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
-		ConsensusHash:      tmhash.Sum([]byte("consensus")),
-		LastResultsHash:    tmhash.Sum([]byte("last_result")),
-	})
+	// Set up EVM params
+	evmParams := evmtypes.DefaultParams()
+	evmParams.AllowUnprotectedTxs = false
+	if !suite.enableLondonHF {
+		maxInt := sdkmath.NewInt(math.MaxInt64)
+		evmParams.ChainConfig.LondonBlock = &maxInt
+		evmParams.ChainConfig.ArrowGlacierBlock = &maxInt
+		evmParams.ChainConfig.GrayGlacierBlock = &maxInt
+		evmParams.ChainConfig.MergeNetsplitBlock = &maxInt
+		evmParams.ChainConfig.ShanghaiBlock = &maxInt
+		evmParams.ChainConfig.CancunBlock = &maxInt
+	}
+
+	err = suite.app.EvmKeeper.SetParams(suite.ctx, evmParams)
+	suite.Require().NoError(err)
+
+	// suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithBlockHeader(tmproto.Header{
+	// 	Height:          1,
+	// 	ChainID:         "ethermint_9000-1",
+	// 	Time:            time.Now().UTC(),
+	// 	ProposerAddress: suite.consAddress.Bytes(),
+	// 	Version: tmversion.Consensus{
+	// 		Block: version.BlockProtocol,
+	// 	},
+	// 	LastBlockId: tmproto.BlockID{
+	// 		Hash: tmhash.Sum([]byte("block_id")),
+	// 		PartSetHeader: tmproto.PartSetHeader{
+	// 			Total: 11,
+	// 			Hash:  tmhash.Sum([]byte("partset_header")),
+	// 		},
+	// 	},
+	// 	AppHash:            tmhash.Sum([]byte("app")),
+	// 	DataHash:           tmhash.Sum([]byte("data")),
+	// 	EvidenceHash:       tmhash.Sum([]byte("evidence")),
+	// 	ValidatorsHash:     tmhash.Sum([]byte("validators")),
+	// 	NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
+	// 	ConsensusHash:      tmhash.Sum([]byte("consensus")),
+	// 	LastResultsHash:    tmhash.Sum([]byte("last_result")),
+	// })
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EvmKeeper)
@@ -182,24 +177,6 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 		// FIXME: fund feecollector
 
 	}
-
-	// Set accounts and validators
-
-	acc := &ethermint.EthAccount{
-		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, 0, 0),
-		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
-	}
-
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
-
-	valAddr := sdk.ValAddress(suite.address.Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr.String(), priv.PubKey(), stakingtypes.Description{})
-	suite.NoError(err)
-	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	suite.NoError(err)
-	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
-	suite.NoError(err)
-	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
 
 	encodingConfig := encoding.MakeConfig()
 	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
