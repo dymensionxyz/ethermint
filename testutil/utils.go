@@ -78,7 +78,7 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*app.EthermintApp, simapp.Gen
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := app.DefaultGenesis()
+		genesisState := NewTestGenesisState(app)
 		if patchGenesis != nil {
 			genesisState = patchGenesis(app, genesisState)
 		}

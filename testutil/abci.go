@@ -9,6 +9,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
@@ -78,22 +79,22 @@ func DeliverTx(
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
-	return BroadcastTxBytes(appEvmos, txConfig.TxEncoder(), tx)
+	return BroadcastTxBytes(appEvmos.BaseApp, txConfig.TxEncoder(), tx)
 }
 
 // CheckTx checks a cosmos tx for a given set of msgs
 func CheckTx(
 	ctx sdk.Context,
-	appEvmos *app.EthermintApp,
+	appEthermint *app.EthermintApp,
 	priv cryptotypes.PrivKey,
 	gasPrice *sdkmath.Int,
 	msgs ...sdk.Msg,
 ) (abci.ResponseCheckTx, error) {
-	txConfig := appEvmos.GetTxConfig()
+	txConfig := appEthermint.GetTxConfig()
 
 	tx, err := tx.PrepareCosmosTx(
 		ctx,
-		appEvmos,
+		appEthermint,
 		tx.CosmosTxArgs{
 			TxCfg:    txConfig,
 			Priv:     priv,
@@ -106,11 +107,11 @@ func CheckTx(
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
-	return checkTxBytes(appEvmos, txConfig.TxEncoder(), tx)
+	return checkTxBytes(appEthermint, txConfig.TxEncoder(), tx)
 }
 
 // BroadcastTxBytes encodes a transaction and calls DeliverTx on the app.
-func BroadcastTxBytes(app *app.EthermintApp, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.ExecTxResult, error) {
+func BroadcastTxBytes(app *baseapp.BaseApp, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.ExecTxResult, error) {
 	// bz are bytes to be broadcasted over the network
 	bz, err := txEncoder(tx)
 	if err != nil {
@@ -119,7 +120,7 @@ func BroadcastTxBytes(app *app.EthermintApp, txEncoder sdk.TxEncoder, tx sdk.Tx)
 
 	req := abci.RequestFinalizeBlock{Txs: [][]byte{bz}}
 
-	res, err := app.BaseApp.FinalizeBlock(&req)
+	res, err := app.FinalizeBlock(&req)
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}

@@ -24,14 +24,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -49,13 +47,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/evmos/ethermint/app"
 	ante "github.com/evmos/ethermint/app/ante"
-	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/tests"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
-
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type AnteTestSuite struct {
@@ -86,50 +81,46 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 	suite.priv = priv
 
-	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
-		if suite.enableFeemarket {
-			// setup feemarketGenesis params
-			feemarketGenesis := feemarkettypes.DefaultGenesisState()
-			feemarketGenesis.Params.EnableHeight = 1
-			feemarketGenesis.Params.NoBaseFee = false
-			// Verify feeMarket genesis
-			err := feemarketGenesis.Validate()
-			suite.Require().NoError(err)
-			genesis[feemarkettypes.ModuleName] = app.AppCodec().MustMarshalJSON(feemarketGenesis)
-		}
-		evmGenesis := evmtypes.DefaultGenesisState()
-		evmGenesis.Params.AllowUnprotectedTxs = false
-		if !suite.enableLondonHF {
-			maxInt := sdkmath.NewInt(math.MaxInt64)
-			evmGenesis.Params.ChainConfig.LondonBlock = &maxInt
-			evmGenesis.Params.ChainConfig.ArrowGlacierBlock = &maxInt
-			evmGenesis.Params.ChainConfig.GrayGlacierBlock = &maxInt
-			evmGenesis.Params.ChainConfig.MergeNetsplitBlock = &maxInt
-			evmGenesis.Params.ChainConfig.ShanghaiBlock = &maxInt
-			evmGenesis.Params.ChainConfig.CancunBlock = &maxInt
-		}
-		if suite.evmParamsOption != nil {
-			suite.evmParamsOption(&evmGenesis.Params)
-		}
-		genesis[evmtypes.ModuleName] = app.AppCodec().MustMarshalJSON(evmGenesis)
-		return genesis
-	})
+	suite.app = testutil.Setup(checkTx, nil)
 
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithBlockHeader(tmproto.Header{Height: 2, ChainID: testutil.TestnetChainID + "-1", Time: time.Now().UTC()})
+	// Set up context
+	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithChainID(suite.app.ChainID())
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdkmath.OneInt())))
 	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(1000000000000000000))
-	suite.app.EvmKeeper.WithChainID(suite.ctx)
 
+	// Set up account
 	addr := sdk.AccAddress(priv.PubKey().Address().Bytes())
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	encodingConfig := encoding.MakeConfig()
-	// We're using TestMsg amino encoding in some tests, so register it here.
-	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
-	eip712.SetEncodingConfig(encodingConfig.Amino, encodingConfig.InterfaceRegistry)
+	// Set up fee market params if enabled
+	if suite.enableFeemarket {
+		feemarketParams := feemarkettypes.DefaultParams()
+		feemarketParams.EnableHeight = 1
+		feemarketParams.NoBaseFee = false
+		err := suite.app.FeeMarketKeeper.SetParams(suite.ctx, feemarketParams)
+		suite.Require().NoError(err)
+	}
 
-	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
+	// Set up EVM params
+	evmParams := evmtypes.DefaultParams()
+	evmParams.AllowUnprotectedTxs = false
+	if !suite.enableLondonHF {
+		maxInt := sdkmath.NewInt(math.MaxInt64)
+		evmParams.ChainConfig.LondonBlock = &maxInt
+		evmParams.ChainConfig.ArrowGlacierBlock = &maxInt
+		evmParams.ChainConfig.GrayGlacierBlock = &maxInt
+		evmParams.ChainConfig.MergeNetsplitBlock = &maxInt
+		evmParams.ChainConfig.ShanghaiBlock = &maxInt
+		evmParams.ChainConfig.CancunBlock = &maxInt
+	}
+	if suite.evmParamsOption != nil {
+		suite.evmParamsOption(&evmParams)
+	}
+	err = suite.app.EvmKeeper.SetParams(suite.ctx, evmParams)
+	suite.Require().NoError(err)
+
+	suite.clientCtx = client.Context{}.WithTxConfig(suite.app.GetTxConfig())
 
 	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
 		AccountKeeper:   suite.app.AccountKeeper,
@@ -138,7 +129,7 @@ func (suite *AnteTestSuite) SetupTest() {
 		FeegrantKeeper:  suite.app.FeeGrantKeeper,
 		IBCKeeper:       suite.app.IBCKeeper,
 		FeeMarketKeeper: suite.app.FeeMarketKeeper,
-		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+		SignModeHandler: suite.app.GetTxConfig().SignModeHandler(),
 		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		DisabledAuthzMsgs: []string{
 			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
