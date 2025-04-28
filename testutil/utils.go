@@ -28,7 +28,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -41,6 +41,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/evmos/ethermint/app"
+	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
@@ -78,7 +79,8 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*app.EthermintApp, simapp.Gen
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
-		genesisState := NewTestGenesisState(app)
+		privKey, _ := ethsecp256k1.GenerateKey()
+		genesisState := NewTestGenesisState(app, privKey)
 		if patchGenesis != nil {
 			genesisState = patchGenesis(app, genesisState)
 		}
@@ -106,7 +108,7 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*app.EthermintApp, simapp.Gen
 }
 
 // NewTestGenesisState generate genesis state with single validator
-func NewTestGenesisState(app *app.EthermintApp) simapp.GenesisState {
+func NewTestGenesisState(app *app.EthermintApp, privKey cryptotypes.PrivKey) simapp.GenesisState {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -117,8 +119,7 @@ func NewTestGenesisState(app *app.EthermintApp) simapp.GenesisState {
 	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
 
 	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(privKey.PubKey().Address().Bytes(), privKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
