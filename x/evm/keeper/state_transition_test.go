@@ -5,11 +5,10 @@ import (
 	"math"
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/evmos/ethermint/utils"
 
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/keeper"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestGetHashFn() {
@@ -593,8 +593,8 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 
 	mintToVFBCSender := func(amount sdkmath.Int) {
 		coins := sdk.NewCoins(sdk.NewCoin(suite.denom, amount))
-		suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-		suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
+		suite.app.BankKeeper.MintCoins(suite.ctx, evmtypes.ModuleName, coins)
+		suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, evmtypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
 	}
 
 	feeCompute := func(msg core.Message, gasUsed uint64) *big.Int {

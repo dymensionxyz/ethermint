@@ -15,7 +15,7 @@ func (suite *KeeperTestSuite) TestBeginBlock() {
 	metaOfInvalid := testutil.NewBankDenomMetadata("ibc/uosmo", 6)
 	metaOfInvalid.Display = ""
 	suite.app.BankKeeper.SetDenomMetaData(suite.ctx, metaOfInvalid)
-	suite.Require().True(suite.app.BankKeeper.HasDenomMetaData(suite.ctx, metaOfInvalid.Base)) // ensure invalid metadata is set
+	suite.True(suite.app.BankKeeper.HasDenomMetaData(suite.ctx, metaOfInvalid.Base)) // ensure invalid metadata is set
 
 	metaOfOverflowDecimals := testutil.NewBankDenomMetadata("ibc/uosmo", 0)
 	metaOfOverflowDecimals.DenomUnits[1].Exponent = math.MaxUint8 + 1 // overflow uint8

@@ -23,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/evmos/ethermint/testutil"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
@@ -104,20 +103,26 @@ func (suite *KeeperTestSuite) SetupTest() {
 	})
 	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithChainID("ethermint_9000-1")
 
-	// FIXME: get from genesis validator
 	// consensus key
-	priv, err = ethsecp256k1.GenerateKey()
-	suite.NoError(err)
-	suite.consAddress = sdk.ConsAddress(priv.PubKey().Address())
+	vals, err := suite.app.StakingKeeper.GetValidators(suite.ctx, 100)
+	suite.Require().NoError(err)
+	suite.Require().Len(vals, 1)
+	consAddr, err := vals[0].GetConsAddr()
+	suite.Require().NoError(err)
+	suite.consAddress = consAddr
+
+	suite.ctx = suite.ctx.WithProposer(consAddr)
 
 	// Set up fee market params if enabled
+	feemarketParams := feemarkettypes.DefaultParams()
 	if suite.enableFeemarket {
-		feemarketParams := feemarkettypes.DefaultParams()
 		feemarketParams.EnableHeight = 1
 		feemarketParams.NoBaseFee = false
-		err := suite.app.FeeMarketKeeper.SetParams(suite.ctx, feemarketParams)
-		suite.Require().NoError(err)
+	} else {
+		feemarketParams.NoBaseFee = true
 	}
+	err = suite.app.FeeMarketKeeper.SetParams(suite.ctx, feemarketParams)
+	suite.Require().NoError(err)
 
 	// Set up EVM params
 	evmParams := evmtypes.DefaultParams()
@@ -167,14 +172,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	if suite.mintFeeCollector {
 		// mint some coin to fee collector
 		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, sdkmath.NewInt(int64(params.TxGas)-1)))
-		balances := []banktypes.Balance{
-			{
-				Address: suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
-				Coins:   coins,
-			},
-		}
-		_ = balances
-		// FIXME: fund feecollector
+		testutil.FundModuleAccount(suite.app.BankKeeper, suite.ctx, authtypes.FeeCollectorName, coins)
 
 	}
 
@@ -202,7 +200,7 @@ func (suite *KeeperTestSuite) StateDB() *statedb.StateDB {
 
 // DeployTestContract deploy a test erc20 contract and returns the contract address
 func (suite *KeeperTestSuite) DeployTestContract(t *testing.T, owner common.Address, supply *big.Int) common.Address {
-	ctx := sdk.WrapSDKContext(suite.ctx)
+	ctx := suite.ctx
 	chainID := suite.app.EvmKeeper.ChainID()
 
 	ctorArgs, err := types.ERC20Contract.ABI.Pack("", owner, supply)
