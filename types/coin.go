@@ -18,7 +18,7 @@ package types
 import (
 	"math/big"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -42,17 +42,17 @@ const (
 )
 
 // PowerReduction defines the default power reduction value for staking
-var PowerReduction = sdkmath.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(BaseDenomUnit), nil))
+var PowerReduction = math.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(BaseDenomUnit), nil))
 
-// NewPhotonCoin is a utility function that returns an "aphoton" coin with the given sdkmath.Int amount.
+// NewPhotonCoin is a utility function that returns an "aphoton" coin with the given math.Int amount.
 // The function will panic if the provided amount is negative.
-func NewPhotonCoin(amount sdkmath.Int) sdk.Coin {
+func NewPhotonCoin(amount math.Int) sdk.Coin {
 	return sdk.NewCoin(AttoPhoton, amount)
 }
 
-// NewPhotonDecCoin is a utility function that returns an "aphoton" decimal coin with the given sdkmath.Int amount.
+// NewPhotonDecCoin is a utility function that returns an "aphoton" decimal coin with the given math.Int amount.
 // The function will panic if the provided amount is negative.
-func NewPhotonDecCoin(amount sdkmath.Int) sdk.DecCoin {
+func NewPhotonDecCoin(amount math.Int) sdk.DecCoin {
 	return sdk.NewDecCoin(AttoPhoton, amount)
 }
 

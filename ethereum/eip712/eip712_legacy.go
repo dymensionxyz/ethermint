@@ -61,7 +61,7 @@ func LegacyWrapTxToTypedData(
 	domain := apitypes.TypedDataDomain{
 		Name:              "Cosmos Web3",
 		Version:           "1.0.0",
-		ChainId:           math.NewHexOrDecimal256(int64(chainID)),
+		ChainId:           math.NewHexOrDecimal256(int64(chainID)), //nolint:gosec
 		VerifyingContract: "cosmos",
 		Salt:              "0",
 	}
@@ -382,7 +382,7 @@ var (
 	addressType   = reflect.TypeOf(common.Address{})
 	bigIntType    = reflect.TypeOf(big.Int{})
 	cosmIntType   = reflect.TypeOf(sdkmath.Int{})
-	cosmDecType   = reflect.TypeOf(sdk.Dec{})
+	cosmDecType   = reflect.TypeOf(sdkmath.LegacyDec{})
 	timeType      = reflect.TypeOf(time.Time{})
 	cosmosAnyType = reflect.TypeOf(&codectypes.Any{})
 	edType        = reflect.TypeOf(ed25519.PubKey{})

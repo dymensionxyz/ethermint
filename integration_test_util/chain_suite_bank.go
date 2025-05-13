@@ -2,7 +2,9 @@ package integration_test_util
 
 //goland:noinspection SpellCheckingInspection
 import (
-	sdkmath "cosmossdk.io/math"
+	"math"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -10,7 +12,6 @@ import (
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"math"
 )
 
 // TxSend sends amount of base coin from one to another.
@@ -36,7 +37,7 @@ func (suite *ChainIntegrationTestSuite) buildBankSendMsg(from, to *itutiltypes.T
 		ToAddress:   to.GetCosmosAddress().String(),
 		Amount: sdk.Coins{
 			sdk.Coin{
-				Amount: sdk.NewInt(int64(amount * math.Pow10(18))),
+				Amount: math.NewInt(int64(amount * math.Pow10(18))),
 				Denom:  suite.ChainConstantsConfig.GetMinDenom(),
 			},
 		},
@@ -64,7 +65,7 @@ func (suite *ChainIntegrationTestSuite) buildMsgEthereumTxTransfer(from, to *itu
 	suite.Require().NotZero(amount)
 
 	toEvmAddr := to.GetEthAddress()
-	amountInt := sdk.NewInt(int64(amount * math.Pow10(18)))
+	amountInt := math.NewInt(int64(amount * math.Pow10(18)))
 	return suite.prepareMsgEthereumTx(suite.CurrentContext, from, &toEvmAddr, amountInt.BigInt(), nil)
 }
 
@@ -137,6 +138,6 @@ func (suite *ChainIntegrationTestSuite) MintCoinToModuleAccount(receiver authtyp
 
 // NewBaseCoin returns an instance of sdk.Coin of base coin with given amount.
 func (suite *ChainIntegrationTestSuite) NewBaseCoin(amount int64) sdk.Coin {
-	intAmt := sdkmath.NewInt(amount).Mul(sdkmath.NewInt(int64(math.Pow10(18))))
+	intAmt := math.NewInt(amount).Mul(math.NewInt(int64(math.Pow10(18))))
 	return sdk.NewCoin(suite.ChainConstantsConfig.GetMinDenom(), intAmt)
 }

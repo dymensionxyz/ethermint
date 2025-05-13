@@ -1,7 +1,7 @@
 package vfc_it_suite_test
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -398,8 +398,8 @@ func (suite *VfcITSuite) TestExecVirtualFrontierBankContract() {
 
 		const originalBalance = 10_000_000
 
-		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcAtom.Base, sdk.NewInt(originalBalance)))
-		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcTia.Base, sdk.NewInt(originalBalance)))
+		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcAtom.Base, math.NewInt(originalBalance)))
+		suite.CITS.MintCoin(senderOfVfbc, sdk.NewCoin(metaIbcTia.Base, math.NewInt(originalBalance)))
 
 		suite.CITS.WaitNextBlockOrCommit()
 

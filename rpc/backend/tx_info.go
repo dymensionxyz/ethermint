@@ -17,8 +17,10 @@ package backend
 
 import (
 	"fmt"
-	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
+	"math"
 	"math/big"
+
+	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 
 	errorsmod "cosmossdk.io/errors"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -58,7 +60,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		return nil, errors.New("invalid ethereum tx")
 	}
 
-	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
+	blockRes, err := b.rpcClient.BlockResults(b.ctx, &block.Block.Height)
 	if err != nil {
 		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
 		return nil, nil
@@ -69,7 +71,10 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		msgs := b.EthMsgsFromTendermintBlock(block, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
-				res.EthTxIndex = int32(i)
+				if i > math.MaxInt32 {
+					return nil, errors.New("tx index overflow")
+				}
+				res.EthTxIndex = int32(i) //nolint:gosec // G115 G115 -- checked for int overflow already
 				break
 			}
 		}
@@ -267,13 +272,39 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	return receipt, nil
 }
 
+// GetTransactionLogs returns the transaction logs identified by hash.
+func (b *Backend) GetTransactionLogs(hash common.Hash) ([]*ethtypes.Log, error) {
+	hexTx := hash.Hex()
+
+	res, err := b.GetTxByEthHash(hash)
+	if err != nil {
+		b.logger.Debug("tx not found", "hash", hexTx, "error", err.Error())
+		return nil, nil
+	}
+
+	if res.Failed {
+		// failed, return empty logs
+		return nil, nil
+	}
+
+	resBlockResult, err := b.rpcClient.BlockResults(b.ctx, &res.Height)
+	if err != nil {
+		b.logger.Debug("block result not found", "number", res.Height, "error", err.Error())
+		return nil, nil
+	}
+
+	// parse tx logs from events
+	index := int(res.MsgIndex) // #nosec G701
+	return TxLogsFromEvents(resBlockResult.TxsResults[res.TxIndex].Events, index)
+}
+
 // GetTransactionByBlockHashAndIndex returns the transaction identified by hash and index.
 func (b *Backend) GetTransactionByBlockHashAndIndex(hash common.Hash, idx hexutil.Uint) (*rpctypes.RPCTransaction, error) {
 	b.logger.Debug("eth_getTransactionByBlockHashAndIndex", "hash", hash.Hex(), "index", idx)
 
 	sc, ok := b.clientCtx.Client.(tmrpcclient.SignClient)
 	if !ok {
-		b.logger.Error("invalid rpc client")
+		return nil, errors.New("invalid rpc client")
 	}
 	block, err := sc.BlockByHash(b.ctx, hash.Bytes())
 	if err != nil {
@@ -309,7 +340,7 @@ func (b *Backend) GetTransactionByBlockNumberAndIndex(blockNum rpctypes.BlockNum
 
 // GetTxByEthHash uses `/tx_query` to find transaction by ethereum tx hash
 // TODO: Don't need to convert once hashing is fixed on Tendermint
-// https://github.com/tendermint/tendermint/issues/6539
+// https://github.com/cometbft/cometbft/issues/6539
 func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, error) {
 	if b.indexer != nil {
 		return b.indexer.GetByTxHash(hash)

@@ -17,16 +17,25 @@ package ante
 
 import (
 	"errors"
-	"github.com/evmos/ethermint/utils"
 	"strconv"
 
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/evmos/ethermint/utils"
+
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+)
+
+var (
+	_ sdk.AnteDecorator = &EthSetupContextDecorator{}
+	_ sdk.AnteDecorator = &EthEmitEventDecorator{}
+	_ sdk.AnteDecorator = &EthValidateBasicDecorator{}
 )
 
 // EthSetupContextDecorator is adapted from SetUpContextDecorator from cosmos-sdk, it ignores gas consumption
@@ -49,7 +58,7 @@ func (esc EthSetupContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	// We need to setup an empty gas config so that the gas is consistent with Ethereum.
-	newCtx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	newCtx = ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
 	newCtx = utils.UseZeroGasConfig(newCtx)
 
 	// Reset transient gas used to prepare the execution of current cosmos tx.
@@ -110,10 +119,12 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 		return next(ctx, tx, simulate)
 	}
 
-	err := tx.ValidateBasic()
-	// ErrNoSignatures is fine with eth tx
-	if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
-		return ctx, errorsmod.Wrap(err, "tx basic validation failed")
+	if t, ok := tx.(sdk.HasValidateBasic); ok {
+		err := t.ValidateBasic()
+		// ErrNoSignatures is fine with eth tx
+		if err != nil && !errors.Is(err, errortypes.ErrNoSignatures) {
+			return ctx, errorsmod.Wrap(err, "tx basic validation failed")
+		}
 	}
 
 	// For eth type cosmos tx, some fields should be verified as zero values,
@@ -189,10 +200,10 @@ func (vbd EthValidateBasicDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 			return ctx, errorsmod.Wrap(ethtypes.ErrTxTypeNotSupported, "dynamic fee tx not supported")
 		}
 
-		txFee = txFee.Add(sdk.Coin{Denom: evmDenom, Amount: sdkmath.NewIntFromBigInt(txData.Fee())})
+		txFee = txFee.Add(sdk.Coin{Denom: evmDenom, Amount: math.NewIntFromBigInt(txData.Fee())})
 	}
 
-	if !authInfo.Fee.Amount.IsEqual(txFee) {
+	if !authInfo.Fee.Amount.Equal(txFee) {
 		return ctx, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "invalid AuthInfo Fee Amount (%s != %s)", authInfo.Fee.Amount, txFee)
 	}
 

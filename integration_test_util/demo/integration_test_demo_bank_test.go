@@ -1,6 +1,7 @@
 package demo
 
 import (
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/evmos/ethermint/integration_test_util"
 )
@@ -11,7 +12,7 @@ func (suite *DemoTestSuite) Test_MintCoins() {
 	newAccount := integration_test_util.NewTestAccount(suite.T(), nil)
 
 	balance := suite.CITS.QueryBalance(0, newAccount.GetCosmosAddress().String())
-	suite.Require().True(balance.Amount.Equal(sdk.ZeroInt()))
+	suite.Require().True(balance.Amount.Equal(math.ZeroInt()))
 
 	mintCoin := sdk.NewCoin(suite.CITS.ChainConstantsConfig.GetMinDenom(), suite.CITS.TestConfig.InitBalanceAmount)
 	suite.CITS.MintCoin(newAccount, mintCoin)
@@ -24,7 +25,7 @@ func (suite *DemoTestSuite) Test_MintCoins() {
 func (suite *DemoTestSuite) Test_QC_Bank_Balance() {
 	balance := suite.CITS.QueryBalance(0, suite.CITS.WalletAccounts.Number(1).GetCosmosAddress().String())
 
-	suite.Require().True(balance.Amount.GT(sdk.ZeroInt()))
+	suite.Require().True(balance.Amount.GT(math.ZeroInt()))
 	suite.Equal(suite.CITS.TestConfig.InitBalanceAmount, balance.Amount)
 
 	secondaryBalance := suite.CITS.QueryBalanceByDenom(
@@ -33,7 +34,7 @@ func (suite *DemoTestSuite) Test_QC_Bank_Balance() {
 		suite.CITS.TestConfig.SecondaryDenomUnits[0].Denom,
 	)
 
-	suite.Require().True(secondaryBalance.Amount.GT(sdk.ZeroInt()))
+	suite.Require().True(secondaryBalance.Amount.GT(math.ZeroInt()))
 	suite.Equal(suite.CITS.TestConfig.InitBalanceAmount, secondaryBalance.Amount)
 }
 
@@ -44,7 +45,7 @@ func (suite *DemoTestSuite) Test_QC_Bank_Balance_At_Different_Blocks() {
 	senderBalanceBefore := suite.CITS.QueryBalance(0, sender.GetCosmosAddress().String())
 	receiverBalanceBefore := suite.CITS.QueryBalance(0, receiver.GetCosmosAddress().String())
 
-	suite.Require().Truef(senderBalanceBefore.Amount.GT(sdk.ZeroInt()), "sender must have balance")
+	suite.Require().Truef(senderBalanceBefore.Amount.GT(math.ZeroInt()), "sender must have balance")
 
 	contextHeightBeforeSend := suite.CITS.CurrentContext.BlockHeight()
 	suite.Commit()

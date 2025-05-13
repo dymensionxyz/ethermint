@@ -15,8 +15,8 @@
 // along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
 package config
 
-// DefaultConfigTemplate defines the configuration template for the EVM RPC configuration
-const DefaultConfigTemplate = `
+// DefaultEVMConfigTemplate defines the configuration template for the EVM RPC configuration.
+const DefaultEVMConfigTemplate = `
 ###############################################################################
 ###                             EVM Configuration                           ###
 ###############################################################################
@@ -37,7 +37,7 @@ max-tx-gas-wanted = {{ .EVM.MaxTxGasWanted }}
 
 [json-rpc]
 
-# Enable defines if the gRPC server should be enabled.
+# Enable defines if the JSONRPC server should be enabled.
 enable = {{ .JSONRPC.Enable }}
 
 # Address defines the EVM RPC HTTP server address to bind to.

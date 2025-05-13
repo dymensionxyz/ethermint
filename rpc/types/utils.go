@@ -23,7 +23,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmtypes "github.com/cometbft/cometbft/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -49,7 +49,7 @@ const ExceedBlockGasLimitError = "out of gas in location: block gas meter; gasWa
 const StateDBCommitError = "failed to commit stateDB"
 
 // RawTxToEthTx returns a evm MsgEthereum transaction from raw tx bytes.
-func RawTxToEthTx(clientCtx client.Context, txBz tmtypes.Tx) ([]*evmtypes.MsgEthereumTx, error) {
+func RawTxToEthTx(clientCtx client.Context, txBz cmtypes.Tx) ([]*evmtypes.MsgEthereumTx, error) {
 	tx, err := clientCtx.TxConfig.TxDecoder()(txBz)
 	if err != nil {
 		return nil, errorsmod.Wrap(errortypes.ErrJSONUnmarshal, err.Error())
@@ -69,7 +69,7 @@ func RawTxToEthTx(clientCtx client.Context, txBz tmtypes.Tx) ([]*evmtypes.MsgEth
 
 // EthHeaderFromTendermint is an util function that returns an Ethereum Header
 // from a tendermint Header.
-func EthHeaderFromTendermint(header tmtypes.Header, bloom ethtypes.Bloom, baseFee *big.Int) *ethtypes.Header {
+func EthHeaderFromTendermint(header cmtypes.Header, bloom ethtypes.Bloom, baseFee *big.Int) *ethtypes.Header {
 	txHash := ethtypes.EmptyRootHash
 	if len(header.DataHash) == 0 {
 		txHash = common.BytesToHash(header.DataHash)
@@ -102,8 +102,9 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 		panic("incorrect tm rpc client")
 	}
 	resConsParams, err := tmrpcClient.ConsensusParams(goCtx, &blockHeight)
+	defaultGasLimit := int64(^uint32(0)) // #nosec G701
 	if err != nil {
-		return int64(^uint32(0)), err
+		return defaultGasLimit, err
 	}
 
 	gasLimit := resConsParams.ConsensusParams.Block.MaxGas
@@ -111,7 +112,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 		// Sets gas limit to max uint32 to not error with javascript dev tooling
 		// This -1 value indicating no block gas limit is set to max uint64 with geth hexutils
 		// which errors certain javascript dev tooling which only supports up to 53 bits
-		gasLimit = int64(^uint32(0))
+		gasLimit = defaultGasLimit
 	}
 
 	return gasLimit, nil
@@ -120,7 +121,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 // FormatBlock creates an ethereum block from a tendermint header and ethereum-formatted
 // transactions.
 func FormatBlock(
-	header tmtypes.Header, size int, gasLimit int64,
+	header cmtypes.Header, size int, gasLimit int64,
 	gasUsed *big.Int, transactions []interface{}, bloom ethtypes.Bloom,
 	validatorAddr common.Address, baseFee *big.Int,
 ) map[string]interface{} {
@@ -258,37 +259,37 @@ func BaseFeeFromEvents(events []abci.Event) *big.Int {
 }
 
 // CheckTxFee is an internal function used to check whether the fee of
-// the given transaction is _reasonable_(under the cap).
-func CheckTxFee(gasPrice *big.Int, gas uint64, cap float64) error {
+// the given transaction is _reasonable_(under the minimum cap).
+func CheckTxFee(gasPrice *big.Int, gas uint64, minCap float64) error {
 	// Short circuit if there is no cap for transaction fee at all.
-	if cap == 0 {
+	if minCap == 0 {
 		return nil
 	}
 	totalfee := new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas)))
-	// 1 photon in 10^18 aphoton
+	// 1 evmos in 10^18 aevmos
 	oneToken := new(big.Float).SetInt(big.NewInt(params.Ether))
 	// quo = rounded(x/y)
 	feeEth := new(big.Float).Quo(totalfee, oneToken)
 	// no need to check error from parsing
 	feeFloat, _ := feeEth.Float64()
-	if feeFloat > cap {
-		return fmt.Errorf("tx fee (%.2f ether) exceeds the configured cap (%.2f ether)", feeFloat, cap)
+	if feeFloat > minCap {
+		return fmt.Errorf("tx fee (%.2f ether) exceeds the configured cap (%.2f ether)", feeFloat, minCap)
 	}
 	return nil
 }
 
 // TxExceedBlockGasLimit returns true if the tx exceeds block gas limit.
-func TxExceedBlockGasLimit(res *abci.ResponseDeliverTx) bool {
+func TxExceedBlockGasLimit(res *abci.ExecTxResult) bool {
 	return strings.Contains(res.Log, ExceedBlockGasLimitError)
 }
 
 // TxStateDBCommitError returns true if the evm tx commit error.
-func TxStateDBCommitError(res *abci.ResponseDeliverTx) bool {
+func TxStateDBCommitError(res *abci.ExecTxResult) bool {
 	return strings.Contains(res.Log, StateDBCommitError)
 }
 
 // TxSuccessOrExceedsBlockGasLimit returns true if the transaction was successful
 // or if it failed with an ExceedBlockGasLimit error
-func TxSuccessOrExceedsBlockGasLimit(res *abci.ResponseDeliverTx) bool {
+func TxSuccessOrExceedsBlockGasLimit(res *abci.ExecTxResult) bool {
 	return res.Code == 0 || TxExceedBlockGasLimit(res) || TxStateDBCommitError(res)
 }

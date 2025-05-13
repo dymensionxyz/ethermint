@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -10,7 +13,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
-	"math/big"
 )
 
 // evmCallVirtualFrontierBankContract handles EVM call to a virtual frontier bank contract.
@@ -241,7 +243,7 @@ func (k *Keeper) evmCallVirtualFrontierBankContract(
 
 		senderBalance := k.bankKeeper.GetBalance(ctx, sender.Bytes(), bankContractMetadata.MinDenom)
 
-		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, sdk.NewIntFromBigInt(amount))
+		sendAmount := sdk.NewCoin(bankContractMetadata.MinDenom, math.NewIntFromBigInt(amount))
 		/*
 			The line above also checks if the amount is negative and if it has more than 256 bits.
 			But let's do explicitly check just for safety, prevent any future issue due to SDK change,

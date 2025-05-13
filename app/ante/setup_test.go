@@ -3,7 +3,7 @@ package ante_test
 import (
 	"math/big"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/evmos/ethermint/app/ante"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -18,7 +18,7 @@ func (suite AnteTestSuite) TestEthSetupContextDecorator() {
 		tx      sdk.Tx
 		expPass bool
 	}{
-		{"invalid transaction type - does not implement GasTx", &invalidTx{}, false},
+		{"invalid transaction type - does not implement GasTx", &InvalidTx{}, false},
 		{
 			"success - transaction implement GasTx",
 			tx,

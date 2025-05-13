@@ -37,13 +37,13 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	}
 
 	consParams := ctx.ConsensusParams()
-	if consParams == nil || consParams.Block == nil {
+	if consParams.Block == nil {
 		/*
 			During migration, this has empty value, read more: https://github.com/cosmos/cosmos-sdk/issues/16494
 			We need to get the consensus params from the keeper instead of the context.
 		*/
 		var err error
-		consParams, err = k.consensusKeeper.Get(ctx)
+		consParams, err = k.consensusKeeper.ParamsStore.Get(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("failed to get consensus params", "error", err)
 			return nil
@@ -71,7 +71,7 @@ func (k Keeper) CalculateBaseFee(ctx sdk.Context) *big.Int {
 	gasLimit := new(big.Int).SetUint64(math.MaxUint64)
 
 	// NOTE: a MaxGas equal to -1 means that block gas is unlimited
-	if consParams != nil && consParams.Block != nil && consParams.Block.MaxGas > -1 {
+	if consParams.Block != nil && consParams.Block.MaxGas > -1 {
 		gasLimit = big.NewInt(consParams.Block.MaxGas)
 	}
 

@@ -30,8 +30,8 @@ func (suite AnteTestSuite) TestEthSigVerificationDecorator() {
 		reCheckTx           bool
 		expPass             bool
 	}{
-		{"ReCheckTx", &invalidTx{}, false, true, false},
-		{"invalid transaction type", &invalidTx{}, false, false, false},
+		{"ReCheckTx", &InvalidTx{}, false, true, false},
+		{"invalid transaction type", &InvalidTx{}, false, false, false},
 		{
 			"invalid sender",
 			evmtypes.NewTx(suite.app.EvmKeeper.ChainID(), 1, &addr, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil),

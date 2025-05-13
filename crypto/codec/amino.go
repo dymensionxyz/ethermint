@@ -38,5 +38,4 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 	// NOTE: update SDK's amino codec to include the ethsecp256k1 keys.
 	// DO NOT REMOVE unless deprecated on the SDK.
 	legacy.Cdc = cdc
-	//keys.KeysCdc = cdc
 }

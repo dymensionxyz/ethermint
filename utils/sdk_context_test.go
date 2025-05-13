@@ -1,10 +1,11 @@
 package utils
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"testing"
+
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestUseZeroGasConfig(t *testing.T) {

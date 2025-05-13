@@ -1,11 +1,12 @@
 package ante_test
 
 import (
+	"math"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/testutil"
-	"math"
-	"math/big"
 
 	"github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/server/config"
@@ -37,7 +38,7 @@ func (suite AnteTestSuite) TestNewEthAccountVerificationDecorator() {
 		expPass  bool
 	}{
 		{"not CheckTx", nil, func() {}, false, true},
-		{"invalid transaction type", &invalidTx{}, func() {}, true, false},
+		{"invalid transaction type", &InvalidTx{}, func() {}, true, false},
 		{
 			"sender not set to msg",
 			evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil),
@@ -121,8 +122,8 @@ func (suite AnteTestSuite) TestEthNonceVerificationDecorator() {
 		reCheckTx bool
 		expPass   bool
 	}{
-		{"ReCheckTx", &invalidTx{}, func() {}, true, false},
-		{"invalid transaction type", &invalidTx{}, func() {}, false, false},
+		{"ReCheckTx", &InvalidTx{}, func() {}, true, false},
+		{"invalid transaction type", &InvalidTx{}, func() {}, false, false},
 		{"sender account not found", tx, func() {}, false, false},
 		{
 			"sender nonce missmatch",
@@ -186,7 +187,7 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 	tx3 := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx3GasLimit, gasPrice, nil, nil, nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})
 
 	dynamicFeeTx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx2GasLimit,
-		nil,                                                                                // gasPrice
+		nil, // gasPrice
 		new(big.Int).Add(baseFee, big.NewInt(evmtypes.DefaultPriorityReduction.Int64()*2)), // gasFeeCap
 		evmtypes.DefaultPriorityReduction.BigInt(),                                         // gasTipCap
 		nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})
@@ -204,7 +205,7 @@ func (suite AnteTestSuite) TestEthGasConsumeDecorator() {
 		expPanic    bool
 		expPriority int64
 	}{
-		{"invalid transaction type", &invalidTx{}, math.MaxUint64, func() {}, false, false, 0},
+		{"invalid transaction type", &InvalidTx{}, math.MaxUint64, func() {}, false, false, 0},
 		{
 			"sender not found",
 			evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil),
@@ -361,7 +362,7 @@ func (suite AnteTestSuite) TestCanTransferDecorator() {
 		malleate func()
 		expPass  bool
 	}{
-		{"invalid transaction type", &invalidTx{}, func() {}, false},
+		{"invalid transaction type", &InvalidTx{}, func() {}, false},
 		{"AsMessage failed", tx2, func() {}, false},
 		{
 			"evm CanTransfer failed",
@@ -431,7 +432,7 @@ func (suite AnteTestSuite) TestEthIncrementSenderSequenceDecorator() {
 	}{
 		{
 			"invalid transaction type",
-			&invalidTx{},
+			&InvalidTx{},
 			func() {},
 			false, false,
 		},

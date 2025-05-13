@@ -1,8 +1,11 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"strings"
+
+	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -11,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
-	"strings"
 )
 
 // IsVirtualFrontierContract returns true if the address is a virtual frontier contract address
@@ -434,7 +436,7 @@ func (k Keeper) DeployNewVirtualFrontierContract(ctx sdk.Context, vfContract *ty
 
 func (k Keeper) IterateVirtualFrontierContracts(ctx sdk.Context, cb func(vfContract types.VirtualFrontierContract) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixVirtualFrontierContract)
+	iterator := storetypes.KVStorePrefixIterator(store, types.KeyPrefixVirtualFrontierContract)
 
 	defer func() {
 		_ = iterator.Close()

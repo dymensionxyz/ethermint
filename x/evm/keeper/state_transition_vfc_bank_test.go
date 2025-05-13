@@ -1,7 +1,10 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
+	"math"
+	"math/big"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -12,8 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/evmos/ethermint/utils"
 	"github.com/evmos/ethermint/x/evm/types"
-	"math"
-	"math/big"
 )
 
 func (suite *KeeperTestSuite) TestApplyMessageWithConfig_VFC_Ops() {
@@ -957,7 +958,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig_VFC_Ops() {
 
 			// minting
 
-			coins := sdk.NewCoins(sdk.NewCoin(suite.denom, sdkmath.NewIntFromBigInt(vfbcSenderInitialBalance)))
+			coins := sdk.NewCoins(sdk.NewCoin(suite.denom, math.NewIntFromBigInt(vfbcSenderInitialBalance)))
 			suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 			suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
 

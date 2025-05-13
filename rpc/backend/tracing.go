@@ -18,11 +18,11 @@ package backend
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/pkg/errors"
@@ -50,7 +50,11 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	// check tx index is not out of bound
-	if uint32(len(blk.Block.Txs)) < transaction.TxIndex {
+	if len(blk.Block.Txs) > math.MaxUint32 {
+		return nil, fmt.Errorf("tx count %d is overfloing", len(blk.Block.Txs))
+	}
+	txsLen := uint32(len(blk.Block.Txs)) // #nosec G701 G115 -- checked for int overflow already
+	if txsLen < transaction.TxIndex {
 		b.logger.Debug("tx index out of bounds", "index", transaction.TxIndex, "hash", hash.String(), "height", blk.Block.Height)
 		return nil, fmt.Errorf("transaction not included in block %v", blk.Block.Height)
 	}
@@ -143,19 +147,11 @@ func (b *Backend) TraceBlock(height rpctypes.BlockNumber,
 		// If there are no transactions return empty array
 		return []*evmtypes.TxTraceResult{}, nil
 	}
-	blockRes, err := b.TendermintBlockResultByNumber(&block.Block.Height)
-	if err != nil {
-		b.logger.Debug("block result not found", "height", block.Block.Height, "error", err.Error())
-		return nil, nil
-	}
+
 	txDecoder := b.clientCtx.TxConfig.TxDecoder()
 
 	var txsMessages []*evmtypes.MsgEthereumTx
 	for i, tx := range txs {
-		if !rpctypes.TxSuccessOrExceedsBlockGasLimit(blockRes.TxsResults[i]) {
-			b.logger.Debug("invalid tx result code", "cosmos-hash", hexutil.Encode(tx.Hash()))
-			continue
-		}
 		decodedTx, err := txDecoder(tx)
 		if err != nil {
 			b.logger.Error("failed to decode transaction", "hash", txs[i].Hash(), "error", err.Error())

@@ -16,6 +16,7 @@
 package keeper
 
 import (
+	"errors"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -23,7 +24,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -34,16 +35,15 @@ import (
 
 // GetCoinbaseAddress returns the block proposer's validator operator address.
 func (k Keeper) GetCoinbaseAddress(ctx sdk.Context, proposerAddress sdk.ConsAddress) (common.Address, error) {
-	validator, found := k.stakingKeeper.GetValidatorByConsAddr(ctx, GetProposerAddress(ctx, proposerAddress))
-	if !found {
+	validator, err := k.stakingKeeper.GetValidatorByConsAddr(ctx, GetProposerAddress(ctx, proposerAddress))
+	if err != nil {
 		return common.Address{}, errorsmod.Wrapf(
-			stakingtypes.ErrNoValidatorFound,
+			errors.Join(err, stakingtypes.ErrNoValidatorFound),
 			"failed to retrieve validator from block proposer address %s",
 			proposerAddress.String(),
 		)
 	}
-
-	coinbase := common.BytesToAddress(validator.GetOperator())
+	coinbase := common.BytesToAddress([]byte(validator.GetOperator()))
 	return coinbase, nil
 }
 
@@ -124,13 +124,13 @@ func VerifyFee(
 		return sdk.Coins{}, nil
 	}
 
-	return sdk.Coins{{Denom: denom, Amount: sdkmath.NewIntFromBigInt(feeAmt)}}, nil
+	return sdk.Coins{{Denom: denom, Amount: math.NewIntFromBigInt(feeAmt)}}, nil
 }
 
 // CheckSenderBalance validates that the tx cost value is positive and that the
 // sender has enough funds to pay for the fees and value of the transaction.
 func CheckSenderBalance(
-	balance sdkmath.Int,
+	balance math.Int,
 	txData types.TxData,
 ) error {
 	cost := txData.Cost()

@@ -2,11 +2,13 @@ package demo
 
 //goland:noinspection SpellCheckingInspection
 import (
+	"testing"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/evmos/ethermint/integration_test_util"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 //goland:noinspection GoSnakeCaseUsage,SpellCheckingInspection
@@ -100,7 +102,7 @@ func (suite *DemoTestSuite) testEnsureStateResetEachTest() {
 		suite.CITS.TestConfig.InitBalanceAmount, balanceBefore.Amount,
 		"balance must be reset to default each test",
 	)
-	suite.True(balanceBefore.Amount.GT(sdk.ZeroInt()), "balance must be reset to default each test")
+	suite.True(balanceBefore.Amount.GT(math.ZeroInt()), "balance must be reset to default each test")
 
 	// change balance
 	err := suite.CITS.TxSend(wallet1, suite.CITS.WalletAccounts.Number(2), 0.1)

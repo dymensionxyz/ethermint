@@ -1,14 +1,15 @@
 package vfc_it_suite_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
+	"math/big"
+
+	math "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/params"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"math/big"
 )
 
 func (suite *EvmITSuite) TestTransfer() {
@@ -26,7 +27,7 @@ func (suite *EvmITSuite) TestTransfer() {
 
 	suite.CITS.MintCoin(sender, sdk.Coin{
 		Denom:  suite.CITS.ChainConstantsConfig.GetMinDenom(),
-		Amount: sdkmath.NewIntFromBigInt(extremeBalance),
+		Amount: math.NewIntFromBigInt(extremeBalance),
 	})
 
 	balance := func(address common.Address) *big.Int {

@@ -1,8 +1,7 @@
 package demo
 
 import (
-	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	math "cosmossdk.io/math"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
@@ -11,7 +10,7 @@ import (
 
 func (suite *DemoTestSuite) Test_QC_Evm_Balance() {
 	balance := suite.queryEvmBalance(0, suite.CITS.WalletAccounts.Number(1).GetEthAddress().String())
-	suite.Require().True(balance.GT(sdk.ZeroInt()))
+	suite.Require().True(balance.GT(math.ZeroInt()))
 }
 
 func (suite *DemoTestSuite) Test_QC_Evm_Balance_At_Different_Blocks() {
@@ -21,7 +20,7 @@ func (suite *DemoTestSuite) Test_QC_Evm_Balance_At_Different_Blocks() {
 	senderBalanceBefore := suite.queryEvmBalance(0, sender.GetEthAddress().String())
 	receiverBalanceBefore := suite.queryEvmBalance(0, receiver.GetEthAddress().String())
 
-	suite.Require().Truef(senderBalanceBefore.GT(sdk.ZeroInt()), "sender must have balance")
+	suite.Require().Truef(senderBalanceBefore.GT(math.ZeroInt()), "sender must have balance")
 
 	contextHeightBeforeSend := suite.CITS.CurrentContext.BlockHeight()
 	suite.Commit()
@@ -46,7 +45,7 @@ func (suite *DemoTestSuite) Test_QC_Evm_Balance_At_Different_Blocks() {
 	suite.Equal(receiverBalanceBefore.String(), historicalReceiverBalanceAfter.String(), "mis-match sender balance at historical height")
 }
 
-func (suite *DemoTestSuite) queryEvmBalance(height int64, evmAddress string) sdkmath.Int {
+func (suite *DemoTestSuite) queryEvmBalance(height int64, evmAddress string) math.Int {
 	res, err := suite.CITS.QueryClientsAt(height).EVM.Balance(
 		rpctypes.ContextWithHeight(height),
 		&evmtypes.QueryBalanceRequest{
@@ -56,9 +55,9 @@ func (suite *DemoTestSuite) queryEvmBalance(height int64, evmAddress string) sdk
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	if res.Balance == "0" {
-		return sdkmath.ZeroInt()
+		return math.ZeroInt()
 	}
-	bal, ok := sdkmath.NewIntFromString(res.Balance)
+	bal, ok := math.NewIntFromString(res.Balance)
 	suite.Require().True(ok)
 	return bal
 }
