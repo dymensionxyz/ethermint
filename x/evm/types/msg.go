@@ -25,6 +25,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	errorsmod "cosmossdk.io/errors"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -32,9 +34,10 @@ import (
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 
+	"cosmossdk.io/x/tx/signing"
+	plusartypes "github.com/evmos/ethermint/api/ethermint/evm/v1"
 	"github.com/evmos/ethermint/types"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -57,13 +60,10 @@ const (
 	TypeMsgEthereumTx = "ethereum_tx"
 )
 
-// FIXME:review
-/*
-var MsgEthereumTxCustomGetSigner = txsigning.CustomGetSigner{
-	MsgType: protov2.MessageName(&evmapi.MsgEthereumTx{}),
-	Fn:      evmapi.GetSigners,
+var MsgEthereumTxCustomGetSigner = signing.CustomGetSigner{
+	MsgType: protov2.MessageName(&plusartypes.MsgEthereumTx{}),
+	Fn:      plusartypes.GetSigners,
 }
-*/
 
 // NewTx returns a reference to a new Ethereum transaction message.
 func NewTx(
@@ -352,7 +352,7 @@ func (msg *MsgEthereumTx) UnmarshalBinary(b []byte) error {
 }
 
 // BuildTx builds the canonical cosmos tx from ethereum msg
-func (msg *MsgEthereumTx) BuildTx(b client.TxBuilder, evmDenom string) (signing.Tx, error) {
+func (msg *MsgEthereumTx) BuildTx(b client.TxBuilder, evmDenom string) (authsigning.Tx, error) {
 	builder, ok := b.(authtx.ExtensionOptionsTxBuilder)
 	if !ok {
 		return nil, errors.New("unsupported builder")
