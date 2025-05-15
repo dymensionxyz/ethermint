@@ -412,6 +412,12 @@ proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
 	$(protoImage) sh ./scripts/protoc-swagger-gen.sh
 
+
+proto-pulsar-gen:
+	@echo "Generating Pulsar Protobuf files"
+	$(protoImage) sh ./scripts/protocgen-pulsar.sh
+
+
 proto-format:
 	@echo "Formatting Protobuf files"
 	$(protoImage) find ./ -name *.proto -exec clang-format -i {} \;
