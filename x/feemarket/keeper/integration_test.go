@@ -566,7 +566,7 @@ func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 	s.Require().NoError(err)
 
 	evmDenom := s.app.EvmKeeper.GetParams(s.ctx).EvmDenom
-	fees := sdk.Coins{{Denom: evmDenom, Amount: math.NewIntFromBigInt(txData.Fee())}}
+	fees := sdk.Coins{{Denom: evmDenom, Amount: sdkmath.NewIntFromBigInt(txData.Fee())}}
 	builder.SetFeeAmount(fees)
 	builder.SetGasLimit(msgEthereumTx.GetGas())
 
@@ -591,7 +591,7 @@ func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 	return res
 }
 
-func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) []byte {
+func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) []byte {
 	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
 	accountAddress := sdk.AccAddress(priv.PubKey().Address().Bytes())
 
@@ -599,7 +599,7 @@ func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk
 
 	txBuilder.SetGasLimit(1000000)
 	if gasPrice == nil {
-		_gasPrice := math.NewInt(1)
+		_gasPrice := sdkmath.NewInt(1)
 		gasPrice = &_gasPrice
 	}
 	fees := &sdk.Coins{{Denom: s.denom, Amount: gasPrice.MulRaw(1000000)}}
@@ -650,14 +650,14 @@ func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk
 	return bz
 }
 
-func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) abci.ResponseCheckTx {
+func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) abci.ResponseCheckTx {
 	bz := prepareCosmosTx(priv, gasPrice, msgs...)
 	req := abci.RequestCheckTx{Tx: bz}
 	res := s.app.BaseApp.CheckTx(req)
 	return res
 }
 
-func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) abci.ResponseDeliverTx {
+func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) abci.ResponseDeliverTx {
 	bz := prepareCosmosTx(priv, gasPrice, msgs...)
 	req := abci.RequestDeliverTx{Tx: bz}
 	res := s.app.BaseApp.DeliverTx(req)

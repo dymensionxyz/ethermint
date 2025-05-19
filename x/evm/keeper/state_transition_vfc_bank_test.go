@@ -4,7 +4,7 @@ import (
 	"math"
 	"math/big"
 
-	math "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/evmos/ethermint/utils"
 	"github.com/evmos/ethermint/x/evm/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func (suite *KeeperTestSuite) TestApplyMessageWithConfig_VFC_Ops() {
@@ -957,9 +958,9 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig_VFC_Ops() {
 
 			// minting
 
-			coins := sdk.NewCoins(sdk.NewCoin(suite.denom, math.NewIntFromBigInt(vfbcSenderInitialBalance)))
-			suite.app.BankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
-			suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, minttypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
+			coins := sdk.NewCoins(sdk.NewCoin(suite.denom, sdkmath.NewIntFromBigInt(vfbcSenderInitialBalance)))
+			suite.app.BankKeeper.MintCoins(suite.ctx, evmtypes.ModuleName, coins)
+			suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, evmtypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
 
 			// prepare exec ctx
 

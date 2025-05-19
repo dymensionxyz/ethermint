@@ -3,6 +3,7 @@ package ante_test
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"time"
 
@@ -221,7 +222,7 @@ func (suite *AnteTestSuite) CreateTestTxBuilder(
 	txData, err := evmtypes.UnpackTxData(msg.Data)
 	suite.Require().NoError(err)
 
-	fees := sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewIntFromBigInt(txData.Fee())))
+	fees := sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewIntFromBigInt(txData.Fee())))
 	builder.SetFeeAmount(fees)
 	builder.SetGasLimit(msg.GetGas())
 
@@ -264,7 +265,7 @@ func (suite *AnteTestSuite) CreateTestTxBuilder(
 	return txBuilder
 }
 
-func (suite *AnteTestSuite) CreateTestCosmosTxBuilder(gasPrice math.Int, denom string, msgs ...sdk.Msg) client.TxBuilder {
+func (suite *AnteTestSuite) CreateTestCosmosTxBuilder(gasPrice sdkmath.Int, denom string, msgs ...sdk.Msg) client.TxBuilder {
 	txBuilder := suite.clientCtx.TxConfig.NewTxBuilder()
 
 	txBuilder.SetGasLimit(TestGasLimit)
@@ -278,7 +279,7 @@ func (suite *AnteTestSuite) CreateTestCosmosTxBuilder(gasPrice math.Int, denom s
 func (suite *AnteTestSuite) CreateTestEIP712TxBuilderMsgSend(from sdk.AccAddress, priv cryptotypes.PrivKey, chainId string, gas uint64, gasAmount sdk.Coins) client.TxBuilder {
 	// Build MsgSend
 	recipient := sdk.AccAddress(common.Address{}.Bytes())
-	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(1))))
+	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(1))))
 	return suite.CreateTestEIP712SingleMessageTxBuilder(priv, chainId, gas, gasAmount, msgSend)
 }
 
@@ -332,7 +333,7 @@ func (suite *AnteTestSuite) CreateTestEIP712SubmitProposal(from sdk.AccAddress, 
 }
 
 func (suite *AnteTestSuite) CreateTestEIP712GrantAllowance(from sdk.AccAddress, priv cryptotypes.PrivKey, chainId string, gas uint64, gasAmount sdk.Coins) client.TxBuilder {
-	spendLimit := sdk.NewCoins(math.NewInt64Coin(evmtypes.DefaultEVMDenom, 10))
+	spendLimit := sdk.NewCoins(sdk.NewInt64Coin(evmtypes.DefaultEVMDenom, 10))
 	threeHours := time.Now().Add(3 * time.Hour)
 	basic := &feegrant.BasicAllowance{
 		SpendLimit: spendLimit,
@@ -403,7 +404,7 @@ func (suite *AnteTestSuite) CreateTestEIP712SubmitProposalV1(from sdk.AccAddress
 	// Build V1 proposal
 	msgProposal, err := govtypesv1.NewMsgSubmitProposal(
 		proposalMsgs,
-		sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(100))),
+		sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(100))),
 		sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), from.Bytes()),
 		"Metadata", "title", "summary", false,
 	)
@@ -415,22 +416,22 @@ func (suite *AnteTestSuite) CreateTestEIP712SubmitProposalV1(from sdk.AccAddress
 
 func (suite *AnteTestSuite) CreateTestEIP712MsgExec(from sdk.AccAddress, priv cryptotypes.PrivKey, chainId string, gas uint64, gasAmount sdk.Coins) client.TxBuilder {
 	recipient := sdk.AccAddress(common.Address{}.Bytes())
-	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(1))))
+	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(1))))
 	msgExec := authz.NewMsgExec(from, []sdk.Msg{msgSend})
 	return suite.CreateTestEIP712SingleMessageTxBuilder(priv, chainId, gas, gasAmount, &msgExec)
 }
 
 func (suite *AnteTestSuite) CreateTestEIP712MultipleMsgSend(from sdk.AccAddress, priv cryptotypes.PrivKey, chainId string, gas uint64, gasAmount sdk.Coins) client.TxBuilder {
 	recipient := sdk.AccAddress(common.Address{}.Bytes())
-	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(1))))
+	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(1))))
 	return suite.CreateTestEIP712CosmosTxBuilder(priv, chainId, gas, gasAmount, []sdk.Msg{msgSend, msgSend, msgSend})
 }
 
 // Fails
 func (suite *AnteTestSuite) CreateTestEIP712MultipleSignerMsgs(from sdk.AccAddress, priv cryptotypes.PrivKey, chainId string, gas uint64, gasAmount sdk.Coins) client.TxBuilder {
 	recipient := sdk.AccAddress(common.Address{}.Bytes())
-	msgSend1 := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(1))))
-	msgSend2 := banktypes.NewMsgSend(recipient, from, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewInt(1))))
+	msgSend1 := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(1))))
+	msgSend2 := banktypes.NewMsgSend(recipient, from, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(1))))
 	return suite.CreateTestEIP712CosmosTxBuilder(priv, chainId, gas, gasAmount, []sdk.Msg{msgSend1, msgSend2})
 }
 
