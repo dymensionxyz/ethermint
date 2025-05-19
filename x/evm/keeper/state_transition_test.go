@@ -5,10 +5,10 @@ import (
 	"math"
 	"math/big"
 
+	math "cosmossdk.io/math"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/evmos/ethermint/utils"
 
-	sdkmath "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
@@ -591,7 +591,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 	vfbcTransferAmount := new(big.Int).Mul(big.NewInt(8), big.NewInt(int64(math.Pow(10, 18)))) // 8 * 10^18
 	vfbcSenderInitialBalance := new(big.Int).SetUint64(math.MaxUint64)
 
-	mintToVFBCSender := func(amount sdkmath.Int) {
+	mintToVFBCSender := func(amount math.Int) {
 		coins := sdk.NewCoins(sdk.NewCoin(suite.denom, amount))
 		suite.app.BankKeeper.MintCoins(suite.ctx, evmtypes.ModuleName, coins)
 		suite.app.BankKeeper.SendCoinsFromModuleToAccount(suite.ctx, evmtypes.ModuleName, randomVFBCSenderAddress.Bytes(), coins)
@@ -674,7 +674,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 				)
 				suite.Require().NoError(err)
 				params := suite.app.FeeMarketKeeper.GetParams(suite.ctx)
-				params.MinGasMultiplier = sdkmath.LegacyNewDec(math.MaxInt64).MulInt64(100)
+				params.MinGasMultiplier = math.LegacyNewDec(math.MaxInt64).MulInt64(100)
 				err = suite.app.FeeMarketKeeper.SetParams(suite.ctx, params)
 				suite.Require().NoError(err)
 			},
@@ -683,7 +683,7 @@ func (suite *KeeperTestSuite) TestApplyMessageWithConfig() {
 		{
 			name: "message transfer native via VFBC",
 			malleate: func() {
-				mintToVFBCSender(sdkmath.NewIntFromBigInt(vfbcSenderInitialBalance))
+				mintToVFBCSender(math.NewIntFromBigInt(vfbcSenderInitialBalance))
 
 				callData := append(
 					// transfer 1 to random receiver

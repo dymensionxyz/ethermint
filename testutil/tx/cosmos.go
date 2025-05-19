@@ -18,7 +18,7 @@ package tx
 import (
 	"math"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -31,7 +31,7 @@ import (
 
 var (
 	feeAmt     = math.Pow10(16)
-	DefaultFee = sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewIntFromUint64(uint64(feeAmt))) // 0.01 EVMOS
+	DefaultFee = sdk.NewCoin(evmtypes.DefaultEVMDenom, math.NewIntFromUint64(uint64(feeAmt)))
 )
 
 // CosmosTxArgs contains the params to create a cosmos tx
@@ -45,7 +45,7 @@ type CosmosTxArgs struct {
 	// Gas to be used on the tx
 	Gas uint64
 	// GasPrice to use on tx
-	GasPrice *sdkmath.Int
+	GasPrice *math.Int
 	// Fees is the fee to be used on the tx (amount and denom)
 	Fees sdk.Coins
 	// FeeGranter is the account address of the fee granter

@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	sdkmath "cosmossdk.io/math"
+	math "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -42,6 +42,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/params"
 )
+
+var testTokens = math.NewIntWithDecimal(1000, 18)
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -111,18 +113,45 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 	suite.consAddress = consAddr
 
-	suite.ctx = suite.ctx.WithProposer(consAddr)
+	suite.app = app.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
+		feemarketGenesis := feemarkettypes.DefaultGenesisState()
+		if suite.enableFeemarket {
+			feemarketGenesis.Params.EnableHeight = 1
+			feemarketGenesis.Params.NoBaseFee = false
+		} else {
+			feemarketGenesis.Params.NoBaseFee = true
+		}
+		genesis[feemarkettypes.ModuleName] = app.AppCodec().MustMarshalJSON(feemarketGenesis)
+		if !suite.enableLondonHF {
+			evmGenesis := types.DefaultGenesisState()
+			maxInt := math.NewInt(math.MaxInt64)
+			evmGenesis.Params.ChainConfig.LondonBlock = &maxInt
+			evmGenesis.Params.ChainConfig.ArrowGlacierBlock = &maxInt
+			evmGenesis.Params.ChainConfig.GrayGlacierBlock = &maxInt
+			evmGenesis.Params.ChainConfig.MergeNetsplitBlock = &maxInt
+			evmGenesis.Params.ChainConfig.ShanghaiBlock = &maxInt
+			evmGenesis.Params.ChainConfig.CancunBlock = &maxInt
+			genesis[types.ModuleName] = app.AppCodec().MustMarshalJSON(evmGenesis)
+		}
+		return genesis
+	})
 
-	// Set up fee market params if enabled
-	feemarketParams := feemarkettypes.DefaultParams()
-	if suite.enableFeemarket {
-		feemarketParams.EnableHeight = 1
-		feemarketParams.NoBaseFee = false
-	} else {
-		feemarketParams.NoBaseFee = true
-	}
-	err = suite.app.FeeMarketKeeper.SetParams(suite.ctx, feemarketParams)
-	suite.Require().NoError(err)
+	if suite.mintFeeCollector {
+		// mint some coin to fee collector
+		coins := sdk.NewCoins(sdk.NewCoin(types.DefaultEVMDenom, math.NewInt(int64(params.TxGas)-1)))
+		genesisState := app.NewTestGenesisState(suite.app.AppCodec())
+		balances := []banktypes.Balance{
+			{
+				Address: suite.app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName).String(),
+				Coins:   coins,
+			},
+		}
+		var bankGenesis banktypes.GenesisState
+		suite.app.AppCodec().MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenesis)
+		// Update balances and total supply
+		bankGenesis.Balances = append(bankGenesis.Balances, balances...)
+		bankGenesis.Supply = bankGenesis.Supply.Add(coins...)
+		genesisState[banktypes.ModuleName] = suite.app.AppCodec().MustMarshalJSON(&bankGenesis)
 
 	// Set up EVM params
 	evmParams := evmtypes.DefaultParams()
