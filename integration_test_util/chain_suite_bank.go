@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	itutiltypes "github.com/evmos/ethermint/integration_test_util/types"
 	rpctypes "github.com/evmos/ethermint/rpc/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -115,10 +114,10 @@ func (suite *ChainIntegrationTestSuite) MintCoinToCosmosAddress(receiver sdk.Acc
 
 	coins := sdk.NewCoins(coin)
 
-	err := suite.ChainApp.BankKeeper().MintCoins(suite.CurrentContext, minttypes.ModuleName, coins)
+	err := suite.ChainApp.BankKeeper().MintCoins(suite.CurrentContext, evmtypes.ModuleName, coins)
 	suite.Require().NoError(err)
 
-	err = suite.ChainApp.BankKeeper().SendCoinsFromModuleToAccount(suite.CurrentContext, minttypes.ModuleName, receiver, coins)
+	err = suite.ChainApp.BankKeeper().SendCoinsFromModuleToAccount(suite.CurrentContext, evmtypes.ModuleName, receiver, coins)
 	suite.Require().NoError(err)
 }
 
@@ -128,10 +127,10 @@ func (suite *ChainIntegrationTestSuite) MintCoinToModuleAccount(receiver authtyp
 
 	coins := sdk.NewCoins(coin)
 
-	err := suite.ChainApp.BankKeeper().MintCoins(suite.CurrentContext, minttypes.ModuleName, coins)
+	err := suite.ChainApp.BankKeeper().MintCoins(suite.CurrentContext, evmtypes.ModuleName, coins)
 	suite.Require().NoError(err)
 
-	err = suite.ChainApp.BankKeeper().SendCoinsFromModuleToModule(suite.CurrentContext, minttypes.ModuleName, receiver.GetName(), coins)
+	err = suite.ChainApp.BankKeeper().SendCoinsFromModuleToModule(suite.CurrentContext, evmtypes.ModuleName, receiver.GetName(), coins)
 	suite.Require().NoError(err)
 }
 
