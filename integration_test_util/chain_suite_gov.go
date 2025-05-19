@@ -34,7 +34,7 @@ func (suite *ChainIntegrationTestSuite) TxFullGov(proposer *itutiltypes.TestAcco
 	suite.TxAllVote(proposal.Id, govv1types.OptionYes)
 	suite.Commit()
 	if suite.HasCometBFT() {
-		time.Sleep(itutiltypes.TendermintGovVotingPeriod + 200*time.Millisecond)
+		time.Sleep(itutiltypes.CometBFTGovVotingPeriod + 200*time.Millisecond)
 	}
 
 	var proposalById *govv1types.Proposal

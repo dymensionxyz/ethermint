@@ -14,7 +14,7 @@ type ChainConfig struct {
 	Bech32Prefix             string
 	EvmChainId               int64
 	EvmChainIdBigInt         *big.Int // dynamic: calculated from EvmChainId
-	DisableTendermint        bool
+	DisableCometBFT          bool
 	DisabledContractCreation bool
 }
 

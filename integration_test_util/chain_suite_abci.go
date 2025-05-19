@@ -159,7 +159,7 @@ func (suite *ChainIntegrationTestSuite) BroadcastTx(tx sdk.Tx) (responseDeliverT
 
 	if err == nil {
 		if suite.HasCometBFT() {
-			res, err := suite.QueryClients.TendermintRpcHttpClient.BroadcastTxCommit(context.Background(), bz)
+			res, err := suite.QueryClients.CometBFTRpcHttpClient.BroadcastTxCommit(context.Background(), bz)
 			suite.Require().NoError(err)
 			responseDeliverTx = res.TxResult
 		} else {
@@ -202,7 +202,7 @@ func (suite *ChainIntegrationTestSuite) BroadcastTxAsync(tx sdk.Tx) (resultBroad
 	bz, err = suite.EncodingConfig.TxConfig.TxEncoder()(tx)
 
 	if err == nil {
-		res, err := suite.QueryClients.TendermintRpcHttpClient.BroadcastTxAsync(context.Background(), bz)
+		res, err := suite.QueryClients.CometBFTRpcHttpClient.BroadcastTxAsync(context.Background(), bz)
 		suite.Require().NoError(err)
 		resultBroadcastTx = res
 	}
