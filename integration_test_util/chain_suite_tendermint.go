@@ -2,14 +2,14 @@ package integration_test_util
 
 //goland:noinspection SpellCheckingInspection
 
-// HasTendermint indicate if the integration chain has Tendermint enabled.
-func (suite *ChainIntegrationTestSuite) HasTendermint() bool {
-	return !suite.TestConfig.DisableTendermint && suite.TendermintApp != nil
+// HasCometBFT indicate if the integration chain has CometBFT enabled.
+func (suite *ChainIntegrationTestSuite) HasCometBFT() bool {
+	return !suite.TestConfig.DisableCometBFT && suite.CometBFTApp != nil
 }
 
-// EnsureTendermint trigger test failure immediately if Tendermint is not enabled on integration chain.
-func (suite *ChainIntegrationTestSuite) EnsureTendermint() {
-	if !suite.HasTendermint() {
-		suite.Require().FailNow("tendermint node must be initialized")
+// EnsureCometBFT trigger test failure immediately if CometBFT is not enabled on integration chain.
+func (suite *ChainIntegrationTestSuite) EnsureCometBFT() {
+	if !suite.HasCometBFT() {
+		suite.Require().FailNow("CometBFT node must be initialized")
 	}
 }

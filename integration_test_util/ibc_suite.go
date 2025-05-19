@@ -32,10 +32,10 @@ type ChainsIbcIntegrationTestSuite struct {
 // CreateChainsIbcIntegrationTestSuite initializes an IBC integration test suite from given chains.
 // The input chain must disable Tendermint.
 func CreateChainsIbcIntegrationTestSuite(chain1, chain2 *ChainIntegrationTestSuite, relayer1, relayer2 *itutiltypes.TestAccount) *ChainsIbcIntegrationTestSuite {
-	if chain1.HasTendermint() {
+	if chain1.HasCometBFT() {
 		panic(fmt.Errorf("chain1 must disable Tendermint"))
 	}
-	if chain2.HasTendermint() {
+	if chain2.HasCometBFT() {
 		panic(fmt.Errorf("chain2 must disable Tendermint"))
 	}
 
@@ -139,7 +139,7 @@ func newIbcTestingChain(coordinator *ibctesting.Coordinator, chain *ChainIntegra
 	}
 
 	return &ibctesting.TestChain{
-		T:             chain.t,
+		TB:            chain.t,
 		Coordinator:   coordinator,
 		ChainID:       chainId,
 		App:           testApp,

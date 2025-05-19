@@ -11,7 +11,8 @@ import (
 func (suite *ChainIntegrationTestSuite) TxPrepareContextWithdrawDelegatorAndValidatorReward(delegator *itutiltypes.TestAccount, delegate uint8, waitXBlocks uint8) (valAddr sdk.ValAddress) {
 	validatorAddr := suite.GetValidatorAddress(1)
 
-	val := suite.ChainApp.StakingKeeper().Validator(suite.CurrentContext, validatorAddr)
+	val, err := suite.ChainApp.StakingKeeper().Validator(suite.CurrentContext, validatorAddr)
+	suite.Require().NoError(err)
 
 	valReward := suite.NewBaseCoin(1)
 	delegationAmount := suite.NewBaseCoin(int64(delegate))
@@ -29,7 +30,7 @@ func (suite *ChainIntegrationTestSuite) TxPrepareContextWithdrawDelegatorAndVali
 		ValidatorAddress: validatorAddr.String(),
 		Amount:           delegationAmount,
 	}
-	_, _, err := suite.DeliverTx(suite.CurrentContext, delegator, nil, msgDelegate)
+	_, _, err = suite.DeliverTx(suite.CurrentContext, delegator, nil, msgDelegate)
 	suite.Require().NoError(err)
 	suite.Commit()
 
@@ -47,7 +48,7 @@ func (suite *ChainIntegrationTestSuite) TxPrepareContextWithdrawDelegatorAndVali
 func (suite *ChainIntegrationTestSuite) GetValidatorAddress(number int) sdk.ValAddress {
 	validator := suite.ValidatorAccounts.Number(number)
 
-	if suite.HasTendermint() {
+	if suite.HasCometBFT() {
 		return sdk.ValAddress(validator.GetTmPubKey().Address())
 	}
 

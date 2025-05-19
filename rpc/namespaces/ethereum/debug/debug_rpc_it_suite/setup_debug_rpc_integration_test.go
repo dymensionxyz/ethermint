@@ -40,7 +40,7 @@ func (suite *DebugRpcTestSuite) SetupSuite() {
 
 func (suite *DebugRpcTestSuite) SetupTest() {
 	suite.CITS = integration_test_util.CreateChainIntegrationTestSuite(suite.T(), suite.Require())
-	suite.CITS.EnsureTendermint() // RPC requires Tendermint
+	suite.CITS.EnsureCometBFT() // RPC requires Tendermint
 }
 
 func (suite *DebugRpcTestSuite) TearDownTest() {

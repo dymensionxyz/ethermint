@@ -8,19 +8,23 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
+	cmtdb "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	sdkdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmosed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -57,9 +61,9 @@ var defaultConsensusParams = &tmproto.ConsensusParams{
 
 const TendermintGovVotingPeriod = 5 * time.Second
 
-func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.EncodingConfig, db *MemDB, validatorAccounts TestAccounts, walletAccounts TestAccounts, genesisAccountBalance sdk.Coins, tempHolder *TemporaryHolder, logger log.Logger) (chainApp ChainApp, tendermintApp TendermintApp, validatorSet *tmtypes.ValidatorSet) {
+func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.EncodingConfig, db cmtdb.DB, validatorAccounts TestAccounts, walletAccounts TestAccounts, genesisAccountBalance sdk.Coins, tempHolder *TemporaryHolder, logger log.Logger) (chainApp ChainApp, tendermintApp TendermintApp, validatorSet *tmtypes.ValidatorSet) {
 	defaultNodeHome := chainapp.DefaultNodeHome
-	moduleBasics := chainapp.ModuleBasics
+	//moduleBasics := chainapp.ModuleBasics
 
 	// create validator set
 	var validators []*tmtypes.Validator
@@ -114,20 +118,20 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	}
 
 	app := chainapp.NewEthermintApp(
-		logger,            // logger
-		db.AsTendermint(), // db
-		nil,               // trace store
-		true,              // load latest
-		map[int64]bool{},  // skipUpgradeHeights
-		defaultNodeHome,   // homePath
-		0,                 // invCheckPeriod
-		encCfg,            // encodingConfig
-		disableCrisisInvariantsChecking{},
+		logger,           // logger
+		sdkdb.NewMemDB(), // db
+		nil,              // trace store
+		true,             // load latest
+		//map[int64]bool{}, // skipUpgradeHeights
+		//defaultNodeHome,  // homePath
+		//0,                // invCheckPeriod
+		//encCfg,           // encodingConfig
+		simtestutil.NewAppOptionsWithFlagHome(defaultNodeHome),
 		baseapp.SetChainID(chainCfg.CosmosChainId), // baseAppOptions
 	)
 
 	// init chain must be called to stop deliverState from being nil
-	genesisState := moduleBasics.DefaultGenesis(encCfg.Codec)
+	genesisState := app.BasicModuleManager.DefaultGenesis(encCfg.Codec)
 
 	genesisState = genesisStateWithValSet(chainCfg, testConfig, encCfg.Codec, genesisState, valSet, genesisValidatorAccounts, genesisWalletAccounts, genesisBalances, signingInfos)
 
@@ -177,7 +181,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	tempHolder.CacheGenesisDoc(&genesisDoc)
 
 	if chainCfg.DisableTendermint {
-		app.InitChain(abci.RequestInitChain{
+		app.InitChain(&abci.RequestInitChain{
 			ChainId: chainCfg.CosmosChainId,
 			ConsensusParams: &tmproto.ConsensusParams{
 				Block: &tmproto.BlockParams{
@@ -197,7 +201,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 		if validator.GetValidatorAddress().String() != sdk.ValAddress(validator.GetPubKey().Address()).String() {
 			panic("validator address does not match")
 		}
-		node, rpcPort, tempFiles := itutilutils.StartTendermintNode(app, &genesisDoc, db, validator.GetTmPrivKey(), logger)
+		node, rpcPort, tempFiles := itutilutils.StartTendermintNode(sdkserver.NewCometABCIWrapper(app), &genesisDoc, db, validator.GetTmPrivKey(), logger)
 		for _, tempFile := range tempFiles {
 			tempHolder.AddTempFile(tempFile)
 		}
@@ -240,15 +244,15 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   math.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
 			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
-			MinSelfDelegation: sdk.OneInt(),
+			MinSelfDelegation: math.OneInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genesisValidatorAccounts[i].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genesisValidatorAccounts[i].GetAddress().String(), sdk.ValAddress(val.Address).String(), math.LegacyOneDec()))
 
 		totalSupply = totalSupply.Add(sdk.NewCoin(chainCfg.BaseDenom, bondAmt))
 	}

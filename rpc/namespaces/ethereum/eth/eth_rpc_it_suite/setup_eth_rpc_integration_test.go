@@ -2,8 +2,8 @@ package demo
 
 //goland:noinspection SpellCheckingInspection
 import (
-	"encoding/json"
 	"cosmossdk.io/log"
+	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -40,7 +40,7 @@ func (suite *EthRpcTestSuite) SetupSuite() {
 
 func (suite *EthRpcTestSuite) SetupTest() {
 	suite.CITS = integration_test_util.CreateChainIntegrationTestSuite(suite.T(), suite.Require())
-	suite.CITS.EnsureTendermint() // RPC requires Tendermint
+	suite.CITS.EnsureCometBFT() // RPC requires Tendermint
 }
 
 func (suite *EthRpcTestSuite) TearDownTest() {

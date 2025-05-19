@@ -5,6 +5,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkserver "github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
@@ -12,13 +13,16 @@ import (
 )
 
 var _ ChainApp = &chainAppImp{}
-var _ ibctesting.TestingApp = &chainAppImp{}
 
 type chainAppImp struct {
 	app *chainapp.EthermintApp
 }
 
 func (c chainAppImp) App() abci.Application {
+	return sdkserver.NewCometABCIWrapper(c.app)
+}
+
+func (c chainAppImp) EthermintApp() *chainapp.EthermintApp {
 	return c.app
 }
 
@@ -27,7 +31,7 @@ func (c chainAppImp) BaseApp() *baseapp.BaseApp {
 }
 
 func (c chainAppImp) IbcTestingApp() ibctesting.TestingApp {
-	return c
+	return c.app
 }
 
 func (c chainAppImp) InterfaceRegistry() codectypes.InterfaceRegistry {
@@ -42,10 +46,10 @@ func (c chainAppImp) FundAccount(ctx sdk.Context, account *TestAccount, amounts 
 	return c.BankKeeper().SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, account.GetCosmosAddress(), amounts)
 }
 
-func (c chainAppImp) PrepareProposal(proposal abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
-	return c.app.PrepareProposal(proposal)
+func (c chainAppImp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return c.app.BeginBlocker(ctx)
 }
 
-func (c chainAppImp) ProcessProposal(proposal abci.RequestProcessProposal) abci.ResponseProcessProposal {
-	return c.app.ProcessProposal(proposal)
+func (c chainAppImp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return c.app.EndBlocker(ctx)
 }

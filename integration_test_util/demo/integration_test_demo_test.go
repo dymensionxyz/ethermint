@@ -81,7 +81,7 @@ func (suite *DemoTestSuite) SkipIfDisabledContractCreation() {
 }
 
 func (suite *DemoTestSuite) SkipIfDisabledTendermint() {
-	if !suite.CITS.HasTendermint() {
+	if !suite.CITS.HasCometBFT() {
 		suite.T().Skip("Tendermint is disabled, some methods can not be used, skip")
 	}
 }

@@ -2,6 +2,7 @@ package integration_test_util
 
 //goland:noinspection SpellCheckingInspection
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypeslegacy "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -14,7 +15,7 @@ import (
 func (suite *ChainIntegrationTestSuite) TxFullGov(proposer *itutiltypes.TestAccount, newProposalContent govtypeslegacy.Content) uint64 {
 	suite.Require().NotNil(proposer)
 
-	depositAmount := math.NewInt(int64(0.1 * math.Pow10(18)))
+	depositAmount := sdkmath.NewInt(int64(0.1 * math.Pow10(18)))
 	msg, err := govtypeslegacy.NewMsgSubmitProposal(newProposalContent, sdk.NewCoins(
 		sdk.NewCoin(suite.ChainConstantsConfig.GetMinDenom(), depositAmount),
 	), proposer.GetCosmosAddress())
@@ -32,7 +33,7 @@ func (suite *ChainIntegrationTestSuite) TxFullGov(proposer *itutiltypes.TestAcco
 
 	suite.TxAllVote(proposal.Id, govv1types.OptionYes)
 	suite.Commit()
-	if suite.HasTendermint() {
+	if suite.HasCometBFT() {
 		time.Sleep(itutiltypes.TendermintGovVotingPeriod + 200*time.Millisecond)
 	}
 

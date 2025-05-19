@@ -22,7 +22,7 @@ type TestConfig struct {
 	SecondaryDenomUnits      []banktypes.DenomUnit
 	InitBalanceAmount        math.Int
 	DefaultFeeAmount         math.Int
-	DisableTendermint        bool
+	DisableCometBFT          bool
 	DisabledContractCreation bool
 }
 

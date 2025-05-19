@@ -136,6 +136,11 @@ func (suite *ChainIntegrationTestSuite) signCosmosTx(
 
 	txCfg := suite.EncodingConfig.TxConfig
 
+	signMode, err := authsigning.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
+	if err != nil {
+		return nil, err
+	}
+
 	seq, err := suite.ChainApp.AccountKeeper().GetSequence(ctx, account.GetCosmosAddress())
 	if err != nil {
 		return nil, err
@@ -146,7 +151,7 @@ func (suite *ChainIntegrationTestSuite) signCosmosTx(
 	sigV2 := signing.SignatureV2{
 		PubKey: account.GetPubKey(),
 		Data: &signing.SingleSignatureData{
-			SignMode:  txCfg.SignModeHandler().DefaultMode(),
+			SignMode:  signMode,
 			Signature: nil,
 		},
 		Sequence: seq,
@@ -166,7 +171,8 @@ func (suite *ChainIntegrationTestSuite) signCosmosTx(
 		Sequence:      seq,
 	}
 	sigV2, err = clienttx.SignWithPrivKey(
-		txCfg.SignModeHandler().DefaultMode(),
+		ctx,
+		signMode,
 		signerData,
 		txBuilder, account.PrivateKey, txCfg,
 		seq,

@@ -39,17 +39,23 @@ func (suite *ChainIntegrationTestSuite) createNewContext(oldCtx sdk.Context, hea
 	// NewContext function keeps the multistore
 	// but resets other context fields
 	// GasMeter is set as InfiniteGasMeter
+
 	var newCtx sdk.Context
-	if suite.HasTendermint() {
+	if suite.HasCometBFT() {
 		newCtx = sdk.NewContext(suite.BaseApp().CommitMultiStore(), header, false, suite.BaseApp().Logger())
+
+		newCtx = newCtx.WithChainID(oldCtx.ChainID())
+		// set the reset-ted fields to keep the current ctx settings
+
+		newCtx = newCtx.WithMinGasPrices(oldCtx.MinGasPrices())
+		newCtx = newCtx.WithEventManager(oldCtx.EventManager())
+		newCtx = newCtx.WithKVGasConfig(oldCtx.KVGasConfig())
+		newCtx = newCtx.WithTransientKVGasConfig(oldCtx.TransientKVGasConfig())
 	} else {
-		newCtx = suite.BaseApp().NewContext(false, header)
+		newCtx = oldCtx.
+			WithMultiStore(suite.BaseApp().CommitMultiStore()).
+			WithBlockHeader(header)
 	}
-	// set the reset-ted fields to keep the current ctx settings
-	newCtx = newCtx.WithMinGasPrices(oldCtx.MinGasPrices())
-	newCtx = newCtx.WithEventManager(oldCtx.EventManager())
-	newCtx = newCtx.WithKVGasConfig(oldCtx.KVGasConfig())
-	newCtx = newCtx.WithTransientKVGasConfig(oldCtx.TransientKVGasConfig())
 
 	return newCtx
 }
@@ -61,7 +67,7 @@ func (suite *ChainIntegrationTestSuite) DeliverTx(
 	signer *itutiltypes.TestAccount,
 	gasPrice *math.Int,
 	msgs ...sdk.Msg,
-) (authsigning.Tx, abci.ResponseDeliverTx, error) {
+) (authsigning.Tx, abci.ExecTxResult, error) {
 	suite.Require().NotNil(signer)
 
 	tx, err := suite.PrepareCosmosTx(
@@ -74,7 +80,7 @@ func (suite *ChainIntegrationTestSuite) DeliverTx(
 		},
 	)
 	if err != nil {
-		return nil, abci.ResponseDeliverTx{}, err
+		return nil, abci.ExecTxResult{}, err
 	}
 	resDeliverTx, err := suite.BroadcastTx(tx)
 	return tx, resDeliverTx, err
@@ -146,27 +152,42 @@ func (suite *ChainIntegrationTestSuite) DeliverEthTxAsync(
 
 // BroadcastTx does broadcast a tx over the network and returns the response
 // The delivery mode is SYNC
-func (suite *ChainIntegrationTestSuite) BroadcastTx(tx sdk.Tx) (responseDeliverTx abci.ResponseDeliverTx, err error) {
+func (suite *ChainIntegrationTestSuite) BroadcastTx(tx sdk.Tx) (responseDeliverTx abci.ExecTxResult, err error) {
 	// bz are bytes to be broadcast over the network
 	var bz []byte
 	bz, err = suite.EncodingConfig.TxConfig.TxEncoder()(tx)
 
 	if err == nil {
-		if suite.HasTendermint() {
+		if suite.HasCometBFT() {
 			res, err := suite.QueryClients.TendermintRpcHttpClient.BroadcastTxCommit(context.Background(), bz)
 			suite.Require().NoError(err)
-			responseDeliverTx = res.DeliverTx
+			responseDeliverTx = res.TxResult
 		} else {
-			responseDeliverTx = suite.BaseApp().DeliverTx(
-				abci.RequestDeliverTx{
-					Tx: bz,
-				},
-			)
+			suite.ReflectChangesToCommitMultiStore()
+
+			header := suite.CurrentContext.BlockHeader()
+
+			req := abci.RequestFinalizeBlock{
+				Height:             header.Height,
+				Txs:                [][]byte{bz},
+				Hash:               header.AppHash,
+				Time:               header.Time,
+				ProposerAddress:    header.ProposerAddress,
+				NextValidatorsHash: header.NextValidatorsHash,
+			}
+			res, err := suite.BaseApp().FinalizeBlock(&req)
+			if err != nil {
+				return abci.ExecTxResult{}, err
+			}
+			if len(res.TxResults) != 1 {
+				return abci.ExecTxResult{}, fmt.Errorf("unexpected transaction results. Expected 1, got: %d", len(res.TxResults))
+			}
+			responseDeliverTx = *res.TxResults[0]
 		}
 
 		if responseDeliverTx.Code != 0 {
 			err = errorsmod.Wrapf(errortypes.ErrInvalidRequest, responseDeliverTx.Log)
-			responseDeliverTx = abci.ResponseDeliverTx{} // purge
+			responseDeliverTx = abci.ExecTxResult{} // purge
 		}
 	}
 
@@ -175,7 +196,7 @@ func (suite *ChainIntegrationTestSuite) BroadcastTx(tx sdk.Tx) (responseDeliverT
 
 // BroadcastTxAsync is the same as BroadcastTx but with Async delivery mode.
 func (suite *ChainIntegrationTestSuite) BroadcastTxAsync(tx sdk.Tx) (resultBroadcastTx *coretypes.ResultBroadcastTx, err error) {
-	suite.EnsureTendermint()
+	suite.EnsureCometBFT()
 	// bz are bytes to be broadcast over the network
 	var bz []byte
 	bz, err = suite.EncodingConfig.TxConfig.TxEncoder()(tx)
@@ -201,18 +222,27 @@ func (suite *ChainIntegrationTestSuite) BroadcastTxAsync(tx sdk.Tx) (resultBroad
 //
 // - Finally, returns the updated header.
 func (suite *ChainIntegrationTestSuite) commit(ctx sdk.Context, t time.Duration, vs *tmtypes.ValidatorSet) (tmproto.Header, *tmtypes.ValidatorSet, error) {
+	suite.ReflectChangesToCommitMultiStore()
+
 	var nextVals *tmtypes.ValidatorSet
 
-	baseApp := suite.BaseApp()
+	chainApp := suite.ChainApp
 
 	header := ctx.BlockHeader()
 
-	res := baseApp.EndBlock(abci.RequestEndBlock{
-		Height: header.Height,
-	})
+	req := abci.RequestFinalizeBlock{
+		Height:             header.Height,
+		Hash:               header.AppHash,
+		Time:               header.Time,
+		ProposerAddress:    header.ProposerAddress,
+		NextValidatorsHash: header.NextValidatorsHash,
+	}
+	res, err := chainApp.BaseApp().FinalizeBlock(&req)
+	if err != nil {
+		return header, nil, err
+	}
 
 	if vs != nil {
-		var err error
 		nextVals, err = applyValSetChanges(vs, res.ValidatorUpdates)
 		if err != nil {
 			return header, nil, err
@@ -221,15 +251,13 @@ func (suite *ChainIntegrationTestSuite) commit(ctx sdk.Context, t time.Duration,
 		header.NextValidatorsHash = nextVals.Hash()
 	}
 
-	_ = baseApp.Commit()
+	if _, err := chainApp.BaseApp().Commit(); err != nil {
+		return header, nil, err
+	}
 
 	header.Height++
 	header.Time = header.Time.Add(t)
-	header.AppHash = baseApp.LastCommitID().Hash
-
-	baseApp.BeginBlock(abci.RequestBeginBlock{
-		Header: header,
-	})
+	header.AppHash = chainApp.BaseApp().LastCommitID().Hash
 
 	return header, nextVals, nil
 }
@@ -251,7 +279,7 @@ func applyValSetChanges(valSet *tmtypes.ValidatorSet, valUpdates []abci.Validato
 	return newVals, nil
 }
 
-func checkEthTxResponse(r abci.ResponseDeliverTx, cdc codec.Codec) ([]*evmtypes.MsgEthereumTxResponse, error) {
+func checkEthTxResponse(r abci.ExecTxResult, cdc codec.Codec) ([]*evmtypes.MsgEthereumTxResponse, error) {
 	if !r.IsOK() {
 		return nil, fmt.Errorf("tx failed. Code: %d, Logs: %s", r.Code, r.Log)
 	}

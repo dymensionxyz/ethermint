@@ -3,11 +3,12 @@ package utils
 //goland:noinspection SpellCheckingInspection
 import (
 	"context"
+	"cosmossdk.io/log"
 	"fmt"
 	cdb "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
-	"cosmossdk.io/log"
 	nm "github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
@@ -17,6 +18,7 @@ import (
 	tmrpcclient "github.com/cometbft/cometbft/rpc/jsonrpc/client"
 	rpctest "github.com/cometbft/cometbft/rpc/test"
 	tmtypes "github.com/cometbft/cometbft/types"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/google/uuid"
 	"time"
 )
@@ -86,11 +88,11 @@ func StartTendermintNode(app abci.Application, genesis *tmtypes.GenesisDoc, db c
 		nodeKey,         // node key
 		pApp,            // client creator
 		genesisProvider, // genesis doc provider
-		func(_ *nm.DBContext) (cdb.DB, error) { // db provider
+		func(_ *cmtcfg.DBContext) (cdb.DB, error) { // db provider
 			return db, nil
 		},
-		nm.DefaultMetricsProvider(config.Instrumentation), // metrics provider
-		logger,                                            // logger
+		nm.DefaultMetricsProvider(config.Instrumentation),                      // metrics provider
+		servercmtlog.CometLoggerWrapper{Logger: logger.With("server", "node")}, // logger
 	)
 	if err != nil {
 		panic(err)
