@@ -43,7 +43,15 @@ func (k Keeper) GetCoinbaseAddress(ctx sdk.Context, proposerAddress sdk.ConsAddr
 			proposerAddress.String(),
 		)
 	}
-	coinbase := common.BytesToAddress([]byte(validator.GetOperator()))
+
+	valAddr := validator.GetOperator()
+	addrBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(valAddr)
+	if err != nil {
+		return common.Address{}, errorsmod.Wrapf(err, "failed to parse validator %s", valAddr)
+	}
+
+	coinbase := common.BytesToAddress(addrBz)
+
 	return coinbase, nil
 }
 
