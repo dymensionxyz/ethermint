@@ -18,6 +18,10 @@ var (
 	_ v1beta1.Content = &UpdateVirtualFrontierBankContractsProposal{}
 )
 
+func init() {
+	v1beta1.RegisterProposalType(ProposalTypeUpdateVirtualFrontierBankContractsProposal)
+}
+
 // NewUpdateVirtualFrontierBankContractsProposal returns new instance of UpdateVirtualFrontierBankContractsProposal
 func NewUpdateVirtualFrontierBankContractsProposal(title, description string, contracts ...VirtualFrontierBankContractProposalContent) v1beta1.Content {
 	return &UpdateVirtualFrontierBankContractsProposal{
