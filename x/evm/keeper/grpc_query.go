@@ -129,8 +129,13 @@ func (k Keeper) ValidatorAccount(c context.Context, req *types.QueryValidatorAcc
 		return nil, fmt.Errorf("validator not found for %s: %w", consAddr.String(), err)
 	}
 
-	accAddr := sdk.AccAddress(validator.GetOperator())
+	valAddr := validator.GetOperator()
+	addrBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(valAddr)
+	if err != nil {
+		return nil, fmt.Errorf("error while getting validator %s. %w", consAddr.String(), err)
+	}
 
+	accAddr := sdk.AccAddress(addrBz)
 	res := types.QueryValidatorAccountResponse{
 		AccountAddress: accAddr.String(),
 	}
