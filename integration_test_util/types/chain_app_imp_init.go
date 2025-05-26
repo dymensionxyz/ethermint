@@ -61,7 +61,7 @@ var defaultConsensusParams = &tmproto.ConsensusParams{
 
 const CometBFTGovVotingPeriod = 5 * time.Second
 
-func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.EncodingConfig, db cmtdb.DB, validatorAccounts TestAccounts, walletAccounts TestAccounts, genesisAccountBalance sdk.Coins, tempHolder *TemporaryHolder, logger log.Logger) (chainApp ChainApp, cometApp CometBftApp, validatorSet *tmtypes.ValidatorSet) {
+func NewChainApp(chainCfg ChainConfig, disableCometBFT bool, testConfig TestConfig, encCfg params.EncodingConfig, db cmtdb.DB, validatorAccounts TestAccounts, walletAccounts TestAccounts, genesisAccountBalance sdk.Coins, tempHolder *TemporaryHolder, logger log.Logger) (chainApp ChainApp, cometApp CometBftApp, validatorSet *tmtypes.ValidatorSet) {
 	defaultNodeHome := chainapp.DefaultNodeHome
 	//moduleBasics := chainapp.ModuleBasics
 
@@ -133,7 +133,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	// init chain must be called to stop deliverState from being nil
 	genesisState := app.BasicModuleManager.DefaultGenesis(encCfg.Codec)
 
-	genesisState = genesisStateWithValSet(chainCfg, testConfig, encCfg.Codec, genesisState, valSet, genesisValidatorAccounts, genesisWalletAccounts, genesisBalances, signingInfos)
+	genesisState = genesisStateWithValSet(chainCfg, disableCometBFT, testConfig, encCfg.Codec, genesisState, valSet, genesisValidatorAccounts, genesisWalletAccounts, genesisBalances, signingInfos)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	if err != nil {
@@ -180,7 +180,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	}
 	tempHolder.CacheGenesisDoc(&genesisDoc)
 
-	if chainCfg.DisableCometBFT {
+	if disableCometBFT {
 		app.InitChain(&abci.RequestInitChain{
 			ChainId: chainCfg.CosmosChainId,
 			ConsensusParams: &tmproto.ConsensusParams{
@@ -211,7 +211,7 @@ func NewChainApp(chainCfg ChainConfig, testConfig TestConfig, encCfg params.Enco
 	return cai, cometApp, valSet
 }
 
-func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec codec.Codec, genesisState map[string]json.RawMessage, valSet *tmtypes.ValidatorSet, genesisValidatorAccounts []authtypes.GenesisAccount, genesisWalletAccounts []authtypes.GenesisAccount, balances []banktypes.Balance, signingInfos []slashingtypes.SigningInfo) simapp.GenesisState {
+func genesisStateWithValSet(chainCfg ChainConfig, disableCometBFT bool, testConfig TestConfig, codec codec.Codec, genesisState map[string]json.RawMessage, valSet *tmtypes.ValidatorSet, genesisValidatorAccounts []authtypes.GenesisAccount, genesisWalletAccounts []authtypes.GenesisAccount, balances []banktypes.Balance, signingInfos []slashingtypes.SigningInfo) simapp.GenesisState {
 	genesisAccounts := append(genesisValidatorAccounts, genesisWalletAccounts...)
 
 	// set genesis accounts
@@ -346,7 +346,7 @@ func genesisStateWithValSet(chainCfg ChainConfig, testConfig TestConfig, codec c
 			govGenesis.Params.MinDeposit[0].Denom = chainCfg.BaseDenom
 			govGenesis.Params.MinDeposit[0].Amount = math.NewIntFromUint64(2)
 			var votingPeriod time.Duration
-			if chainCfg.DisableCometBFT {
+			if disableCometBFT {
 				votingPeriod = 30 * time.Minute
 			} else {
 				// due to CometBFT block time not configurable time jumping, we need to set a low voting period

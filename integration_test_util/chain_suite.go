@@ -91,7 +91,7 @@ type ChainIntegrationTestSuite struct {
 
 // CreateChainIntegrationTestSuite initialize an integration test suite using default configuration.
 func CreateChainIntegrationTestSuite(t *testing.T, r *require.Assertions) *ChainIntegrationTestSuite {
-	return CreateChainIntegrationTestSuiteFromChainConfig(t, r, IntegrationTestChain1)
+	return CreateChainIntegrationTestSuiteFromChainConfig(t, r, IntegrationTestChain1, false)
 }
 
 //goland:noinspection SpellCheckingInspection
@@ -113,7 +113,7 @@ var IntegrationTestChain2 = itutiltypes.ChainConfig{
 }
 
 // CreateChainIntegrationTestSuiteFromChainConfig initialize an integration test suite from a given chain config.
-func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Assertions, chainCfg itutiltypes.ChainConfig) *ChainIntegrationTestSuite {
+func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Assertions, chainCfg itutiltypes.ChainConfig, disableCometBFT bool) *ChainIntegrationTestSuite {
 	//goland:noinspection SpellCheckingInspection
 	const balancePerAccount = 2
 
@@ -142,7 +142,7 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 		},
 		InitBalanceAmount:        sdkmath.NewInt(int64(balancePerAccount * math.Pow10(18))),
 		DefaultFeeAmount:         sdkmath.NewInt(int64(math.Pow10(16))),
-		DisableCometBFT:          chainCfg.DisableCometBFT,
+		DisableCometBFT:          disableCometBFT,
 		DisabledContractCreation: chainCfg.DisabledContractCreation,
 	}
 
@@ -156,7 +156,7 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 	// Setup Test accounts
 
 	validatorAccounts := newValidatorAccounts(t)
-	if chainCfg.DisableCometBFT {
+	if disableCometBFT {
 		// no-op
 	} else {
 		// test CometBFT use only one validator
@@ -180,7 +180,7 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 	}
 
 	logger := log.NewNopLogger()
-	app, tmApp, valSet := itutiltypes.NewChainApp(chainCfg, testConfig, appEncodingCfg, cmtDB, validatorAccounts, walletAccounts, genesisAccountBalance, tempHolder, logger)
+	app, tmApp, valSet := itutiltypes.NewChainApp(chainCfg, disableCometBFT, testConfig, appEncodingCfg, cmtDB, validatorAccounts, walletAccounts, genesisAccountBalance, tempHolder, logger)
 
 	oga := app.EthermintApp()
 	oga.BasicModuleManager.RegisterInterfaces(appEncodingCfg.InterfaceRegistry)
@@ -263,8 +263,7 @@ func CreateChainIntegrationTestSuiteFromChainConfig(t *testing.T, r *require.Ass
 		TestConfig:        testConfig,
 	}
 
-	if chainCfg.DisableCometBFT {
-
+	if disableCometBFT {
 		result.Commit() // Commit the initial block
 	} else {
 		time.Sleep(300 * time.Millisecond)
