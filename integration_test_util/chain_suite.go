@@ -460,6 +460,10 @@ func (suite *ChainIntegrationTestSuite) QueryClientsAt(height int64) *itutiltype
 
 	if suite.HasCometBFT() {
 		clientQueryCtx = clientQueryCtx.WithClient(cometRpcHttpClient)
+	} else {
+		// Due to RPC backend uses CometBFT HTTP client, but in IBC we don't use CometBFT,
+		// so as a workaround we set a nil client to avoid crash.
+		clientQueryCtx = clientQueryCtx.WithClient((*httpclient.HTTP)(nil))
 	}
 
 	cosmostxtypes.RegisterServiceServer(
