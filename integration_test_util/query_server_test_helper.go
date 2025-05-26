@@ -69,7 +69,7 @@ func (q *QueryServiceTestHelper) Invoke(_ gocontext.Context, method string, args
 		}
 	}
 
-	res, err := querier(q.Ctx, abci.RequestQuery{Data: reqBz})
+	res, err := querier(q.Ctx, &abci.RequestQuery{Data: reqBz})
 	if err != nil {
 		return err
 	}

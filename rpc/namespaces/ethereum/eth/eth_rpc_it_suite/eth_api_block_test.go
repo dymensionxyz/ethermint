@@ -66,7 +66,7 @@ func (suite *EthRpcTestSuite) Test_GetBlockByNumberAndHash() {
 	suite.Run("basic test", func() {
 		suite.Commit() // require at least 2 blocks
 
-		previousBlockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(1))
+		previousBlockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(1))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(previousBlockResult)
 
@@ -74,7 +74,7 @@ func (suite *EthRpcTestSuite) Test_GetBlockByNumberAndHash() {
 		suite.Require().NoError(err)
 		suite.Require().NotNil(gotBlockByNumber)
 
-		currentBlockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(2))
+		currentBlockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(2))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(currentBlockResult)
 		suite.Require().Equal(int64(2), currentBlockResult.Block.Height)
@@ -158,7 +158,7 @@ func (suite *EthRpcTestSuite) Test_GetBlockByNumberAndHash() {
 		balance := suite.CITS.QueryBalance(0, receiver.GetCosmosAddress().String())
 		suite.Require().False(balance.IsZero(), "receiver must received some balance")
 
-		previousBlockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(testBlockHeight-1))
+		previousBlockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(testBlockHeight-1))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(previousBlockResult)
 
@@ -166,7 +166,7 @@ func (suite *EthRpcTestSuite) Test_GetBlockByNumberAndHash() {
 		suite.Require().NoError(err)
 		suite.Require().NotNil(gotBlockByNumber)
 
-		blockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(testBlockHeight))
+		blockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(testBlockHeight))
 		suite.Require().NoError(err)
 		suite.Require().NotNil(blockResult)
 		suite.Require().Equal(evmTxsCount+nonEvmTxsCount, len(blockResult.Block.Txs), "must be same as sent txs count for both EVM & non-EVM txs")
@@ -712,7 +712,7 @@ func (suite *EthRpcTestSuite) Test_GetBlockTransactionCountByNumberAndHash() {
 	balance := suite.CITS.QueryBalance(0, receiver.GetCosmosAddress().String())
 	suite.Require().False(balance.IsZero(), "receiver must received some balance")
 
-	blockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(testBlockHeight))
+	blockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(testBlockHeight))
 	suite.Require().NoError(err)
 	suite.Require().NotNil(blockResult)
 	suite.Require().Equal(evmTxsCount+nonEvmTxsCount, len(blockResult.Block.Txs), "must be same as sent txs count for both EVM & non-EVM txs")

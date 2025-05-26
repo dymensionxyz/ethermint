@@ -15,12 +15,14 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v8/testing"
+	chainapp "github.com/evmos/ethermint/app"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 )
 
 type ChainApp interface {
 	App() abci.Application
+	EthermintApp() *chainapp.EthermintApp
 	BaseApp() *baseapp.BaseApp
 	IbcTestingApp() ibctesting.TestingApp
 	InterfaceRegistry() codectypes.InterfaceRegistry

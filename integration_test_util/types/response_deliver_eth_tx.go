@@ -9,10 +9,10 @@ type ResponseDeliverEthTx struct {
 	CosmosTxHash         string
 	EthTxHash            string
 	EvmError             string
-	ResponseDeliverEthTx *abci.ResponseDeliverTx
+	ResponseDeliverEthTx *abci.ExecTxResult
 }
 
-func NewResponseDeliverEthTx(responseDeliverTx *abci.ResponseDeliverTx) *ResponseDeliverEthTx {
+func NewResponseDeliverEthTx(responseDeliverTx *abci.ExecTxResult) *ResponseDeliverEthTx {
 	if responseDeliverTx == nil {
 		return nil
 	}
