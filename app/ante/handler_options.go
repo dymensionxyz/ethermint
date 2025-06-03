@@ -17,6 +17,7 @@ package ante
 
 import (
 	txsigning "cosmossdk.io/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -35,6 +36,7 @@ import (
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
 // channel keeper, EVM Keeper and Fee Market Keeper.
 type HandlerOptions struct {
+	Cdc                    codec.BinaryCodec
 	AccountKeeper          evmtypes.AccountKeeper
 	BankKeeper             evmtypes.BankKeeper
 	IBCKeeper              *ibckeeper.Keeper

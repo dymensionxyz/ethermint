@@ -59,7 +59,7 @@ func TestAnteTestSuite(t *testing.T) {
 }
 
 func (suite *AnteTestSuite) TestAnteHandler() {
-	var acc authtypes.AccountI
+	var acc sdk.AccountI
 	addr, privKey := tests.NewAddrKey()
 	to := tests.GenerateAddress()
 

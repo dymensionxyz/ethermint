@@ -19,12 +19,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -74,8 +73,12 @@ func SetupWithDB(isCheckTx bool, patchGenesis func(*app.EthermintApp, simapp.Gen
 		db,
 		nil,
 		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		5,
 		simtestutil.EmptyAppOptions{},
-		baseapp.SetChainID("ethermint_9000-1"))
+		baseapp.SetChainID("ethermint_9000-1"),
+	)
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
