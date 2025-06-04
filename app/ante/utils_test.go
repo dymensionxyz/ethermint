@@ -9,6 +9,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -84,7 +85,7 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.app = testutil.Setup(checkTx, nil)
 
 	// Set up context
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithChainID(suite.app.ChainID())
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{Height: 2, ChainID: testutil.TestnetChainID + "-1", Time: time.Now().UTC()}).WithChainID(suite.app.ChainID())
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdkmath.OneInt())))
 	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(1000000000000000000))
 
@@ -278,7 +279,7 @@ func (suite *AnteTestSuite) CreateTestCosmosTxBuilder(gasPrice sdkmath.Int, deno
 
 func (suite *AnteTestSuite) CreateTestEIP712TxBuilderMsgSend(from sdk.AccAddress, priv cryptotypes.PrivKey, chainId string, gas uint64, gasAmount sdk.Coins) client.TxBuilder {
 	// Build MsgSend
-	recipient := sdk.AccAddress(common.Address{}.Bytes())
+	recipient := sdk.AccAddress(tests.GenerateAddress().Bytes())
 	msgSend := banktypes.NewMsgSend(from, recipient, sdk.NewCoins(sdk.NewCoin(evmtypes.DefaultEVMDenom, sdkmath.NewInt(1))))
 	return suite.CreateTestEIP712SingleMessageTxBuilder(priv, chainId, gas, gasAmount, msgSend)
 }
@@ -661,15 +662,17 @@ func (suite *AnteTestSuite) CreateTestSingleSignedTx(privKey cryptotypes.PrivKey
 
 	// Prepare signature field
 	sig := signing.SingleSignatureData{}
-	txBuilder.SetSignatures(signing.SignatureV2{
+	err := txBuilder.SetSignatures(signing.SignatureV2{
 		PubKey: pubKey,
 		Data:   &sig,
 	})
+	suite.Require().NoError(err)
 
 	signerBytes := suite.createSignerBytes(chainId, signMode, pubKey, txBuilder)
 
 	sigData := suite.generateSingleSignature(signMode, privKey, signerBytes, signType)
-	txBuilder.SetSignatures(sigData)
+	err = txBuilder.SetSignatures(sigData)
+	suite.Require().NoError(err)
 
 	return txBuilder
 }
