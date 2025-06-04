@@ -8,6 +8,10 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
+	"github.com/cometbft/cometbft/version"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -65,7 +69,29 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
 		return testutil.NewTestGenesisState(app, priv)
 	})
-	suite.ctx = suite.app.BaseApp.NewContext(checkTx)
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{
+		Height:          1,
+		ChainID:         "ethermint_9000-1",
+		Time:            time.Now().UTC(),
+		ProposerAddress: suite.consAddress.Bytes(),
+		Version: tmversion.Consensus{
+			Block: version.BlockProtocol,
+		},
+		LastBlockId: tmproto.BlockID{
+			Hash: tmhash.Sum([]byte("block_id")),
+			PartSetHeader: tmproto.PartSetHeader{
+				Total: 11,
+				Hash:  tmhash.Sum([]byte("partset_header")),
+			},
+		},
+		AppHash:            tmhash.Sum([]byte("app")),
+		DataHash:           tmhash.Sum([]byte("data")),
+		EvidenceHash:       tmhash.Sum([]byte("evidence")),
+		ValidatorsHash:     tmhash.Sum([]byte("validators")),
+		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
+		ConsensusHash:      tmhash.Sum([]byte("consensus")),
+		LastResultsHash:    tmhash.Sum([]byte("last_result")),
+	})
 
 	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = tx.NewSigner(priv)
