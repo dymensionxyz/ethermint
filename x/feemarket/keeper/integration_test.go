@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"math/big"
 	"strings"
 
@@ -26,14 +25,12 @@ var _ = Describe("Feemarket", func() {
 	var (
 		privKey *ethsecp256k1.PrivKey
 		msg     banktypes.MsgSend
-		err     error
 	)
 
 	Describe("Performing Cosmos transactions", func() {
 		Context("with min-gas-prices (local) < MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg, err = setupTestWithContext("1", math.LegacyNewDec(3), math.ZeroInt())
-				Expect(err).To(BeNil())
+				privKey, msg = setupTestWithContext(1, math.LegacyNewDec(3), math.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -79,8 +76,7 @@ var _ = Describe("Feemarket", func() {
 
 		Context("with min-gas-prices (local) == MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg, err = setupTestWithContext("3", math.LegacyNewDec(3), math.ZeroInt())
-				Expect(err).To(BeNil())
+				privKey, msg = setupTestWithContext(3, math.LegacyNewDec(3), math.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -126,8 +122,7 @@ var _ = Describe("Feemarket", func() {
 
 		Context("with MinGasPrices (feemarket param) < min-gas-prices (local)", func() {
 			BeforeEach(func() {
-				privKey, msg, err = setupTestWithContext("5", math.LegacyNewDec(3), math.NewInt(5))
-				Expect(err).To(BeNil())
+				privKey, msg = setupTestWithContext(5, math.LegacyNewDec(3), math.NewInt(5))
 			})
 			Context("during CheckTx", func() {
 				It("should reject transactions with gasPrice < MinGasPrices", func() {
@@ -205,7 +200,6 @@ var _ = Describe("Feemarket", func() {
 			var (
 				baseFee      int64
 				minGasPrices int64
-				err          error
 			)
 
 			BeforeEach(func() {
@@ -216,8 +210,7 @@ var _ = Describe("Feemarket", func() {
 				// 100000`. With the fee calculation `Fee = (baseFee + tip) * gasLimit`,
 				// a `minGasPrices = 40_000_000_000` results in `minGlobalFee =
 				// 4000000000000000`
-				privKey, _, err = setupTestWithContext("1", math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
-				Expect(err).To(BeNil())
+				privKey, _ = setupTestWithContext(1, math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -319,7 +312,6 @@ var _ = Describe("Feemarket", func() {
 			var (
 				baseFee      int64
 				minGasPrices int64
-				err          error
 			)
 
 			BeforeEach(func() {
@@ -330,8 +322,7 @@ var _ = Describe("Feemarket", func() {
 				// 100_000`. With the fee calculation `Fee = (baseFee + tip) * gasLimit`,
 				// a `minGasPrices = 5_000_000_000` results in `minGlobalFee =
 				// 500_000_000_000_000`
-				privKey, _, err = setupTestWithContext("1", math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
-				Expect(err).To(BeNil())
+				privKey, _ = setupTestWithContext(1, math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -465,14 +456,11 @@ var _ = Describe("Feemarket", func() {
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
-func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend, error) {
+func setupTestWithContext(valMinGasPrice int64, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
 	s = new(KeeperTestSuite)
 	s.SetupTest()
 
-	valMinGasPriceInt, ok := math.NewIntFromString(valMinGasPrice)
-	if !ok {
-		return nil, banktypes.MsgSend{}, fmt.Errorf("invalid minGasPrice: %s", valMinGasPrice)
-	}
+	valMinGasPriceInt := math.NewInt(valMinGasPrice)
 	s.ctx = s.ctx.WithMinGasPrices(sdk.DecCoins{sdk.NewDecCoin(s.denom, valMinGasPriceInt)})
 
 	params := types.DefaultParams()
@@ -481,10 +469,8 @@ func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, bas
 	s.app.FeeMarketKeeper.SetBaseFee(s.ctx, baseFee.BigInt())
 
 	privKey, address := generateKey()
-	amount, ok := math.NewIntFromString("10000000000000000000")
-	if !ok {
-		return nil, banktypes.MsgSend{}, fmt.Errorf("invalid amount: %s", amount)
-	}
+	math.NewIntWithDecimal(10, 18)
+	amount := math.NewIntWithDecimal(10, 18)
 	initBalance := sdk.Coins{sdk.Coin{
 		Denom:  s.denom,
 		Amount: amount,
@@ -500,7 +486,7 @@ func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, bas
 		}},
 	}
 	s.Commit()
-	return privKey, msg, nil
+	return privKey, msg
 }
 
 func generateKey() (*ethsecp256k1.PrivKey, sdk.AccAddress) {
