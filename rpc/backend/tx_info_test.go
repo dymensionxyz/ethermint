@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
-	tmlog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -106,7 +106,7 @@ func (suite *BackendTestSuite) TestGetTransactionByHash() {
 			tc.registerMock()
 
 			db := dbm.NewMemDB()
-			suite.backend.indexer = indexer.NewKVIndexer(db, tmlog.NewNopLogger(), suite.backend.clientCtx)
+			suite.backend.indexer = indexer.NewKVIndexer(db, log.NewNopLogger(), suite.backend.clientCtx)
 			err := suite.backend.indexer.IndexBlock(block, responseDeliver)
 			suite.Require().NoError(err)
 
@@ -278,7 +278,7 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 	msgEthTx, bz := suite.buildEthereumTx()
 
 	defaultBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
-	defaultResponseDeliverTx := []*abci.ExecTxResult{
+	defaultExecTxResult := []*abci.ExecTxResult{
 		{
 			Code: 0,
 			Events: []abci.Event{
@@ -311,10 +311,11 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 		expPass      bool
 	}{
 		{
-			"pass - block txs index out of bound ",
+			"pass - block txs index out of bound",
 			func() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 			},
 			&tmrpctypes.ResultBlock{Block: types.MakeBlock(1, []types.Tx{bz}, nil, nil)},
 			1,
@@ -326,7 +327,8 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFeeError(queryClient)
 			},
 			&tmrpctypes.ResultBlock{Block: defaultBlock},
@@ -340,12 +342,13 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				db := dbm.NewMemDB()
-				suite.backend.indexer = indexer.NewKVIndexer(db, tmlog.NewNopLogger(), suite.backend.clientCtx)
+				suite.backend.indexer = indexer.NewKVIndexer(db, log.NewNopLogger(), suite.backend.clientCtx)
 				txBz := suite.signAndEncodeEthTx(msgEthTx)
 				block := &types.Block{Header: types.Header{Height: 1, ChainID: "test"}, Data: types.Data{Txs: []types.Tx{txBz}}}
-				err := suite.backend.indexer.IndexBlock(block, defaultResponseDeliverTx)
+				err := suite.backend.indexer.IndexBlock(block, defaultExecTxResult)
 				suite.Require().NoError(err)
-				RegisterBlockResults(client, 1)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, math.NewInt(1))
 			},
 			&tmrpctypes.ResultBlock{Block: defaultBlock},
@@ -358,7 +361,8 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockAndIndex() {
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, math.NewInt(1))
 			},
 			&tmrpctypes.ResultBlock{Block: defaultBlock},
@@ -420,8 +424,10 @@ func (suite *BackendTestSuite) TestGetTransactionByBlockNumberAndIndex() {
 			func() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterBlock(client, 1, bz)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, bz)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 				RegisterBaseFee(queryClient, math.NewInt(1))
 			},
 			0,
@@ -504,7 +510,7 @@ func (suite *BackendTestSuite) TestQueryTendermintTxIndexer() {
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterTxSearchEmpty(client, "")
 			},
-			func(txs *rpctypes.ParsedTxs) *rpctypes.ParsedTx {
+			func(_ *rpctypes.ParsedTxs) *rpctypes.ParsedTx {
 				return &rpctypes.ParsedTx{}
 			},
 			"",
@@ -546,15 +552,16 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 		expPass      bool
 	}{
 		{
-			"fail - Receipts do not match ",
+			"fail - Receipts do not match",
 			func() {
 				var header metadata.MD
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
 				RegisterParams(queryClient, &header, 1)
-				RegisterParamsWithoutHeader(queryClient, 1)
-				RegisterBlock(client, 1, txBz)
-				RegisterBlockResults(client, 1)
+				_, err := RegisterBlock(client, 1, txBz)
+				suite.Require().NoError(err)
+				_, err = RegisterBlockResults(client, 1)
+				suite.Require().NoError(err)
 			},
 			msgEthereumTx,
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
@@ -584,7 +591,7 @@ func (suite *BackendTestSuite) TestGetTransactionReceipt() {
 			tc.registerMock()
 
 			db := dbm.NewMemDB()
-			suite.backend.indexer = indexer.NewKVIndexer(db, tmlog.NewNopLogger(), suite.backend.clientCtx)
+			suite.backend.indexer = indexer.NewKVIndexer(db, log.NewNopLogger(), suite.backend.clientCtx)
 			err := suite.backend.indexer.IndexBlock(tc.block, tc.blockResult)
 			suite.Require().NoError(err)
 

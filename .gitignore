@@ -83,3 +83,4 @@ contracts/@openzeppelin/*
 
 # AI
 .aider.*
+.aider*

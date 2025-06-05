@@ -31,7 +31,7 @@ func (c chainAppImp) BaseApp() *baseapp.BaseApp {
 }
 
 func (c chainAppImp) IbcTestingApp() ibctesting.TestingApp {
-	return c.app
+	return nil // TODO?
 }
 
 func (c chainAppImp) InterfaceRegistry() codectypes.InterfaceRegistry {

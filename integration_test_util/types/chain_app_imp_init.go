@@ -122,10 +122,9 @@ func NewChainApp(chainCfg ChainConfig, disableCometBFT bool, testConfig TestConf
 		sdkdb.NewMemDB(), // db
 		nil,              // trace store
 		true,             // load latest
-		//map[int64]bool{}, // skipUpgradeHeights
-		//defaultNodeHome,  // homePath
-		//0,                // invCheckPeriod
-		//encCfg,           // encodingConfig
+		map[int64]bool{}, // skipUpgradeHeights
+		defaultNodeHome,  // homePath
+		0,                // invCheckPeriod
 		simtestutil.NewAppOptionsWithFlagHome(defaultNodeHome),
 		baseapp.SetChainID(chainCfg.CosmosChainId), // baseAppOptions
 	)

@@ -16,7 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/simapp"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -81,14 +80,23 @@ func TestKeeperTestSuite(t *testing.T) {
 	RunSpecs(t, "Keeper Suite")
 }
 
-// FIXME: needed??
-func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
-	s.SetupTest()
-}
-
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
+	suite.app = testutil.Setup(checkTx, nil)
+	suite.SetupApp(checkTx)
+}
 
+func (suite *KeeperTestSuite) SetupTestWithT(t require.TestingT) {
+	checkTx := false
+	suite.app = testutil.Setup(checkTx, nil)
+	suite.SetupAppWithT(checkTx, t)
+}
+
+func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
+	suite.SetupAppWithT(checkTx, suite.T())
+}
+
+func (suite *KeeperTestSuite) SetupAppWithT(checkTx bool, t require.TestingT) {
 	// account key, use a constant account to keep unit test deterministic.
 	ecdsaPriv, err := crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	suite.NoError(err)
@@ -98,9 +106,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
 	suite.signer = txutils.NewSigner(priv)
 
-	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
-		return testutil.NewTestGenesisState(app, priv)
-	})
 	suite.ctx = suite.app.BaseApp.NewContext(checkTx).WithChainID("ethermint_9000-1")
 
 	// consensus key
