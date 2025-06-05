@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
@@ -53,8 +53,11 @@ type KeeperTestSuite struct {
 	denom    string
 }
 
+var s *KeeperTestSuite
+
 func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+	s = new(KeeperTestSuite)
+	suite.Run(t, s)
 
 	// Run Ginkgo integration tests
 	RegisterFailHandler(Fail)
@@ -64,11 +67,14 @@ func TestKeeperTestSuite(t *testing.T) {
 // SetupTest setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
 func (suite *KeeperTestSuite) SetupTest() {
 	checkTx := false
+	suite.app = testutil.Setup(checkTx, nil)
+	suite.SetupApp(checkTx)
+}
+
+// SetupTest setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
+func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 	priv, _ := ethsecp256k1.GenerateKey()
 
-	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
-		return testutil.NewTestGenesisState(app, priv)
-	})
 	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{
 		Height:          1,
 		ChainID:         "ethermint_9000-1",
@@ -114,9 +120,31 @@ func (suite *KeeperTestSuite) Commit() {
 
 // Commit commits a block at a given time.
 func (suite *KeeperTestSuite) CommitAfter(t time.Duration) {
-	ctx, err := testutil.Commit(suite.ctx, suite.app, t, nil)
+	//ctx, _ := testutil.Commit(suite.ctx, suite.app, t, nil)
+	//suite.Require().NoError(err)
+	//suite.ctx = ctx
+
+	header := suite.ctx.BlockHeader()
+	req := &abci.RequestFinalizeBlock{Height: header.Height}
+
+	_, err := suite.app.FinalizeBlock(req)
+
+	//_, err := suite.app.EndBlocker(suite.ctx)
 	suite.Require().NoError(err)
-	suite.ctx = ctx
+	_, err = suite.app.Commit()
+	suite.Require().NoError(err)
+
+	header.Height += 1
+	header.Time = header.Time.Add(t)
+	_, err = suite.app.BeginBlocker(suite.ctx)
+	suite.Require().NoError(err)
+
+	// update ctx
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, header)
+
+	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
+	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
+	suite.queryClient = types.NewQueryClient(queryHelper)
 }
 
 func (suite *KeeperTestSuite) TestSetGetBlockGasWanted() {
