@@ -131,16 +131,29 @@ func (suite *KeeperTestSuite) CommitAfter(t time.Duration) {
 
 	//_, err := suite.app.EndBlocker(suite.ctx)
 	suite.Require().NoError(err)
-	_, err = suite.app.Commit()
+	_, err = suite.app.Commit() // After this, app.finalizeBlockState is nil.
 	suite.Require().NoError(err)
 
+	// 'header' is a local variable, a copy of the original suite.ctx.BlockHeader().
+	// Mutate it for the new block.
 	header.Height += 1
 	header.Time = header.Time.Add(t)
-	_, err = suite.app.BeginBlocker(suite.ctx)
+	// Note: Fields like header.LastBlockId and header.AppHash are based on the state
+	// before this block's commit. For full accuracy, these would need to be updated
+	// using information from the commit response, but this change maintains the
+	// previous level of header detail passed to NewContextLegacy.
+
+	// Create the new context for the next block using the mutated 'header'.
+	// NewContextLegacy is called when app.finalizeBlockState is nil.
+	newCtx := suite.app.BaseApp.NewContextLegacy(false, header)
+
+	// Call BeginBlocker with the new context.
+	// The EthermintApp's BeginBlocker uses newCtx.BlockHeader() to set up for the new block.
+	_, err = suite.app.BeginBlocker(newCtx)
 	suite.Require().NoError(err)
 
-	// update ctx
-	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, header)
+	// Update suite.ctx to the new context
+	suite.ctx = newCtx
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
