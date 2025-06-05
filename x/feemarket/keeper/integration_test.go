@@ -466,7 +466,6 @@ var _ = Describe("Feemarket", func() {
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
 func setupTestWithContext(valMinGasPrice int64, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
-	s = new(KeeperTestSuite)
 	s.SetupTest()
 
 	valMinGasPriceInt := math.NewInt(valMinGasPrice)
