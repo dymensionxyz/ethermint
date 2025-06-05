@@ -1,18 +1,24 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"math/big"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
 	types2 "github.com/evmos/ethermint/integration_test_util/types"
 	. "github.com/onsi/ginkgo/v2"
@@ -39,7 +45,7 @@ var _ = Describe("Feemarket", func() {
 	Describe("Performing Cosmos transactions", func() {
 		Context("with min-gas-prices (local) < MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext(1, math.LegacyNewDec(3), math.ZeroInt())
+				privKey, msg = setupTestWithContext("1", math.LegacyNewDec(3), math.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -85,7 +91,7 @@ var _ = Describe("Feemarket", func() {
 
 		Context("with min-gas-prices (local) == MinGasPrices (feemarket param)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext(3, math.LegacyNewDec(3), math.ZeroInt())
+				privKey, msg = setupTestWithContext("3", math.LegacyNewDec(3), math.ZeroInt())
 			})
 
 			Context("during CheckTx", func() {
@@ -131,7 +137,7 @@ var _ = Describe("Feemarket", func() {
 
 		Context("with MinGasPrices (feemarket param) < min-gas-prices (local)", func() {
 			BeforeEach(func() {
-				privKey, msg = setupTestWithContext(5, math.LegacyNewDec(3), math.NewInt(5))
+				privKey, msg = setupTestWithContext("5", math.LegacyNewDec(3), math.NewInt(5))
 			})
 			Context("during CheckTx", func() {
 				It("should reject transactions with gasPrice < MinGasPrices", func() {
@@ -219,7 +225,7 @@ var _ = Describe("Feemarket", func() {
 				// 100000`. With the fee calculation `Fee = (baseFee + tip) * gasLimit`,
 				// a `minGasPrices = 40_000_000_000` results in `minGlobalFee =
 				// 4000000000000000`
-				privKey, _ = setupTestWithContext(1, math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
+				privKey, _ = setupTestWithContext("1", math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -331,7 +337,7 @@ var _ = Describe("Feemarket", func() {
 				// 100_000`. With the fee calculation `Fee = (baseFee + tip) * gasLimit`,
 				// a `minGasPrices = 5_000_000_000` results in `minGlobalFee =
 				// 500_000_000_000_000`
-				privKey, _ = setupTestWithContext(1, math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
+				privKey, _ = setupTestWithContext("1", math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -465,20 +471,57 @@ var _ = Describe("Feemarket", func() {
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
-func setupTestWithContext(valMinGasPrice int64, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
-	s.SetupTest()
+//func setupTestWithContext(valMinGasPrice int64, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+//	s.SetupTest()
+//
+//	valMinGasPriceInt := math.NewInt(valMinGasPrice)
+//	s.ctx = s.ctx.WithMinGasPrices(sdk.DecCoins{sdk.NewDecCoin(s.denom, valMinGasPriceInt)})
+//
+//	params := types.DefaultParams()
+//	params.MinGasPrice = minGasPrice
+//	s.app.FeeMarketKeeper.SetParams(s.ctx, params)
+//	s.app.FeeMarketKeeper.SetBaseFee(s.ctx, baseFee.BigInt())
+//
+//	privKey, address := generateKey()
+//	math.NewIntWithDecimal(10, 18)
+//	amount := math.NewIntWithDecimal(10, 18)
+//	initBalance := sdk.Coins{sdk.Coin{
+//		Denom:  s.denom,
+//		Amount: amount,
+//	}}
+//	testutil.FundAccount(s.app.BankKeeper, s.ctx, address, initBalance)
+//
+//	msg := banktypes.MsgSend{
+//		FromAddress: address.String(),
+//		ToAddress:   address.String(),
+//		Amount: sdk.Coins{sdk.Coin{
+//			Denom:  s.denom,
+//			Amount: math.NewInt(10000),
+//		}},
+//	}
+//	s.Commit()
+//	return privKey, msg
+//}
 
-	valMinGasPriceInt := math.NewInt(valMinGasPrice)
-	s.ctx = s.ctx.WithMinGasPrices(sdk.DecCoins{sdk.NewDecCoin(s.denom, valMinGasPriceInt)})
-
+// setupTestWithContext sets up a test chain with an example Cosmos send msg,
+// given a local (validator config) and a gloabl (feemarket param) minGasPrice
+func setupTestWithContext(valMinGasPrice string, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+	privKey, msg := setupTest(valMinGasPrice + s.denom)
 	params := types.DefaultParams()
 	params.MinGasPrice = minGasPrice
 	s.app.FeeMarketKeeper.SetParams(s.ctx, params)
 	s.app.FeeMarketKeeper.SetBaseFee(s.ctx, baseFee.BigInt())
+	s.Commit()
+
+	return privKey, msg
+}
+
+func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
+	setupChain(localMinGasPrices)
 
 	privKey, address := generateKey()
-	math.NewIntWithDecimal(10, 18)
-	amount := math.NewIntWithDecimal(10, 18)
+	amount, ok := math.NewIntFromString("10000000000000000000")
+	s.Require().True(ok)
 	initBalance := sdk.Coins{sdk.Coin{
 		Denom:  s.denom,
 		Amount: amount,
@@ -495,6 +538,45 @@ func setupTestWithContext(valMinGasPrice int64, minGasPrice math.LegacyDec, base
 	}
 	s.Commit()
 	return privKey, msg
+}
+
+func setupChain(localMinGasPricesStr string) {
+	// Initialize the app, so we can use SetMinGasPrices to set the
+	// validator-specific min-gas-prices setting
+	db := dbm.NewMemDB()
+	newapp := app.NewEthermintApp(
+		log.NewNopLogger(),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		5,
+		simtestutil.EmptyAppOptions{},
+		baseapp.SetMinGasPrices(localMinGasPricesStr),
+		baseapp.SetChainID("ethermint_9000-1"),
+	)
+
+	privKey, _ := ethsecp256k1.GenerateKey()
+	genesisState := testutil.NewTestGenesisState(newapp, privKey)
+	genesisState[types.ModuleName] = newapp.AppCodec().MustMarshalJSON(types.DefaultGenesisState())
+
+	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	s.Require().NoError(err)
+
+	// Initialize the chain
+	_, err = newapp.InitChain(
+		&abci.RequestInitChain{
+			ChainId:         "ethermint_9000-1",
+			Validators:      []abci.ValidatorUpdate{},
+			AppStateBytes:   stateBytes,
+			ConsensusParams: testutil.DefaultConsensusParams,
+		},
+	)
+	s.Require().NoError(err)
+
+	s.app = newapp
+	s.SetupApp(false)
 }
 
 func generateKey() (*ethsecp256k1.PrivKey, sdk.AccAddress) {

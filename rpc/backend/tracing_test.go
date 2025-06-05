@@ -3,11 +3,10 @@ package backend
 import (
 	"fmt"
 
-	tmlog "cosmossdk.io/log"
+	log "cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
-	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/ethereum/go-ethereum/common"
@@ -27,24 +26,28 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 	priv, _ := ethsecp256k1.GenerateKey()
 	from := common.BytesToAddress(priv.PubKey().Address().Bytes())
+	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+	_ = suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
 
 	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
 	RegisterParamsWithoutHeader(queryClient, 1)
 
-	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
-	suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
 	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
 
 	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
 
 	msgEthereumTx.From = from.String()
-	msgEthereumTx.Sign(ethSigner, suite.signer)
-	tx, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+	_ = msgEthereumTx.Sign(ethSigner, suite.signer)
+
+	baseDenom := evmtypes.DefaultEVMDenom
+
+	tx, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), baseDenom)
 	txBz, _ := txEncoder(tx)
 
 	msgEthereumTx2.From = from.String()
-	msgEthereumTx2.Sign(ethSigner, suite.signer)
-	tx2, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), "aphoton")
+	_ = msgEthereumTx2.Sign(ethSigner, suite.signer)
+
+	tx2, _ := msgEthereumTx.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), baseDenom)
 	txBz2, _ := txEncoder(tx2)
 
 	testCases := []struct {
@@ -106,10 +109,15 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 		{
 			"pass - transaction found in a block with multiple transactions",
 			func() {
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockMultipleTxs(client, 1, []types.Tx{txBz, txBz2})
+				var (
+					queryClient       = suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+					client            = suite.backend.clientCtx.Client.(*mocks.Client)
+					height      int64 = 1
+				)
+				_, err := RegisterBlockMultipleTxs(client, height, []types.Tx{txBz, txBz2})
+				suite.Require().NoError(err)
 				RegisterTraceTransactionWithPredecessors(queryClient, msgEthereumTx, []*evmtypes.MsgEthereumTx{msgEthereumTx})
+				RegisterConsensusParams(client, height)
 			},
 			&types.Block{Header: types.Header{Height: 1, ChainID: ChainID}, Data: types.Data{Txs: []types.Tx{txBz, txBz2}}},
 			[]*abci.ExecTxResult{
@@ -146,10 +154,15 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 		{
 			"pass - transaction found",
 			func() {
-				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlock(client, 1, txBz)
+				var (
+					queryClient       = suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+					client            = suite.backend.clientCtx.Client.(*mocks.Client)
+					height      int64 = 1
+				)
+				_, err := RegisterBlock(client, height, txBz)
+				suite.Require().NoError(err)
 				RegisterTraceTransaction(queryClient, msgEthereumTx)
+				RegisterConsensusParams(client, height)
 			},
 			&types.Block{Header: types.Header{Height: 1}, Data: types.Data{Txs: []types.Tx{txBz}}},
 			[]*abci.ExecTxResult{
@@ -178,7 +191,7 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 			tc.registerMock()
 
 			db := dbm.NewMemDB()
-			suite.backend.indexer = indexer.NewKVIndexer(db, tmlog.NewNopLogger(), suite.backend.clientCtx)
+			suite.backend.indexer = indexer.NewKVIndexer(db, log.NewNopLogger(), suite.backend.clientCtx)
 
 			err := suite.backend.indexer.IndexBlock(tc.block, tc.responseBlock)
 			suite.Require().NoError(err)
@@ -196,9 +209,9 @@ func (suite *BackendTestSuite) TestTraceTransaction() {
 
 func (suite *BackendTestSuite) TestTraceBlock() {
 	msgEthTx, bz := suite.buildEthereumTx()
-	emptyBlock := tmtypes.MakeBlock(1, []tmtypes.Tx{}, nil, nil)
+	emptyBlock := types.MakeBlock(1, []types.Tx{}, nil, nil)
 	emptyBlock.ChainID = ChainID
-	filledBlock := tmtypes.MakeBlock(1, []tmtypes.Tx{bz}, nil, nil)
+	filledBlock := types.MakeBlock(1, []types.Tx{bz}, nil, nil)
 	filledBlock.ChainID = ChainID
 	resBlockEmpty := tmrpctypes.ResultBlock{Block: emptyBlock, BlockID: emptyBlock.LastBlockID}
 	resBlockFilled := tmrpctypes.ResultBlock{Block: filledBlock, BlockID: filledBlock.LastBlockID}
@@ -223,9 +236,9 @@ func (suite *BackendTestSuite) TestTraceBlock() {
 			"fail - cannot unmarshal data",
 			func() {
 				queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
-				RegisterTraceBlock(queryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
 				client := suite.backend.clientCtx.Client.(*mocks.Client)
-				RegisterBlockResults(client, 1)
+				RegisterTraceBlock(queryClient, []*evmtypes.MsgEthereumTx{msgEthTx})
+				RegisterConsensusParams(client, 1)
 			},
 			[]*evmtypes.TxTraceResult{},
 			&resBlockFilled,

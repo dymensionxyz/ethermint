@@ -83,7 +83,7 @@ func DeliverTx(
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
-	return BroadcastTxBytes(appEth.GetBaseApp(), txConfig.TxEncoder(), tx)
+	return BroadcastTxBytes(ctx, appEth.GetBaseApp(), txConfig.TxEncoder(), tx)
 }
 
 // DeliverEthTx generates and broadcasts a Cosmos Tx populated with MsgEthereumTx messages.
@@ -101,7 +101,7 @@ func DeliverEthTx(
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
-	res, err := BroadcastTxBytes(appEth.GetBaseApp(), txConfig.TxEncoder(), tx)
+	res, err := BroadcastTxBytes(ctx, appEth.GetBaseApp(), txConfig.TxEncoder(), tx)
 	if err != nil {
 		return res, err
 	}
@@ -130,7 +130,7 @@ func DeliverEthTxWithoutCheck(
 		return abci.ExecTxResult{}, err
 	}
 
-	res, err := BroadcastTxBytes(appEth.GetBaseApp(), txConfig.TxEncoder(), tx)
+	res, err := BroadcastTxBytes(ctx, appEth.GetBaseApp(), txConfig.TxEncoder(), tx)
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
@@ -163,6 +163,13 @@ func CheckTx(
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
+
+	p := appEthermint.EvmKeeper.GetParams(ctx)
+	_ = p
+
+	p1 := appEthermint.FeeMarketKeeper.GetParams(ctx)
+	_ = p1
+
 	return checkTxBytes(appEthermint, txConfig.TxEncoder(), tx)
 }
 
@@ -183,14 +190,17 @@ func CheckEthTx(
 }
 
 // BroadcastTxBytes encodes a transaction and calls DeliverTx on the app.
-func BroadcastTxBytes(app *baseapp.BaseApp, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.ExecTxResult, error) {
+func BroadcastTxBytes(ctx sdk.Context, app *baseapp.BaseApp, txEncoder sdk.TxEncoder, tx sdk.Tx) (abci.ExecTxResult, error) {
 	// bz are bytes to be broadcasted over the network
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return abci.ExecTxResult{}, err
 	}
 
-	req := abci.RequestFinalizeBlock{Txs: [][]byte{bz}}
+	req := abci.RequestFinalizeBlock{
+		Height: ctx.BlockHeight(),
+		Txs:    [][]byte{bz},
+	}
 
 	res, err := app.FinalizeBlock(&req)
 	if err != nil {

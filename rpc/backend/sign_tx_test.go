@@ -261,3 +261,27 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 		})
 	}
 }
+
+func broadcastTx(suite *BackendTestSuite, priv *ethsecp256k1.PrivKey, baseFee math.Int, callArgsDefault evmtypes.TransactionArgs) (client *mocks.Client, txBytes []byte) {
+	var header metadata.MD
+	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+	client = suite.backend.clientCtx.Client.(*mocks.Client)
+	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+	_ = suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
+	RegisterParams(queryClient, &header, 1)
+	_, err := RegisterBlock(client, 1, nil)
+	suite.Require().NoError(err)
+	_, err = RegisterBlockResults(client, 1)
+	suite.Require().NoError(err)
+	RegisterBaseFee(queryClient, baseFee)
+
+	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
+	msg := callArgsDefault.ToTransaction()
+	err = msg.Sign(ethSigner, suite.backend.clientCtx.Keyring)
+	suite.Require().NoError(err)
+	baseDenom := sdk.DefaultBondDenom
+	tx, _ := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), baseDenom)
+	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
+	txBytes, _ = txEncoder(tx)
+	return client, txBytes
+}
