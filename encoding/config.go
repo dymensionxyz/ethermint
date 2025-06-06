@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	sdktestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -66,4 +67,11 @@ func MakeConfig() sdktestutil.TestEncodingConfig {
 		TxConfig:          tx.NewTxConfig(codec, tx.DefaultSignModes),
 		Amino:             cdc,
 	}
+}
+
+func MakeConfigWithModules(mb module.BasicManager) sdktestutil.TestEncodingConfig {
+	encodingCfg := MakeConfig()
+	mb.RegisterInterfaces(encodingCfg.InterfaceRegistry)
+	mb.RegisterLegacyAminoCodec(encodingCfg.Amino)
+	return encodingCfg
 }
