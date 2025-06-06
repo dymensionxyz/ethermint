@@ -51,9 +51,9 @@ func (suite *BackendTestSuite) TestRPCMinGasPrice() {
 
 			minPrice := suite.backend.RPCMinGasPrice()
 			if tc.expPass {
-				suite.Require().Equal(tc.expMinGasPrice, minPrice)
+				suite.Require().Equal(big.NewInt(tc.expMinGasPrice), minPrice)
 			} else {
-				suite.Require().NotEqual(tc.expMinGasPrice, minPrice)
+				suite.Require().NotEqual(big.NewInt(tc.expMinGasPrice), minPrice)
 			}
 		})
 	}

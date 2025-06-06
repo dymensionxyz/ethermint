@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/evmos/ethermint/app"
 
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -68,7 +69,7 @@ func (suite *BackendTestSuite) SetupTest() {
 	suite.signer = tx.NewSigner(priv)
 	suite.Require().NoError(err)
 
-	encodingConfig := encoding.MakeConfig()
+	encodingConfig := encoding.MakeConfigWithModules(app.ModuleBasics)
 	clientCtx := client.Context{}.WithChainID(ChainID).
 		WithHeight(1).
 		WithTxConfig(encodingConfig.TxConfig).
