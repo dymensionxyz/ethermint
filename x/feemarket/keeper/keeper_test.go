@@ -129,15 +129,13 @@ func (suite *KeeperTestSuite) CommitAfter(t time.Duration) {
 	header.Height += 1
 	header.Time = header.Time.Add(t)
 
-	newCtx := suite.app.BaseApp.NewContextLegacy(false, header)
-
 	_, err = suite.app.Commit() // After this, app.finalizeBlockState is nil.
 	suite.Require().NoError(err)
 
-	//_, err = suite.app.BeginBlocker(newCtx)
-	//suite.Require().NoError(err)
+	_, err = suite.app.BeginBlocker(suite.ctx)
+	suite.Require().NoError(err)
 
-	suite.ctx = newCtx
+	suite.ctx = suite.ctx.WithBlockHeader(header)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
