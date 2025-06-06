@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) TestQueryCosmosAccount() {
 				expAccount = &types.QueryCosmosAccountResponse{
 					CosmosAddress: sdk.AccAddress(suite.address.Bytes()).String(),
 					Sequence:      0,
-					AccountNumber: 0,
+					AccountNumber: suite.accNumber,
 				}
 				req = &types.QueryCosmosAccountRequest{
 					Address: suite.address.String(),
@@ -134,14 +134,18 @@ func (suite *KeeperTestSuite) TestQueryCosmosAccount() {
 			"success with seq and account number",
 			func() {
 				acc := suite.app.AccountKeeper.GetAccount(suite.ctx, suite.address.Bytes())
-				suite.Require().NoError(acc.SetSequence(10))
-				suite.Require().NoError(acc.SetAccountNumber(1))
+				accNum := suite.app.AccountKeeper.NextAccountNumber(suite.ctx)
+				accSeq := acc.GetSequence() + 1
+
+				suite.Require().NoError(acc.SetSequence(accSeq))
+				suite.Require().NoError(acc.SetAccountNumber(accNum))
+
 				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
 				expAccount = &types.QueryCosmosAccountResponse{
 					CosmosAddress: sdk.AccAddress(suite.address.Bytes()).String(),
-					Sequence:      10,
-					AccountNumber: 1,
+					Sequence:      accSeq,
+					AccountNumber: accNum,
 				}
 				req = &types.QueryCosmosAccountRequest{
 					Address: suite.address.String(),
@@ -440,7 +444,7 @@ func (suite *KeeperTestSuite) TestQueryValidatorAccount() {
 				expAccount = &types.QueryValidatorAccountResponse{
 					AccountAddress: sdk.AccAddress(suite.address.Bytes()).String(),
 					Sequence:       0,
-					AccountNumber:  0,
+					AccountNumber:  suite.accNumber,
 				}
 				req = &types.QueryValidatorAccountRequest{
 					ConsAddress: suite.consAddress.String(),
@@ -452,14 +456,18 @@ func (suite *KeeperTestSuite) TestQueryValidatorAccount() {
 			"success with seq and account number",
 			func() {
 				acc := suite.app.AccountKeeper.GetAccount(suite.ctx, suite.address.Bytes())
-				suite.Require().NoError(acc.SetSequence(10))
-				suite.Require().NoError(acc.SetAccountNumber(1))
+				accNum := suite.app.AccountKeeper.NextAccountNumber(suite.ctx)
+				accSeq := acc.GetSequence() + 1
+
+				suite.Require().NoError(acc.SetSequence(accSeq))
+				suite.Require().NoError(acc.SetAccountNumber(accNum))
+
 				suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
 				expAccount = &types.QueryValidatorAccountResponse{
 					AccountAddress: sdk.AccAddress(suite.address.Bytes()).String(),
-					Sequence:       10,
-					AccountNumber:  1,
+					Sequence:       accSeq,
+					AccountNumber:  accNum,
 				}
 				req = &types.QueryValidatorAccountRequest{
 					ConsAddress: suite.consAddress.String(),

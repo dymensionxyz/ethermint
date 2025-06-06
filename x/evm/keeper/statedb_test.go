@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -226,7 +225,12 @@ func (suite *KeeperTestSuite) TestSetNonce() {
 
 func (suite *KeeperTestSuite) TestGetCodeHash() {
 	addr := tests.GenerateAddress()
-	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	baseAcc := authtypes.NewBaseAccount(
+		addr.Bytes(),
+		nil,
+		suite.app.AccountKeeper.NextAccountNumber(suite.ctx),
+		0,
+	)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
 
 	testCases := []struct {
@@ -270,7 +274,12 @@ func (suite *KeeperTestSuite) TestGetCodeHash() {
 
 func (suite *KeeperTestSuite) TestSetCode() {
 	addr := tests.GenerateAddress()
-	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	baseAcc := authtypes.NewBaseAccount(
+		addr.Bytes(),
+		nil,
+		suite.app.AccountKeeper.NextAccountNumber(suite.ctx),
+		0,
+	)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
 
 	testCases := []struct {
@@ -325,7 +334,12 @@ func (suite *KeeperTestSuite) TestSetCode() {
 
 func (suite *KeeperTestSuite) TestKeeperSetCode() {
 	addr := tests.GenerateAddress()
-	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	baseAcc := authtypes.NewBaseAccount(
+		addr.Bytes(),
+		nil,
+		suite.app.AccountKeeper.NextAccountNumber(suite.ctx),
+		0,
+	)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
 
 	testCases := []struct {
