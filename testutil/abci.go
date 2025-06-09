@@ -227,24 +227,17 @@ func BroadcastTxBytes(ctx sdk.Context, app *baseapp.BaseApp, txEncoder sdk.TxEnc
 // updates the header, runs the BeginBlocker function and returns the updated header
 func commit(ctx sdk.Context, app *app.EthermintApp, t time.Duration, vs *cmttypes.ValidatorSet) (tmproto.Header, error) {
 	header := ctx.BlockHeader()
-	req := abci.RequestFinalizeBlock{Height: header.Height}
+	req := abci.RequestFinalizeBlock{
+		Height:             header.Height,
+		Hash:               header.AppHash,
+		Time:               header.Time,
+		ProposerAddress:    header.ProposerAddress,
+		NextValidatorsHash: header.NextValidatorsHash,
+	}
 
-	if vs != nil {
-		res, err := app.FinalizeBlock(&req)
-		if err != nil {
-			return header, err
-		}
-
-		nextVals, err := applyValSetChanges(vs, res.ValidatorUpdates)
-		if err != nil {
-			return header, err
-		}
-		header.ValidatorsHash = vs.Hash()
-		header.NextValidatorsHash = nextVals.Hash()
-	} else {
-		if _, err := app.EndBlocker(ctx); err != nil {
-			return header, err
-		}
+	_, err := app.FinalizeBlock(&req)
+	if err != nil {
+		return header, err
 	}
 
 	if _, err := app.Commit(); err != nil {
@@ -255,9 +248,9 @@ func commit(ctx sdk.Context, app *app.EthermintApp, t time.Duration, vs *cmttype
 	header.Time = header.Time.Add(t)
 	header.AppHash = app.LastCommitID().Hash
 
-	if _, err := app.BeginBlocker(ctx); err != nil {
-		return header, err
-	}
+	//if _, err := app.BeginBlocker(ctx); err != nil {
+	//	return header, err
+	//}
 
 	return header, nil
 }

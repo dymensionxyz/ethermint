@@ -8,8 +8,12 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 	storetypes "cosmossdk.io/store/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/evmos/ethermint/encoding"
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
 
@@ -82,41 +86,53 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 	suite.priv = priv
 
-	suite.app = testutil.Setup(checkTx, nil)
+	suite.app = testutil.Setup(checkTx, func(app *app.EthermintApp, genesis simapp.GenesisState) simapp.GenesisState {
+		if suite.enableFeemarket {
+			// setup feemarketGenesis params
+			feemarketGenesis := feemarkettypes.DefaultGenesisState()
+			feemarketGenesis.Params.EnableHeight = 1
+			feemarketGenesis.Params.NoBaseFee = false
+			// Verify feeMarket genesis
+			err := feemarketGenesis.Validate()
+			suite.Require().NoError(err)
+			genesis[feemarkettypes.ModuleName] = app.AppCodec().MustMarshalJSON(feemarketGenesis)
+		}
+		evmGenesis := evmtypes.DefaultGenesisState()
+		evmGenesis.Params.AllowUnprotectedTxs = false
+		if !suite.enableLondonHF {
+			maxInt := sdkmath.NewInt(math.MaxInt64)
+			evmGenesis.Params.ChainConfig.LondonBlock = &maxInt
+			evmGenesis.Params.ChainConfig.ArrowGlacierBlock = &maxInt
+			evmGenesis.Params.ChainConfig.GrayGlacierBlock = &maxInt
+			evmGenesis.Params.ChainConfig.MergeNetsplitBlock = &maxInt
+			evmGenesis.Params.ChainConfig.ShanghaiBlock = &maxInt
+			evmGenesis.Params.ChainConfig.CancunBlock = &maxInt
+		}
+		if suite.evmParamsOption != nil {
+			suite.evmParamsOption(&evmGenesis.Params)
+		}
+		genesis[evmtypes.ModuleName] = app.AppCodec().MustMarshalJSON(evmGenesis)
+		return genesis
+	})
 
-	// Set up context
-	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{Height: 2, ChainID: testutil.TestnetChainID + "-1", Time: time.Now().UTC()}).WithChainID(suite.app.ChainID())
+	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{Height: 2, ChainID: testutil.TestnetChainID + "-1", Time: time.Now().UTC()})
 	suite.ctx = suite.ctx.WithMinGasPrices(sdk.NewDecCoins(sdk.NewDecCoin(evmtypes.DefaultEVMDenom, sdkmath.OneInt())))
 	suite.ctx = suite.ctx.WithBlockGasMeter(storetypes.NewGasMeter(1000000000000000000))
+	suite.app.EvmKeeper.WithChainID(suite.ctx)
 
-	// Set up fee market params if enabled
-	if suite.enableFeemarket {
-		feemarketParams := feemarkettypes.DefaultParams()
-		feemarketParams.EnableHeight = 1
-		feemarketParams.NoBaseFee = false
-		err := suite.app.FeeMarketKeeper.SetParams(suite.ctx, feemarketParams)
-		suite.Require().NoError(err)
-	}
+	infCtx := suite.ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	suite.app.AccountKeeper.Params.Set(infCtx, authtypes.DefaultParams())
 
-	// Set up EVM params
-	evmParams := evmtypes.DefaultParams()
-	evmParams.AllowUnprotectedTxs = false
-	if !suite.enableLondonHF {
-		maxInt := sdkmath.NewInt(math.MaxInt64)
-		evmParams.ChainConfig.LondonBlock = &maxInt
-		evmParams.ChainConfig.ArrowGlacierBlock = &maxInt
-		evmParams.ChainConfig.GrayGlacierBlock = &maxInt
-		evmParams.ChainConfig.MergeNetsplitBlock = &maxInt
-		evmParams.ChainConfig.ShanghaiBlock = &maxInt
-		evmParams.ChainConfig.CancunBlock = &maxInt
-	}
-	if suite.evmParamsOption != nil {
-		suite.evmParamsOption(&evmParams)
-	}
-	err = suite.app.EvmKeeper.SetParams(suite.ctx, evmParams)
-	suite.Require().NoError(err)
+	addr := sdk.AccAddress(priv.PubKey().Address().Bytes())
+	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	suite.clientCtx = client.Context{}.WithTxConfig(suite.app.GetTxConfig())
+	encodingConfig := encoding.MakeConfigWithModules(app.ModuleBasics)
+	// We're using TestMsg amino encoding in some tests, so register it here.
+	encodingConfig.Amino.RegisterConcrete(&testdata.TestMsg{}, "testdata.TestMsg", nil)
+	//eip712.SetEncodingConfig(encodingConfig)
+
+	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 
 	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
 		AccountKeeper:   suite.app.AccountKeeper,
@@ -125,7 +141,7 @@ func (suite *AnteTestSuite) SetupTest() {
 		FeegrantKeeper:  suite.app.FeeGrantKeeper,
 		IBCKeeper:       suite.app.IBCKeeper,
 		FeeMarketKeeper: suite.app.FeeMarketKeeper,
-		SignModeHandler: suite.app.GetTxConfig().SignModeHandler(),
+		SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		DisabledAuthzMsgs: []string{
 			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
@@ -689,7 +705,7 @@ var _ sdk.Tx = &InvalidTx{}
 // NOTE: This is used for testing purposes, to serve the edge case of invalid data being passed to functions.
 type InvalidTx struct{}
 
-func (InvalidTx) GetMsgs() []sdk.Msg                    { return nil }
-func (InvalidTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
+func (InvalidTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{nil} }
+func (InvalidTx) GetMsgsV2() ([]protov2.Message, error) { return []protov2.Message{nil}, nil }
 
 func (InvalidTx) ValidateBasic() error { return nil }
