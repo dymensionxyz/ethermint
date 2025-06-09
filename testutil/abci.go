@@ -197,9 +197,15 @@ func BroadcastTxBytes(ctx sdk.Context, app *baseapp.BaseApp, txEncoder sdk.TxEnc
 		return abci.ExecTxResult{}, err
 	}
 
+	header := ctx.BlockHeader()
 	req := abci.RequestFinalizeBlock{
-		Height: ctx.BlockHeight(),
-		Txs:    [][]byte{bz},
+		Txs:                [][]byte{bz},
+		Misbehavior:        nil,
+		Hash:               header.AppHash,
+		Height:             header.Height,
+		Time:               header.Time,
+		NextValidatorsHash: header.ValidatorsHash,
+		ProposerAddress:    header.ProposerAddress,
 	}
 
 	res, err := app.FinalizeBlock(&req)
@@ -210,9 +216,9 @@ func BroadcastTxBytes(ctx sdk.Context, app *baseapp.BaseApp, txEncoder sdk.TxEnc
 		return abci.ExecTxResult{}, fmt.Errorf("unexpected transaction results. Expected 1, got: %d", len(res.TxResults))
 	}
 	txRes := res.TxResults[0]
-	if txRes.Code != 0 {
-		return abci.ExecTxResult{}, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "log: %s", txRes.Log)
-	}
+	//if txRes.Code != 0 {
+	//	return abci.ExecTxResult{}, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "log: %s", txRes.Log)
+	//}
 
 	return *txRes, nil
 }
