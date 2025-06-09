@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"strings"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -14,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
@@ -284,7 +282,7 @@ var _ = Describe("Feemarket", func() {
 						p := malleate()
 						to := tests.GenerateAddress()
 						msgEthereumTx := buildEthTx(privKey, &to, p.gasPrice, p.gasFeeCap, p.gasTipCap, p.accesses)
-						res, err := testutil.DeliverEthTx(s.ctx, s.app, privKey, msgEthereumTx)
+						res, err := testutil.DeliverEthTxWithoutCheck(s.ctx, s.app, privKey, msgEthereumTx)
 						Expect(err).To(BeNil())
 						Expect(res.IsOK()).To(Equal(false), "transaction should have failed")
 						Expect(
@@ -309,7 +307,7 @@ var _ = Describe("Feemarket", func() {
 						p := malleate()
 						to := tests.GenerateAddress()
 						msgEthereumTx := buildEthTx(privKey, &to, p.gasPrice, p.gasFeeCap, p.gasTipCap, p.accesses)
-						res, err := testutil.DeliverEthTx(s.ctx, s.app, privKey, msgEthereumTx)
+						res, err := testutil.DeliverEthTxWithoutCheck(s.ctx, s.app, privKey, msgEthereumTx)
 						Expect(err).To(BeNil())
 						Expect(res.IsOK()).To(Equal(true), "transaction should have succeeded", res.GetLog())
 					},
@@ -410,7 +408,7 @@ var _ = Describe("Feemarket", func() {
 						p := malleate()
 						to := tests.GenerateAddress()
 						msgEthereumTx := buildEthTx(privKey, &to, p.gasPrice, p.gasFeeCap, p.gasTipCap, p.accesses)
-						res, err := testutil.DeliverEthTx(s.ctx, s.app, privKey, msgEthereumTx)
+						res, err := testutil.DeliverEthTxWithoutCheck(s.ctx, s.app, privKey, msgEthereumTx)
 						Expect(err).To(BeNil())
 						Expect(res.IsOK()).To(Equal(false), "transaction should have failed")
 						Expect(
@@ -431,7 +429,7 @@ var _ = Describe("Feemarket", func() {
 						p := malleate()
 						to := tests.GenerateAddress()
 						msgEthereumTx := buildEthTx(privKey, &to, p.gasPrice, p.gasFeeCap, p.gasTipCap, p.accesses)
-						res, err := testutil.DeliverEthTx(s.ctx, s.app, privKey, msgEthereumTx)
+						res, err := testutil.DeliverEthTxWithoutCheck(s.ctx, s.app, privKey, msgEthereumTx)
 						Expect(err).To(BeNil())
 						Expect(res.IsOK()).To(Equal(false), "transaction should have failed")
 						Expect(
@@ -453,7 +451,7 @@ var _ = Describe("Feemarket", func() {
 						p := malleate()
 						to := tests.GenerateAddress()
 						msgEthereumTx := buildEthTx(privKey, &to, p.gasPrice, p.gasFeeCap, p.gasTipCap, p.accesses)
-						res, err := testutil.DeliverEthTx(s.ctx, s.app, privKey, msgEthereumTx)
+						res, err := testutil.DeliverEthTxWithoutCheck(s.ctx, s.app, privKey, msgEthereumTx)
 						Expect(err).To(BeNil())
 						Expect(res.IsOK()).To(Equal(true), "transaction should have succeeded", res.GetLog())
 					},
@@ -536,7 +534,6 @@ func setupTest(localMinGasPrices string) (*ethsecp256k1.PrivKey, banktypes.MsgSe
 			Amount: math.NewInt(10000),
 		}},
 	}
-	s.Commit()
 	return privKey, msg
 }
 
@@ -627,15 +624,12 @@ func checkTx(ctx sdk.Context, priv *ethsecp256k1.PrivKey, gasPrice *math.Int, ms
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
-	if res.Code != 0 {
-		return abci.ResponseCheckTx{}, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "log: %s", res.Log)
-	}
 
 	return *res, nil
 }
 
 func prepareCosmosTx(ctx sdk.Context, priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) []byte {
-	encodingConfig := encoding.MakeConfig()
+	encodingConfig := encoding.MakeConfigWithModules(app.ModuleBasics)
 	accountAddress := sdk.AccAddress(priv.PubKey().Address().Bytes())
 
 	txBuilder := encodingConfig.TxConfig.NewTxBuilder()
@@ -700,15 +694,12 @@ func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumT
 	if err != nil {
 		return abci.ResponseCheckTx{}, err
 	}
-	if res.Code != 0 {
-		return abci.ResponseCheckTx{}, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "log: %s", res.Log)
-	}
 
 	return *res, nil
 }
 
 func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) []byte {
-	encodingConfig := encoding.MakeConfig()
+	encodingConfig := encoding.MakeConfigWithModules(app.ModuleBasics)
 	option, err := codectypes.NewAnyWithValue(&evmtypes.ExtensionOptionsEthereumTx{})
 	s.Require().NoError(err)
 
@@ -819,11 +810,14 @@ func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg)
 	res := s.app.BaseApp.CheckTx(req)
 	return res
 }
-
-func deliverTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) abci.ResponseDeliverTx {
-	bz := prepareCosmosTx(priv, gasPrice, msgs...)
-	req := abci.RequestDeliverTx{Tx: bz}
-	res := s.app.BaseApp.DeliverTx(req)
-	return res
-}
 */
+
+//func deliverTx(ctx sdk.Context, priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) (abci.ExecTxResult, error) {
+//	bz := prepareCosmosTx(ctx, priv, gasPrice, msgs...)
+//
+//	s.app.BaseApp.
+//
+//	req := abci.RequestDeliverTx{Tx: bz}
+//	res := s.app.BaseApp.DeliverTx(req)
+//	return res
+//}

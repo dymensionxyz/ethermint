@@ -12,8 +12,14 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmversion "github.com/cometbft/cometbft/proto/tendermint/version"
 	"github.com/cometbft/cometbft/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	ethermint "github.com/evmos/ethermint/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/require"
 
 	"github.com/stretchr/testify/suite"
 
@@ -73,7 +79,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 // SetupTest setup test environment, it uses`require.TestingT` to support both `testing.T` and `testing.B`.
 func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
-	priv, _ := ethsecp256k1.GenerateKey()
+	t := suite.T()
+	// account key
+	priv, err := ethsecp256k1.GenerateKey()
+	require.NoError(t, err)
+	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
+	suite.signer = tx.NewSigner(priv)
+
+	// consensus key
+	priv, err = ethsecp256k1.GenerateKey()
+	require.NoError(t, err)
+	suite.consAddress = sdk.ConsAddress(priv.PubKey().Address())
 
 	suite.ctx = suite.app.BaseApp.NewContextLegacy(checkTx, tmproto.Header{
 		Height:          1,
@@ -99,14 +115,29 @@ func (suite *KeeperTestSuite) SetupApp(checkTx bool) {
 		LastResultsHash:    tmhash.Sum([]byte("last_result")),
 	})
 
-	suite.address = common.BytesToAddress(priv.PubKey().Address().Bytes())
-	suite.signer = tx.NewSigner(priv)
-
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.FeeMarketKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
 
-	encodingConfig := encoding.MakeConfig()
+	acc := &ethermint.EthAccount{
+		BaseAccount: authtypes.NewBaseAccount(sdk.AccAddress(suite.address.Bytes()), nil, suite.app.AccountKeeper.NextAccountNumber(s.ctx), 0),
+		CodeHash:    common.BytesToHash(crypto.Keccak256(nil)).String(),
+	}
+
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
+
+	valAddr := sdk.ValAddress(suite.address.Bytes())
+	validator, err := stakingtypes.NewValidator(valAddr.String(), priv.PubKey(), stakingtypes.Description{})
+	require.NoError(t, err)
+	validator = stakingkeeper.TestingUpdateValidator(suite.app.StakingKeeper, suite.ctx, validator, true)
+	err = suite.app.StakingKeeper.Hooks().AfterValidatorCreated(suite.ctx, valAddr)
+	require.NoError(t, err)
+
+	err = suite.app.StakingKeeper.SetValidatorByConsAddr(suite.ctx, validator)
+	require.NoError(t, err)
+	suite.app.StakingKeeper.SetValidator(suite.ctx, validator)
+
+	encodingConfig := encoding.MakeConfigWithModules(app.ModuleBasics)
 	suite.clientCtx = client.Context{}.WithTxConfig(encodingConfig.TxConfig)
 	suite.ethSigner = ethtypes.LatestSignerForChainID(suite.app.EvmKeeper.ChainID())
 	suite.appCodec = encodingConfig.Codec
@@ -126,15 +157,12 @@ func (suite *KeeperTestSuite) CommitAfter(t time.Duration) {
 	_, err := suite.app.FinalizeBlock(req)
 	suite.Require().NoError(err)
 
-	header.Height += 1
-	header.Time = header.Time.Add(t)
-
 	_, err = suite.app.Commit() // After this, app.finalizeBlockState is nil.
 	suite.Require().NoError(err)
 
-	_, err = suite.app.BeginBlocker(suite.ctx)
-	suite.Require().NoError(err)
-
+	header.Height += 1
+	header.Time = header.Time.Add(t)
+	
 	suite.ctx = suite.ctx.WithBlockHeader(header)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
