@@ -256,9 +256,6 @@ func (suite *KeeperTestSuite) Commit() {
 	_, err = suite.app.Commit() // After this, app.finalizeBlockState is nil.
 	suite.Require().NoError(err)
 
-	_, err = suite.app.BeginBlocker(suite.ctx)
-	suite.Require().NoError(err)
-
 	suite.ctx = suite.ctx.WithBlockHeader(header)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())

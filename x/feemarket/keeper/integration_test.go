@@ -376,11 +376,12 @@ var _ = Describe("Feemarket", func() {
 								"insufficient fee"),
 						).To(BeTrue(), res.GetLog())
 					},
+					// Note that the baseFee is not 10_000_000_000 anymore but updates to 8_750_000_000 because of the s.Commit
 					Entry("legacy tx", func() txParams {
-						return txParams{big.NewInt(baseFee - 1_000_000_000), nil, nil, nil}
+						return txParams{big.NewInt(baseFee - 1_500_000_000), nil, nil, nil}
 					}),
 					Entry("dynamic tx", func() txParams {
-						return txParams{nil, big.NewInt(baseFee - 1_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
+						return txParams{nil, big.NewInt(baseFee - 1_500_000_000), big.NewInt(0), &ethtypes.AccessList{}}
 					}),
 				)
 
@@ -437,12 +438,13 @@ var _ = Describe("Feemarket", func() {
 								"insufficient fee"),
 						).To(BeTrue(), res.GetLog())
 					},
-					// Note that the baseFee is not 10_000_000_000 anymore but updates to 8_750_000_000 because of the s.Commit
+					// Note that the baseFee is not 10_000_000_000 anymore but updates to 7_656_250_000 because of the s.Commit
+					// and app.FinalizeBlock while broadcasting the TX (so x/feemarket BeginBlock is called 2 times).
 					Entry("legacy tx", func() txParams {
-						return txParams{big.NewInt(baseFee - 2_000_000_000), nil, nil, nil}
+						return txParams{big.NewInt(baseFee - 2_500_000_000), nil, nil, nil}
 					}),
 					Entry("dynamic tx", func() txParams {
-						return txParams{nil, big.NewInt(baseFee - 2_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
+						return txParams{nil, big.NewInt(baseFee - 2_500_000_000), big.NewInt(0), &ethtypes.AccessList{}}
 					}),
 				)
 
@@ -466,40 +468,6 @@ var _ = Describe("Feemarket", func() {
 		})
 	})
 })
-
-// setupTestWithContext sets up a test chain with an example Cosmos send msg,
-// given a local (validator config) and a gloabl (feemarket param) minGasPrice
-//func setupTestWithContext(valMinGasPrice int64, minGasPrice math.LegacyDec, baseFee math.Int) (*ethsecp256k1.PrivKey, banktypes.MsgSend) {
-//	s.SetupTest()
-//
-//	valMinGasPriceInt := math.NewInt(valMinGasPrice)
-//	s.ctx = s.ctx.WithMinGasPrices(sdk.DecCoins{sdk.NewDecCoin(s.denom, valMinGasPriceInt)})
-//
-//	params := types.DefaultParams()
-//	params.MinGasPrice = minGasPrice
-//	s.app.FeeMarketKeeper.SetParams(s.ctx, params)
-//	s.app.FeeMarketKeeper.SetBaseFee(s.ctx, baseFee.BigInt())
-//
-//	privKey, address := generateKey()
-//	math.NewIntWithDecimal(10, 18)
-//	amount := math.NewIntWithDecimal(10, 18)
-//	initBalance := sdk.Coins{sdk.Coin{
-//		Denom:  s.denom,
-//		Amount: amount,
-//	}}
-//	testutil.FundAccount(s.app.BankKeeper, s.ctx, address, initBalance)
-//
-//	msg := banktypes.MsgSend{
-//		FromAddress: address.String(),
-//		ToAddress:   address.String(),
-//		Amount: sdk.Coins{sdk.Coin{
-//			Denom:  s.denom,
-//			Amount: math.NewInt(10000),
-//		}},
-//	}
-//	s.Commit()
-//	return privKey, msg
-//}
 
 // setupTestWithContext sets up a test chain with an example Cosmos send msg,
 // given a local (validator config) and a gloabl (feemarket param) minGasPrice
@@ -729,95 +697,3 @@ func prepareEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereu
 
 	return bz
 }
-
-/*
-func checkEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ResponseCheckTx {
-	bz := prepareEthTx(priv, msgEthereumTx)
-	req := abci.RequestCheckTx{Tx: bz}
-	res := s.app.BaseApp.CheckTx(req)
-	return res
-}
-
-func deliverEthTx(priv *ethsecp256k1.PrivKey, msgEthereumTx *evmtypes.MsgEthereumTx) abci.ResponseDeliverTx {
-	bz := prepareEthTx(priv, msgEthereumTx)
-	req := abci.RequestDeliverTx{Tx: bz}
-	res := s.app.BaseApp.DeliverTx(req)
-	return res
-}
-
-func prepareCosmosTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) []byte {
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
-	accountAddress := sdk.AccAddress(priv.PubKey().Address().Bytes())
-
-	txBuilder := encodingConfig.TxConfig.NewTxBuilder()
-
-	txBuilder.SetGasLimit(1000000)
-	if gasPrice == nil {
-		_gasPrice := sdkmath.NewInt(1)
-		gasPrice = &_gasPrice
-	}
-	fees := &sdk.Coins{{Denom: s.denom, Amount: gasPrice.MulRaw(1000000)}}
-	txBuilder.SetFeeAmount(*fees)
-	err := txBuilder.SetMsgs(msgs...)
-	s.Require().NoError(err)
-
-	seq, err := s.app.AccountKeeper.GetSequence(s.ctx, accountAddress)
-	s.Require().NoError(err)
-
-	// First round: we gather all the signer infos. We use the "set empty
-	// signature" hack to do that.
-	sigV2 := signing.SignatureV2{
-		PubKey: priv.PubKey(),
-		Data: &signing.SingleSignatureData{
-			SignMode:  encodingConfig.TxConfig.SignModeHandler().DefaultMode(),
-			Signature: nil,
-		},
-		Sequence: seq,
-	}
-
-	sigsV2 := []signing.SignatureV2{sigV2}
-
-	err = txBuilder.SetSignatures(sigsV2...)
-	s.Require().NoError(err)
-
-	// Second round: all signer infos are set, so each signer can sign.
-	accNumber := s.app.AccountKeeper.GetAccount(s.ctx, accountAddress).GetAccountNumber()
-	signerData := authsigning.SignerData{
-		ChainID:       s.ctx.ChainID(),
-		AccountNumber: accNumber,
-		Sequence:      seq,
-	}
-	sigV2, err = tx.SignWithPrivKey(
-		encodingConfig.TxConfig.SignModeHandler().DefaultMode(), signerData,
-		txBuilder, priv, encodingConfig.TxConfig,
-		seq,
-	)
-	s.Require().NoError(err)
-
-	sigsV2 = []signing.SignatureV2{sigV2}
-	err = txBuilder.SetSignatures(sigsV2...)
-	s.Require().NoError(err)
-
-	// bz are bytes to be broadcasted over the network
-	bz, err := encodingConfig.TxConfig.TxEncoder()(txBuilder.GetTx())
-	s.Require().NoError(err)
-	return bz
-}
-
-func checkTx(priv *ethsecp256k1.PrivKey, gasPrice *sdkmath.Int, msgs ...sdk.Msg) abci.ResponseCheckTx {
-	bz := prepareCosmosTx(priv, gasPrice, msgs...)
-	req := abci.RequestCheckTx{Tx: bz}
-	res := s.app.BaseApp.CheckTx(req)
-	return res
-}
-*/
-
-//func deliverTx(ctx sdk.Context, priv *ethsecp256k1.PrivKey, gasPrice *math.Int, msgs ...sdk.Msg) (abci.ExecTxResult, error) {
-//	bz := prepareCosmosTx(ctx, priv, gasPrice, msgs...)
-//
-//	s.app.BaseApp.
-//
-//	req := abci.RequestDeliverTx{Tx: bz}
-//	res := s.app.BaseApp.DeliverTx(req)
-//	return res
-//}
