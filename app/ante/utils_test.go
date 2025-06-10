@@ -90,9 +90,7 @@ func (suite *AnteTestSuite) SetupTest() {
 		if suite.enableFeemarket {
 			// setup feemarketGenesis params
 			feemarketGenesis := feemarkettypes.DefaultGenesisState()
-			// Ensure BaseFee is explicitly the default, matching the test's expectation for EnableHeight.
-			feemarketGenesis.Params.BaseFee = sdkmath.NewInt(feemarkettypes.DefaultBaseFee)
-			feemarketGenesis.Params.EnableHeight = 2
+			feemarketGenesis.Params.EnableHeight = 1
 			feemarketGenesis.Params.NoBaseFee = false
 			// Verify feeMarket genesis
 			err := feemarketGenesis.Validate()
@@ -165,9 +163,17 @@ func (suite *AnteTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 
+	bf := suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx)
+	_ = bf
+
 	header := suite.ctx.BlockHeader()
 	suite.ctx = suite.ctx.WithBlockHeight(header.Height - 1)
 	suite.ctx, err = testutil.Commit(suite.ctx, suite.app, time.Second*0, nil)
+	suite.Require().NoError(err)
+
+	bf1 := suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx)
+	_ = bf1
+
 	suite.Require().NoError(err)
 }
 

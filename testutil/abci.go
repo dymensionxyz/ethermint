@@ -164,12 +164,6 @@ func CheckTx(
 		return abci.ResponseCheckTx{}, err
 	}
 
-	p := appEthermint.EvmKeeper.GetParams(ctx)
-	_ = p
-
-	p1 := appEthermint.FeeMarketKeeper.GetParams(ctx)
-	_ = p1
-
 	return checkTxBytes(appEthermint, txConfig.TxEncoder(), tx)
 }
 
@@ -216,9 +210,6 @@ func BroadcastTxBytes(ctx sdk.Context, app *baseapp.BaseApp, txEncoder sdk.TxEnc
 		return abci.ExecTxResult{}, fmt.Errorf("unexpected transaction results. Expected 1, got: %d", len(res.TxResults))
 	}
 	txRes := res.TxResults[0]
-	//if txRes.Code != 0 {
-	//	return abci.ExecTxResult{}, errorsmod.Wrapf(errortypes.ErrInvalidRequest, "log: %s", txRes.Log)
-	//}
 
 	return *txRes, nil
 }

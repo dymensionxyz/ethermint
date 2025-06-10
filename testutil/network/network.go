@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 
 	app "github.com/evmos/ethermint/app"
@@ -47,8 +47,15 @@ func DefaultConfig() network.Config {
 	cfg.ChainID = "ethermint_1000-1"
 	cfg.AppConstructor = func(val network.ValidatorI) servertypes.Application {
 		return app.NewEthermintApp(
-			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
-			sims.EmptyAppOptions{},
+			val.GetCtx().Logger,
+			dbm.NewMemDB(),
+			nil,
+			true,
+			map[int64]bool{},
+			"",
+			5,
+			simtestutil.EmptyAppOptions{},
+			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetMinGasPrices(val.GetAppConfig().MinGasPrices),
 		)
