@@ -90,6 +90,8 @@ func (suite *AnteTestSuite) SetupTest() {
 		if suite.enableFeemarket {
 			// setup feemarketGenesis params
 			feemarketGenesis := feemarkettypes.DefaultGenesisState()
+			// Ensure BaseFee is explicitly the default, matching the test's expectation for EnableHeight.
+			feemarketGenesis.Params.BaseFee = sdkmath.NewInt(feemarkettypes.DefaultBaseFee)
 			feemarketGenesis.Params.EnableHeight = 2
 			feemarketGenesis.Params.NoBaseFee = false
 			// Verify feeMarket genesis
