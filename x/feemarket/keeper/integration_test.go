@@ -224,6 +224,7 @@ var _ = Describe("Feemarket", func() {
 				// a `minGasPrices = 40_000_000_000` results in `minGlobalFee =
 				// 4000000000000000`
 				privKey, _ = setupTestWithContext("1", math.LegacyNewDec(minGasPrices), math.NewInt(baseFee))
+				s.app.FeeMarketKeeper.SetBaseFee(s.ctx, big.NewInt(baseFee))
 			})
 
 			Context("during CheckTx", func() {
@@ -250,9 +251,21 @@ var _ = Describe("Feemarket", func() {
 						// Note that max priority fee per gas can't be higher than the max fee per gas (gasFeeCap), i.e. 30_000_000_000)
 						return txParams{nil, big.NewInt(minGasPrices - 10_000_000_000), big.NewInt(30_000_000_000), &ethtypes.AccessList{}}
 					}),
-					Entry("dynamic tx with GasFeeCap > MinGasPrices, EffectivePrice < MinGasPrices", func() txParams {
-						return txParams{nil, big.NewInt(minGasPrices + 10_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
-					}),
+					// In this case, the transaction should not fail. During s.Commit(), x/feemarket BeginBlock is called
+					// where baseFee = math.BigMax(params.BaseFee, params.MinGasPrice) = math.BigMax(10G, 40G) = 40G.
+					//
+					// Consequently, when EthMinGasPriceDecorator later calls empd.evmKeeper.GetBaseFee(s.ctx, ethCfg),
+					// it receives 40G. With an active baseFee of 40G, the transaction's EffectiveFee becomes
+					// min(GasFeeCap, baseFee + GasTipCap) = min(50G, 40G + 0) = 40G. The decorator then checks if fee
+					// (40G) < requiredFee (based on MinGasPriceParam=40G). This is false, so the transaction is accepted.
+					//
+					// Note, that in the following case, GasFeeCap > MinGasPrices, baseFee = MinGasPrices, GasTipCap = 0,
+					// so min(GasFeeCap, baseFee + GasTipCap) = min(MinGasPrices + E, MinGasPrices + 0), which always
+					// results in fee EffectiveFee = MinGasPrices. Therefore, such transaction is always accepted.
+					//
+					// Entry("dynamic tx with GasFeeCap > MinGasPrices, EffectivePrice < MinGasPrices", func() txParams {
+					// 	return txParams{nil, big.NewInt(minGasPrices + 10_000_000_000), big.NewInt(0), &ethtypes.AccessList{}}
+					// }),
 				)
 
 				DescribeTable("should accept transactions with gasPrice >= MinGasPrices",
