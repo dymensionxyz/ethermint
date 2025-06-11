@@ -173,9 +173,6 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 	tx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), txGasLimit, big.NewInt(1), nil, nil, nil, nil)
 	tx.From = addr.Hex()
 
-	bf := suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx)
-	_ = bf
-
 	ethCfg := suite.app.EvmKeeper.GetParams(suite.ctx).
 		ChainConfig.EthereumConfig(suite.app.EvmKeeper.ChainID())
 	baseFee := suite.app.EvmKeeper.GetBaseFee(suite.ctx, ethCfg)
@@ -192,7 +189,7 @@ func (suite *AnteTestSuite) TestEthGasConsumeDecorator() {
 	tx3 := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx3GasLimit, gasPrice, nil, nil, nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})
 
 	dynamicFeeTx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), tx2GasLimit,
-		nil, // gasPrice
+		nil,                                                                                // gasPrice
 		new(big.Int).Add(baseFee, big.NewInt(evmtypes.DefaultPriorityReduction.Int64()*2)), // gasFeeCap
 		evmtypes.DefaultPriorityReduction.BigInt(),                                         // gasTipCap
 		nil, &ethtypes.AccessList{{Address: addr, StorageKeys: nil}})

@@ -205,8 +205,6 @@ var (
 	allowedReceivingModAcc = map[string]bool{}
 )
 
-// var _ server.Application (*EthermintApp)(nil)
-
 // EthermintApp implements an extended ABCI application. It is an application
 // that may process transactions through Ethereum's EVM running atop of
 // Tendermint consensus.
@@ -715,7 +713,6 @@ func NewEthermintApp(
 // use Ethermint's custom AnteHandler
 func (app *EthermintApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64) {
 	anteHandler, err := ante.NewAnteHandler(ante.HandlerOptions{
-		Cdc:                    app.appCodec,
 		AccountKeeper:          app.AccountKeeper,
 		BankKeeper:             app.BankKeeper,
 		ExtensionOptionChecker: ethermint.HasDynamicFeeExtensionOption,

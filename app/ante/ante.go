@@ -50,13 +50,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ctx sdk.Context, tx sdk.Tx, sim bool,
 	) (newCtx sdk.Context, err error) {
 		var anteHandler sdk.AnteHandler
-
-		p := options.EvmKeeper.GetParams(ctx)
-		_ = p
-
-		p1 := options.FeeMarketKeeper.GetParams(ctx)
-		_ = p1
-
 		defer Recover(ctx.Logger(), &err)
 
 		txWithExtensions, ok := tx.(authante.HasExtensionOptionsTx)

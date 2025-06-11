@@ -163,16 +163,10 @@ func (suite *AnteTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 
-	bf := suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx)
-	_ = bf
-
 	header := suite.ctx.BlockHeader()
 	suite.ctx = suite.ctx.WithBlockHeight(header.Height - 1)
 	suite.ctx, err = testutil.Commit(suite.ctx, suite.app, time.Second*0, nil)
 	suite.Require().NoError(err)
-
-	bf1 := suite.app.FeeMarketKeeper.GetBaseFee(suite.ctx)
-	_ = bf1
 
 	suite.Require().NoError(err)
 }
@@ -711,6 +705,7 @@ var _ sdk.Tx = &InvalidTx{}
 // holds no valid transaction information.
 //
 // NOTE: This is used for testing purposes, to serve the edge case of invalid data being passed to functions.
+// GetMsgs and GetMsgsV2 MUST RETURN SLICES WITH ONE NIL ELEMENT!!
 type InvalidTx struct{}
 
 func (InvalidTx) GetMsgs() []sdk.Msg                    { return []sdk.Msg{nil} }
