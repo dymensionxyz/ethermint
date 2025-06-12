@@ -17,7 +17,6 @@ package tx
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,6 +24,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
+
 	"github.com/ethereum/go-ethereum/crypto"
 	cryptocodec "github.com/evmos/ethermint/crypto/codec"
 
@@ -43,7 +44,6 @@ import (
 type EIP712TxArgs struct {
 	CosmosTxArgs       CosmosTxArgs
 	UseLegacyTypedData bool
-	UseLegacyExtension bool
 }
 
 type typedDataArgs struct {
@@ -51,12 +51,6 @@ type typedDataArgs struct {
 	data           []byte
 	legacyFeePayer sdk.AccAddress
 	legacyMsg      sdk.Msg
-}
-
-type legacyWeb3ExtensionArgs struct {
-	feePayer  string
-	chainID   uint64
-	signature []byte
 }
 
 type signatureV2Args struct {
@@ -97,13 +91,8 @@ func PrepareEIP712CosmosTx(
 	}
 	chainIDNum := pc.Uint64()
 
-	fmt.Println("args ", txArgs.Priv)
 	from := sdk.AccAddress(txArgs.Priv.PubKey().Address().Bytes())
-	fmt.Println("from ", from)
-	acc := appEthermint.AccountKeeper.GetAccount(ctx, from)
-
-	fmt.Println("acc: ", acc)
-	accNumber := acc.GetAccountNumber()
+	accNumber := appEthermint.AccountKeeper.GetAccount(ctx, from).GetAccountNumber()
 
 	nonce, err := appEthermint.AccountKeeper.GetSequence(ctx, from)
 	if err != nil {
@@ -113,7 +102,7 @@ func PrepareEIP712CosmosTx(
 	fee := legacytx.NewStdFee(txArgs.Gas, txArgs.Fees) //nolint: staticcheck
 
 	msgs := txArgs.Msgs
-	data := legacytx.StdSignBytes(ctx.ChainID(), accNumber, nonce, 0, fee, msgs, "", nil)
+	data := legacytx.StdSignBytes(ctx.ChainID(), accNumber, nonce, 0, fee, msgs, "")
 
 	typedDataArgs := typedDataArgs{
 		chainID:        chainIDNum,
@@ -146,7 +135,6 @@ func PrepareEIP712CosmosTx(
 		appEthermint,
 		args,
 		builder,
-		chainIDNum,
 		typedData,
 	)
 }
@@ -182,7 +170,6 @@ func signCosmosEIP712Tx(
 	appEvmos *app.EthermintApp,
 	args EIP712TxArgs,
 	builder authtx.ExtensionOptionsTxBuilder,
-	chainID uint64,
 	data apitypes.TypedData,
 ) (client.TxBuilder, error) {
 	priv := args.CosmosTxArgs.Priv
@@ -199,23 +186,11 @@ func signCosmosEIP712Tx(
 	}
 
 	keyringSigner := NewSigner(priv)
-	signature, pubKey, err := keyringSigner.SignByAddress(from, sigHash)
+	signature, pubKey, err := keyringSigner.SignByAddress(from, sigHash, signingtypes.SignMode_SIGN_MODE_DIRECT)
 	if err != nil {
 		return nil, err
 	}
 	signature[crypto.RecoveryIDOffset] += 27 // Transform V from 0/1 to 27/28 according to the yellow paper
-
-	if args.UseLegacyExtension {
-		if err := setBuilderLegacyWeb3Extension(
-			builder,
-			legacyWeb3ExtensionArgs{
-				feePayer:  from.String(),
-				chainID:   chainID,
-				signature: signature,
-			}); err != nil {
-			return nil, err
-		}
-	}
 
 	sigsV2 := getTxSignatureV2(
 		signatureV2Args{
@@ -223,7 +198,6 @@ func signCosmosEIP712Tx(
 			signature: signature,
 			nonce:     nonce,
 		},
-		args.UseLegacyExtension,
 	)
 
 	err = builder.SetSignatures(sigsV2)
@@ -236,17 +210,7 @@ func signCosmosEIP712Tx(
 
 // getTxSignatureV2 returns the SignatureV2 object corresponding to
 // the arguments, using the legacy implementation as needed.
-func getTxSignatureV2(args signatureV2Args, useLegacyExtension bool) signing.SignatureV2 {
-	if useLegacyExtension {
-		return signing.SignatureV2{
-			PubKey: args.pubKey,
-			Data: &signing.SingleSignatureData{
-				SignMode: signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON,
-			},
-			Sequence: args.nonce,
-		}
-	}
-
+func getTxSignatureV2(args signatureV2Args) signingtypes.SignatureV2 {
 	// Must use SIGN_MODE_DIRECT, since Amino has some trouble parsing certain Any values from a SignDoc
 	// with the Legacy EIP-712 TypedData encodings. This is not an issue with the latest encoding.
 	return signing.SignatureV2{
@@ -257,20 +221,4 @@ func getTxSignatureV2(args signatureV2Args, useLegacyExtension bool) signing.Sig
 		},
 		Sequence: args.nonce,
 	}
-}
-
-// setBuilderLegacyWeb3Extension creates a legacy ExtensionOptionsWeb3Tx and
-// appends it to the builder options.
-func setBuilderLegacyWeb3Extension(builder authtx.ExtensionOptionsTxBuilder, args legacyWeb3ExtensionArgs) error {
-	option, err := codectypes.NewAnyWithValue(&types.ExtensionOptionsWeb3Tx{
-		FeePayer:         args.feePayer,
-		TypedDataChainID: args.chainID,
-		FeePayerSig:      args.signature,
-	})
-	if err != nil {
-		return err
-	}
-
-	builder.SetExtensionOptions(option)
-	return nil
 }

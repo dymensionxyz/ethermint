@@ -60,7 +60,7 @@ func (a TestAccount) GetTmPrivKey() tmcrypto.PrivKey {
 }
 
 // GetValidatorAddress returns validator address of the account, deliver from sdk pubkey.
-// Should use suite.GetValidatorAddress() instead for correcting with Tendermint node mode.
+// Should use suite.GetValidatorAddress() instead for correcting with CometBFT node mode.
 func (a TestAccount) GetValidatorAddress() sdk.ValAddress {
 	return sdk.ValAddress(a.GetPubKey().Address())
 }

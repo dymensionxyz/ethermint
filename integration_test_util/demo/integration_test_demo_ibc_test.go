@@ -2,14 +2,13 @@ package demo
 
 //goland:noinspection SpellCheckingInspection
 import (
-	"math"
-
-	math "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	ibcconntypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	"github.com/evmos/ethermint/integration_test_util"
+	"math"
 )
 
 //goland:noinspection SpellCheckingInspection
@@ -76,7 +75,7 @@ func (suite *DemoTestSuite) Test_Ibc_Transfer() {
 	}
 
 	denomUnit := fromChain.TestConfig.SecondaryDenomUnits[0]
-	intAmt := math.NewInt(1).Mul(math.NewInt(int64(math.Pow10(int(denomUnit.Exponent)))))
+	intAmt := sdkmath.NewInt(1).Mul(sdkmath.NewInt(int64(math.Pow10(int(denomUnit.Exponent)))))
 	transferCoin2 := sdk.NewCoin(denomUnit.Denom, intAmt)
 
 	fromChain.MintCoin(sender, transferCoin2)

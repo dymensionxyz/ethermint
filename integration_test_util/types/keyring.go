@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	cryptohd "github.com/evmos/ethermint/crypto/hd"
 )
 
@@ -138,7 +139,7 @@ func (kr *itKeyring) SaveMultisig(uid string, pubkey cryptotypes.PubKey) (*keyri
 	panic("implement me")
 }
 
-func (kr *itKeyring) Sign(uid string, msg []byte) ([]byte, cryptotypes.PubKey, error) {
+func (kr *itKeyring) Sign(uid string, msg []byte, _ signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
 	for _, record := range kr.records {
 		if record.uid == uid {
 			return kr.sign(record, msg)
@@ -148,7 +149,7 @@ func (kr *itKeyring) Sign(uid string, msg []byte) ([]byte, cryptotypes.PubKey, e
 	return nil, nil, fmt.Errorf("keyring record with uid %s not found", uid)
 }
 
-func (kr *itKeyring) SignByAddress(address sdk.Address, msg []byte) ([]byte, cryptotypes.PubKey, error) {
+func (kr *itKeyring) SignByAddress(address sdk.Address, msg []byte, _ signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
 	for _, record := range kr.records {
 		if record.testAccount.GetCosmosAddress().Equals(address) {
 			return kr.sign(record, msg)
@@ -159,7 +160,7 @@ func (kr *itKeyring) SignByAddress(address sdk.Address, msg []byte) ([]byte, cry
 }
 
 func (kr *itKeyring) sign(record *itKeyringRecord, msg []byte) ([]byte, cryptotypes.PubKey, error) {
-	return record.testAccount.Signer.SignByAddress(record.testAccount.GetCosmosAddress(), msg)
+	return record.testAccount.Signer.SignByAddress(record.testAccount.GetCosmosAddress(), msg, signing.SignMode_SIGN_MODE_DIRECT)
 }
 
 //goland:noinspection GoUnusedParameter

@@ -3,8 +3,10 @@ package backend
 import (
 	"fmt"
 
+	math "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -200,7 +202,7 @@ func (suite *BackendTestSuite) TestSign() {
 
 			responseBz, err := suite.backend.Sign(tc.fromAddr, tc.inputBz)
 			if tc.expPass {
-				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), tc.inputBz)
+				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), tc.inputBz, signing.SignMode_SIGN_MODE_TEXTUAL)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)
 				suite.Require().Equal((hexutil.Bytes)(signature), responseBz)
@@ -249,7 +251,7 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 
 			if tc.expPass {
 				sigHash, _, err := apitypes.TypedDataAndHash(tc.inputTypedData)
-				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), sigHash)
+				signature, _, err := suite.backend.clientCtx.Keyring.SignByAddress((sdk.AccAddress)(from.Bytes()), sigHash, signing.SignMode_SIGN_MODE_TEXTUAL)
 				signature[goethcrypto.RecoveryIDOffset] += 27
 				suite.Require().NoError(err)
 				suite.Require().Equal((hexutil.Bytes)(signature), responseBz)
@@ -258,4 +260,28 @@ func (suite *BackendTestSuite) TestSignTypedData() {
 			}
 		})
 	}
+}
+
+func broadcastTx(suite *BackendTestSuite, priv *ethsecp256k1.PrivKey, baseFee math.Int, callArgsDefault evmtypes.TransactionArgs) (client *mocks.Client, txBytes []byte) {
+	var header metadata.MD
+	queryClient := suite.backend.queryClient.QueryClient.(*mocks.EVMQueryClient)
+	client = suite.backend.clientCtx.Client.(*mocks.Client)
+	armor := crypto.EncryptArmorPrivKey(priv, "", "eth_secp256k1")
+	_ = suite.backend.clientCtx.Keyring.ImportPrivKey("test_key", armor, "")
+	RegisterParams(queryClient, &header, 1)
+	_, err := RegisterBlock(client, 1, nil)
+	suite.Require().NoError(err)
+	_, err = RegisterBlockResults(client, 1)
+	suite.Require().NoError(err)
+	RegisterBaseFee(queryClient, baseFee)
+
+	ethSigner := ethtypes.LatestSigner(suite.backend.ChainConfig())
+	msg := callArgsDefault.ToTransaction()
+	err = msg.Sign(ethSigner, suite.backend.clientCtx.Keyring)
+	suite.Require().NoError(err)
+	baseDenom := sdk.DefaultBondDenom
+	tx, _ := msg.BuildTx(suite.backend.clientCtx.TxConfig.NewTxBuilder(), baseDenom)
+	txEncoder := suite.backend.clientCtx.TxConfig.TxEncoder()
+	txBytes, _ = txEncoder(tx)
+	return client, txBytes
 }

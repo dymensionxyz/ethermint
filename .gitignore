@@ -80,3 +80,7 @@ dependency-graph.png
 
 # OpenZeppelin contracts
 contracts/@openzeppelin/*
+
+# AI
+.aider.*
+.aider*

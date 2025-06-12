@@ -9,7 +9,6 @@ import (
 	"time"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
 
 	math "cosmossdk.io/math"
@@ -59,8 +58,8 @@ func TestAnteTestSuite(t *testing.T) {
 	})
 }
 
-func (suite AnteTestSuite) TestAnteHandler() {
-	var acc authtypes.AccountI
+func (suite *AnteTestSuite) TestAnteHandler() {
+	var acc sdk.AccountI
 	addr, privKey := tests.NewAddrKey()
 	to := tests.GenerateAddress()
 
@@ -953,7 +952,7 @@ func (suite AnteTestSuite) TestAnteHandler() {
 	}
 }
 
-func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
+func (suite *AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 	addr, privKey := tests.NewAddrKey()
 	to := tests.GenerateAddress()
 
@@ -1220,7 +1219,7 @@ func (suite AnteTestSuite) TestAnteHandlerWithDynamicTxFee() {
 	suite.enableLondonHF = true
 }
 
-func (suite AnteTestSuite) TestAnteHandlerWithParams() {
+func (suite *AnteTestSuite) TestAnteHandlerWithParams() {
 	addr, privKey := tests.NewAddrKey()
 	to := tests.GenerateAddress()
 
@@ -1354,7 +1353,7 @@ func (suite *AnteTestSuite) TestConsumeSignatureVerificationGas() {
 	params := authtypes.DefaultParams()
 	msg := []byte{1, 2, 3, 4}
 
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 	cdc := encodingConfig.Amino
 
 	p := authtypes.DefaultParams()

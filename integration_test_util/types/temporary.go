@@ -2,14 +2,14 @@ package types
 
 import (
 	"fmt"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"path"
 	"strings"
 )
 
 type TemporaryHolder struct {
-	files                []string
-	tendermintGenesisDoc *tmtypes.GenesisDoc
+	files           []string
+	cometGenesisDoc *cmttypes.GenesisDoc
 }
 
 func NewTemporaryHolder() *TemporaryHolder {
@@ -30,14 +30,14 @@ func (h *TemporaryHolder) AddTempFile(file string) {
 	h.files = append(h.files, file)
 }
 
-func (h *TemporaryHolder) CacheGenesisDoc(doc *tmtypes.GenesisDoc) {
-	h.tendermintGenesisDoc = doc
+func (h *TemporaryHolder) CacheGenesisDoc(doc *cmttypes.GenesisDoc) {
+	h.cometGenesisDoc = doc
 }
 
 func (h *TemporaryHolder) GetTempFiles() ([]string, bool) {
 	return h.files, len(h.files) > 0
 }
 
-func (h *TemporaryHolder) GetCachedGenesisDoc() (*tmtypes.GenesisDoc, bool) {
-	return h.tendermintGenesisDoc, h.tendermintGenesisDoc != nil
+func (h *TemporaryHolder) GetCachedGenesisDoc() (*cmttypes.GenesisDoc, bool) {
+	return h.cometGenesisDoc, h.cometGenesisDoc != nil
 }

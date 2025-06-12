@@ -1,10 +1,12 @@
 package cli
 
 import (
-	"github.com/evmos/ethermint/x/evm/types"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/evmos/ethermint/encoding"
+	"github.com/evmos/ethermint/x/evm/types"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -153,7 +155,8 @@ func TestParseUpdateVirtualFrontierBankContractsProposal(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			proposal, err := parseUpdateVirtualFrontierBankContractsProposal(types.AminoCdc, tc.metadataFile)
+			encCfg := encoding.MakeConfig()
+			proposal, err := parseUpdateVirtualFrontierBankContractsProposal(encCfg.Codec, tc.metadataFile)
 			if tc.wantErr {
 				require.Error(t, err)
 				return

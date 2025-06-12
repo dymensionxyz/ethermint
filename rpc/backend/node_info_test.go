@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	math "cosmossdk.io/math"
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -50,9 +51,9 @@ func (suite *BackendTestSuite) TestRPCMinGasPrice() {
 
 			minPrice := suite.backend.RPCMinGasPrice()
 			if tc.expPass {
-				suite.Require().Equal(tc.expMinGasPrice, minPrice)
+				suite.Require().Equal(big.NewInt(tc.expMinGasPrice), minPrice)
 			} else {
-				suite.Require().NotEqual(tc.expMinGasPrice, minPrice)
+				suite.Require().NotEqual(big.NewInt(tc.expMinGasPrice), minPrice)
 			}
 		})
 	}

@@ -27,6 +27,12 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
+// RegisterLegacyAminoCodec required for EIP-712
+func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	cdc.RegisterConcrete(&MsgUpdateParams{}, "ethermint/MsgUpdateParams", nil)
+	cdc.RegisterConcrete(&UpdateVirtualFrontierBankContractsProposal{}, "ethermint/UpdateVFBankContracts", nil)
+}
+
 // RegisterInterfaces registers the client interfaces to protobuf Any.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations(
@@ -83,9 +89,4 @@ func UnpackTxData(any *codectypes.Any) (TxData, error) {
 	}
 
 	return txData, nil
-}
-
-// RegisterLegacyAminoCodec required for EIP-712
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgUpdateParams{}, "ethermint/MsgUpdateParams", nil)
 }

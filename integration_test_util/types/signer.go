@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 )
 
@@ -31,7 +32,7 @@ func NewSigner(sk cryptotypes.PrivKey) keyring.Signer {
 }
 
 // Sign signs the message using the underlying private key
-func (s signer) Sign(_ string, msg []byte) ([]byte, cryptotypes.PubKey, error) {
+func (s signer) Sign(_ string, msg []byte, _ signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
 	sig, err := s.privKey.Sign(msg)
 	if err != nil {
 		return nil, nil, err
@@ -41,11 +42,11 @@ func (s signer) Sign(_ string, msg []byte) ([]byte, cryptotypes.PubKey, error) {
 }
 
 // SignByAddress sign byte messages with a user key providing the address.
-func (s signer) SignByAddress(address sdk.Address, msg []byte) ([]byte, cryptotypes.PubKey, error) {
+func (s signer) SignByAddress(address sdk.Address, msg []byte, signMode signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
 	signerAddress := sdk.AccAddress(s.privKey.PubKey().Address())
 	if !signerAddress.Equals(address) {
 		return nil, nil, fmt.Errorf("address mismatch: signer %s ≠ given address %s", signerAddress, address)
 	}
 
-	return s.Sign("", msg)
+	return s.Sign("", msg, signMode)
 }

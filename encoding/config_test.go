@@ -8,15 +8,15 @@ import (
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
-	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/tests"
+	txutils "github.com/evmos/ethermint/testutil/tx"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func TestTxEncoding(t *testing.T) {
 	addr, key := tests.NewAddrKey()
-	signer := tests.NewSigner(key)
+	signer := txutils.NewSigner(key)
 
 	msg := evmtypes.NewTxContract(big.NewInt(1), 1, big.NewInt(10), 100000, nil, big.NewInt(1), big.NewInt(1), []byte{}, nil)
 	msg.From = addr.Hex()
@@ -25,7 +25,7 @@ func TestTxEncoding(t *testing.T) {
 	err := msg.Sign(ethSigner, signer)
 	require.NoError(t, err)
 
-	cfg := encoding.MakeConfig(app.ModuleBasics)
+	cfg := encoding.MakeConfig()
 
 	_, err = cfg.TxConfig.TxEncoder()(msg)
 	require.Error(t, err, "encoding failed")

@@ -14,7 +14,6 @@ type ChainConfig struct {
 	Bech32Prefix             string
 	EvmChainId               int64
 	EvmChainIdBigInt         *big.Int // dynamic: calculated from EvmChainId
-	DisableTendermint        bool
 	DisabledContractCreation bool
 }
 
@@ -22,7 +21,7 @@ type TestConfig struct {
 	SecondaryDenomUnits      []banktypes.DenomUnit
 	InitBalanceAmount        math.Int
 	DefaultFeeAmount         math.Int
-	DisableTendermint        bool
+	DisableCometBFT          bool
 	DisabledContractCreation bool
 }
 

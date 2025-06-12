@@ -129,13 +129,17 @@ func (k Keeper) ValidatorAccount(c context.Context, req *types.QueryValidatorAcc
 		return nil, fmt.Errorf("validator not found for %s: %w", consAddr.String(), err)
 	}
 
-	accAddr := sdk.AccAddress(validator.GetOperator())
-
-	res := types.QueryValidatorAccountResponse{
-		AccountAddress: accAddr.String(),
+	valAddr := validator.GetOperator()
+	addrBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(valAddr)
+	if err != nil {
+		return nil, fmt.Errorf("error while getting validator %s. %w", consAddr.String(), err)
 	}
 
-	account := k.accountKeeper.GetAccount(ctx, accAddr)
+	res := types.QueryValidatorAccountResponse{
+		AccountAddress: sdk.AccAddress(addrBz).String(),
+	}
+
+	account := k.accountKeeper.GetAccount(ctx, addrBz)
 	if account != nil {
 		res.Sequence = account.GetSequence()
 		res.AccountNumber = account.GetAccountNumber()
@@ -326,6 +330,7 @@ func (k Keeper) EstimateGas(c context.Context, req *types.EthCallRequest) (*type
 	gasCap = hi
 	cfg, err := k.EVMConfig(ctx, GetProposerAddress(ctx, req.ProposerAddress), chainID)
 	if err != nil {
+		// FIXME: wrap err
 		return nil, status.Error(codes.Internal, "failed to load evm config")
 	}
 
@@ -509,6 +514,7 @@ func (k Keeper) TraceBlock(c context.Context, req *types.QueryTraceBlockRequest)
 
 	cfg, err := k.EVMConfig(ctx, GetProposerAddress(ctx, req.ProposerAddress), chainID)
 	if err != nil {
+		// FIXME: wrap err
 		return nil, status.Error(codes.Internal, "failed to load evm config")
 	}
 	signer := ethtypes.MakeSigner(cfg.ChainConfig, big.NewInt(ctx.BlockHeight()))
