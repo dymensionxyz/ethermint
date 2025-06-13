@@ -3,18 +3,18 @@ package types_test
 import (
 	"encoding/hex"
 	"fmt"
+	"testing"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/evmos/ethermint/app"
 	"github.com/evmos/ethermint/encoding"
 	"github.com/evmos/ethermint/utils"
 	"github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestVirtualFrontierContract_ValidateBasic(t *testing.T) {
-	encodingConfig := encoding.MakeConfig(app.ModuleBasics)
+	encodingConfig := encoding.MakeConfig()
 
 	validVFBankContractMetadata := types.VFBankContractMetadata{
 		MinDenom: "wei",

@@ -10,9 +10,11 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/bytes"
+	cmtversion "github.com/cometbft/cometbft/proto/tendermint/version"
 	tmrpcclient "github.com/cometbft/cometbft/rpc/client"
 	tmrpctypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/rpc/backend/mocks"
@@ -141,7 +143,8 @@ func RegisterBlockNotFound(
 func TestRegisterBlock(t *testing.T) {
 	client := mocks.NewClient(t)
 	height := rpc.BlockNumber(1).Int64()
-	RegisterBlock(client, height, nil)
+	_, err := RegisterBlock(client, height, nil)
+	require.NoError(t, err)
 
 	res, err := client.Block(rpc.ContextWithHeight(height), &height)
 
@@ -180,12 +183,12 @@ func TestRegisterConsensusParams(t *testing.T) {
 func RegisterBlockResultsWithEventLog(client *mocks.Client, height int64) (*tmrpctypes.ResultBlockResults, error) {
 	res := &tmrpctypes.ResultBlockResults{
 		Height: height,
-		TxsResults: []*abci.ResponseDeliverTx{
+		TxsResults: []*abci.ExecTxResult{
 			{Code: 0, GasUsed: 0, Events: []abci.Event{{
 				Type: evmtypes.EventTypeTxLog,
 				Attributes: []abci.EventAttribute{{
 					Key:   evmtypes.AttributeKeyTxLog,
-					Value: string([]byte{0x7b, 0x22, 0x74, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x20, 0x22, 0x68, 0x65, 0x6c, 0x6c, 0x6f, 0x22, 0x7d}), // Represents {"test": "hello"}
+					Value: "{\"test\": \"hello\"}", // TODO refactor the value to unmarshall to a evmtypes.Log struct successfully
 					Index: true,
 				}},
 			}}},
@@ -202,7 +205,7 @@ func RegisterBlockResults(
 ) (*tmrpctypes.ResultBlockResults, error) {
 	res := &tmrpctypes.ResultBlockResults{
 		Height:     height,
-		TxsResults: []*abci.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+		TxsResults: []*abci.ExecTxResult{{Code: 0, GasUsed: 0}},
 	}
 
 	client.On("BlockResults", rpc.ContextWithHeight(height), mock.AnythingOfType("*int64")).
@@ -218,12 +221,13 @@ func RegisterBlockResultsError(client *mocks.Client, height int64) {
 func TestRegisterBlockResults(t *testing.T) {
 	client := mocks.NewClient(t)
 	height := int64(1)
-	RegisterBlockResults(client, height)
+	_, err := RegisterBlockResults(client, height)
+	require.NoError(t, err)
 
 	res, err := client.BlockResults(rpc.ContextWithHeight(height), &height)
 	expRes := &tmrpctypes.ResultBlockResults{
 		Height:     height,
-		TxsResults: []*abci.ResponseDeliverTx{{Code: 0, GasUsed: 0}},
+		TxsResults: []*abci.ExecTxResult{{Code: 0, GasUsed: 0}},
 	}
 	require.Equal(t, expRes, res)
 	require.NoError(t, err)
@@ -232,7 +236,7 @@ func TestRegisterBlockResults(t *testing.T) {
 // BlockByHash
 func RegisterBlockByHash(
 	client *mocks.Client,
-	hash common.Hash,
+	_ common.Hash,
 	tx []byte,
 ) (*tmrpctypes.ResultBlock, error) {
 	block := types.MakeBlock(1, []types.Tx{tx}, nil, nil)
@@ -243,13 +247,42 @@ func RegisterBlockByHash(
 	return resBlock, nil
 }
 
-func RegisterBlockByHashError(client *mocks.Client, hash common.Hash, tx []byte) {
+func RegisterBlockByHashError(client *mocks.Client, _ common.Hash, _ []byte) {
 	client.On("BlockByHash", rpc.ContextWithHeight(1), []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).
 		Return(nil, errortypes.ErrInvalidRequest)
 }
 
-func RegisterBlockByHashNotFound(client *mocks.Client, hash common.Hash, tx []byte) {
+func RegisterBlockByHashNotFound(client *mocks.Client, _ common.Hash, _ []byte) {
 	client.On("BlockByHash", rpc.ContextWithHeight(1), []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).
+		Return(nil, nil)
+}
+
+// HeaderByHash
+func RegisterHeaderByHash(
+	client *mocks.Client,
+	_ common.Hash,
+	_ []byte,
+) (*tmrpctypes.ResultHeader, error) {
+	header := &types.Header{
+		Version: cmtversion.Consensus{Block: version.BlockProtocol, App: 0},
+		Height:  1,
+	}
+	resHeader := &tmrpctypes.ResultHeader{
+		Header: header,
+	}
+
+	client.On("HeaderByHash", rpc.ContextWithHeight(1), bytes.HexBytes{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).
+		Return(resHeader, nil)
+	return resHeader, nil
+}
+
+func RegisterHeaderByHashError(client *mocks.Client, _ common.Hash, _ []byte) {
+	client.On("HeaderByHash", rpc.ContextWithHeight(1), bytes.HexBytes{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).
+		Return(nil, errortypes.ErrInvalidRequest)
+}
+
+func RegisterHeaderByHashNotFound(client *mocks.Client, _ common.Hash, _ []byte) {
+	client.On("HeaderByHash", rpc.ContextWithHeight(1), bytes.HexBytes{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}).
 		Return(nil, nil)
 }
 

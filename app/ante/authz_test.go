@@ -343,8 +343,8 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 			suite.Require().NoError(err)
 			suite.Require().NotEmpty(bz)
 
-			resCheckTx := suite.app.CheckTx(
-				abci.RequestCheckTx{
+			resCheckTx, err := suite.app.CheckTx(
+				&abci.RequestCheckTx{
 					Tx:   bz,
 					Type: abci.CheckTxType_New,
 				},
@@ -354,7 +354,7 @@ func (suite *AnteTestSuite) TestRejectDeliverMsgsInAuthz() {
 			header := suite.ctx.BlockHeader()
 			blockRes, err := suite.app.FinalizeBlock(
 				&abci.RequestFinalizeBlock{
-					Height:             suite.ctx.BlockHeight() + 1,
+					Height:             suite.ctx.BlockHeight(),
 					Txs:                [][]byte{bz},
 					Hash:               header.AppHash,
 					NextValidatorsHash: header.NextValidatorsHash,
@@ -465,8 +465,7 @@ func (suite *AnteTestSuite) createEIP712Tx(priv cryptotypes.PrivKey, msgs ...sdk
 		suite.ctx,
 		suite.app,
 		utiltx.EIP712TxArgs{
-			CosmosTxArgs:       cosmosTxArgs,
-			UseLegacyExtension: true,
+			CosmosTxArgs: cosmosTxArgs,
 		},
 	)
 }

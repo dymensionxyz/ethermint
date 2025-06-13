@@ -64,7 +64,7 @@ func (suite *EthRpcTestSuite) Test_GetBalance() {
 		suite.Require().False((*afterReceived).IsEqual(*beforeReceive), "receiver balance must be changed")
 
 		currentHeight := suite.CITS.GetLatestBlockHeight()
-		currentBlockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), nil)
+		currentBlockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), nil)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(currentBlockResult)
 
@@ -161,7 +161,7 @@ func (suite *EthRpcTestSuite) Test_GetStorage() {
 		suite.Require().NotEqual(storagesBefore, storagesLater, "storage of contract must be changed")
 
 		currentHeight := suite.CITS.GetLatestBlockHeight()
-		currentBlockResult, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), nil)
+		currentBlockResult, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), nil)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(currentBlockResult)
 
@@ -254,11 +254,11 @@ func (suite *EthRpcTestSuite) Test_GetCode() {
 	code := suite.App().EvmKeeper().GetCode(suite.Ctx(), codeHash)
 	suite.Require().NotEmptyf(code, "not found code for contract %s", contractAddr.String())
 
-	blockWithoutCode, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(heightWithoutCode))
+	blockWithoutCode, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(heightWithoutCode))
 	suite.Require().NoError(err)
 	suite.Require().NotNil(blockWithoutCode)
 
-	blockWithCode, err := suite.CITS.QueryClients.TendermintRpcHttpClient.Block(context.Background(), ptrInt64(heightWithCode))
+	blockWithCode, err := suite.CITS.QueryClients.CometBFTRpcHttpClient.Block(context.Background(), ptrInt64(heightWithCode))
 	suite.Require().NoError(err)
 	suite.Require().NotNil(blockWithCode)
 

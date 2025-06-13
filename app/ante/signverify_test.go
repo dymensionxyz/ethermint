@@ -7,6 +7,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/evmos/ethermint/app/ante"
 	"github.com/evmos/ethermint/tests"
+	txutils "github.com/evmos/ethermint/testutil/tx"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
@@ -15,12 +16,12 @@ func (suite AnteTestSuite) TestEthSigVerificationDecorator() {
 
 	signedTx := evmtypes.NewTxContract(suite.app.EvmKeeper.ChainID(), 1, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	signedTx.From = addr.Hex()
-	err := signedTx.Sign(suite.ethSigner, tests.NewSigner(privKey))
+	err := signedTx.Sign(suite.ethSigner, txutils.NewSigner(privKey))
 	suite.Require().NoError(err)
 
 	unprotectedTx := evmtypes.NewTxContract(nil, 1, big.NewInt(10), 1000, big.NewInt(1), nil, nil, nil, nil)
 	unprotectedTx.From = addr.Hex()
-	err = unprotectedTx.Sign(ethtypes.HomesteadSigner{}, tests.NewSigner(privKey))
+	err = unprotectedTx.Sign(ethtypes.HomesteadSigner{}, txutils.NewSigner(privKey))
 	suite.Require().NoError(err)
 
 	testCases := []struct {

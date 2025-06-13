@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
 	"github.com/evmos/ethermint/tests"
+	txutils "github.com/evmos/ethermint/testutil/tx"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/evmos/ethermint/x/evm/types"
 )
@@ -225,7 +225,12 @@ func (suite *KeeperTestSuite) TestSetNonce() {
 
 func (suite *KeeperTestSuite) TestGetCodeHash() {
 	addr := tests.GenerateAddress()
-	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	baseAcc := authtypes.NewBaseAccount(
+		addr.Bytes(),
+		nil,
+		suite.app.AccountKeeper.NextAccountNumber(suite.ctx),
+		0,
+	)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
 
 	testCases := []struct {
@@ -269,7 +274,12 @@ func (suite *KeeperTestSuite) TestGetCodeHash() {
 
 func (suite *KeeperTestSuite) TestSetCode() {
 	addr := tests.GenerateAddress()
-	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	baseAcc := authtypes.NewBaseAccount(
+		addr.Bytes(),
+		nil,
+		suite.app.AccountKeeper.NextAccountNumber(suite.ctx),
+		0,
+	)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
 
 	testCases := []struct {
@@ -324,7 +334,12 @@ func (suite *KeeperTestSuite) TestSetCode() {
 
 func (suite *KeeperTestSuite) TestKeeperSetCode() {
 	addr := tests.GenerateAddress()
-	baseAcc := &authtypes.BaseAccount{Address: sdk.AccAddress(addr.Bytes()).String()}
+	baseAcc := authtypes.NewBaseAccount(
+		addr.Bytes(),
+		nil,
+		suite.app.AccountKeeper.NextAccountNumber(suite.ctx),
+		0,
+	)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, baseAcc)
 
 	testCases := []struct {
@@ -618,7 +633,7 @@ func (suite *KeeperTestSuite) CreateTestTx(msg *types.MsgEthereumTx, priv crypto
 
 	builder.SetExtensionOptions(option)
 
-	err = msg.Sign(suite.ethSigner, tests.NewSigner(priv))
+	err = msg.Sign(suite.ethSigner, txutils.NewSigner(priv))
 	suite.Require().NoError(err)
 
 	err = txBuilder.SetMsgs(msg)
@@ -695,7 +710,7 @@ func (suite *KeeperTestSuite) TestAddLog() {
 		suite.Run(tc.name, func() {
 			suite.SetupTest()
 			vmdb := statedb.New(suite.ctx, suite.app.EvmKeeper, statedb.NewTxConfig(
-				common.BytesToHash(suite.ctx.HeaderHash().Bytes()),
+				common.BytesToHash(suite.ctx.HeaderHash()),
 				tc.hash,
 				0, 0,
 			))
