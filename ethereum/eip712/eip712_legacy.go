@@ -293,10 +293,29 @@ func legacyTraverseFields(
 
 		fieldPrefix := fmt.Sprintf("%s.%s", prefix, fieldName)
 
-		ethTyp := typToEth(fieldType)
+        ethTyp := typToEth(fieldType)
+
+        // Special-case bytes fields (i.e., collections of uint8) to be strings,
+        // since Cosmos JSON encodes []byte as base64 strings. This avoids producing
+        // a uint8[] EIP-712 type that won't match provided data.
+        if isCollection && fieldType.Kind() == reflect.Uint8 {
+            if prefix == typeDefPrefix {
+                typeMap[rootType] = append(typeMap[rootType], apitypes.Type{
+                    Name: fieldName,
+                    Type: "string",
+                })
+            } else {
+                typeDef := sanitizeTypedef(prefix)
+                typeMap[typeDef] = append(typeMap[typeDef], apitypes.Type{
+                    Name: fieldName,
+                    Type: "string",
+                })
+            }
+            continue
+        }
 
 		if len(ethTyp) > 0 {
-			// Support array of uint64
+            // Support array of primitives
 			if isCollection && fieldType.Kind() != reflect.Slice && fieldType.Kind() != reflect.Array {
 				ethTyp += "[]"
 			}
@@ -418,16 +437,24 @@ func typToEth(typ reflect.Type) string {
 		return "uint32"
 	case reflect.Uint64:
 		return "uint64"
-	case reflect.Slice:
-		ethName := typToEth(typ.Elem())
-		if len(ethName) > 0 {
-			return ethName + "[]"
-		}
-	case reflect.Array:
-		ethName := typToEth(typ.Elem())
-		if len(ethName) > 0 {
-			return ethName + "[]"
-		}
+    case reflect.Slice:
+        // Special-case []byte -> treat as string, since JSON encoding uses base64 strings
+        if typ.Elem().Kind() == reflect.Uint8 {
+            return str
+        }
+        ethName := typToEth(typ.Elem())
+        if len(ethName) > 0 {
+            return ethName + "[]"
+        }
+    case reflect.Array:
+        // Special-case [N]byte -> treat as string, since JSON encoding uses base64 strings
+        if typ.Elem().Kind() == reflect.Uint8 {
+            return str
+        }
+        ethName := typToEth(typ.Elem())
+        if len(ethName) > 0 {
+            return ethName + "[]"
+        }
 	case reflect.Ptr:
 		if typ.Elem().ConvertibleTo(bigIntType) ||
 			typ.Elem().ConvertibleTo(timeType) ||
