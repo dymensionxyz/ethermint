@@ -28,6 +28,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/evmos/ethermint/ethereum/eip712"
 )
 
 const (
@@ -205,7 +206,56 @@ func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 	return pubKey.UnmarshalAmino(bz)
 }
 
-// WARNING: ALWAYS true for testing purposes
-func (pubKey PubKey) VerifySignature([]byte, []byte) bool {
+// VerifySignature verifies that the ECDSA public key created a given signature over
+// the provided message. It will calculate the Keccak256 hash of the message
+// prior to verification and approve verification if the signature can be verified
+// from either the original message or its EIP-712 representation.
+//
+// CONTRACT: The signature should be in [R || S] format.
+func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
+	// Check if the message is an EIP-712 struct by attempting to get EIP-712 bytes
+	_, err1 := eip712.GetEIP712BytesForMsg(msg)
+	_, err2 := eip712.LegacyGetEIP712BytesForMsg(msg)
+	// if either of the errors is nil, then the message is an EIP-712 struct
+	// and we can verify the signature as an EIP-712 signature
+	if err1 == nil || err2 == nil {
+		return pubKey.verifySignatureAsEIP712(msg, sig)
+	}
+
+	// if both errors are not nil, then the message is not an EIP-712 struct
+	// and we fake success
 	return true
+}
+
+// Verifies the signature as an EIP-712 signature by first converting the message payload
+// to EIP-712 object bytes, then performing ECDSA verification on the hash. This is to support
+// signing a Cosmos payload using EIP-712.
+func (pubKey PubKey) verifySignatureAsEIP712(msg, sig []byte) bool {
+	eip712Bytes, err := eip712.GetEIP712BytesForMsg(msg)
+	if err != nil {
+		return false
+	}
+
+	if pubKey.verifySignatureECDSA(eip712Bytes, sig) {
+		return true
+	}
+
+	// Try verifying the signature using the legacy EIP-712 encoding
+	legacyEIP712Bytes, err := eip712.LegacyGetEIP712BytesForMsg(msg)
+	if err != nil {
+		return false
+	}
+
+	return pubKey.verifySignatureECDSA(legacyEIP712Bytes, sig)
+}
+
+// Perform standard ECDSA signature verification for the given raw bytes and signature.
+func (pubKey PubKey) verifySignatureECDSA(msg, sig []byte) bool {
+	if len(sig) == crypto.SignatureLength {
+		// remove recovery ID (V) if contained in the signature
+		sig = sig[:len(sig)-1]
+	}
+
+	// the signature needs to be in [R || S] format when provided to VerifySignature
+	return crypto.VerifySignature(pubKey.Key, crypto.Keccak256Hash(msg).Bytes(), sig)
 }
