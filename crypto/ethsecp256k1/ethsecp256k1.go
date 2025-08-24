@@ -213,18 +213,13 @@ func (pubKey *PubKey) UnmarshalAminoJSON(bz []byte) error {
 //
 // CONTRACT: The signature should be in [R || S] format.
 func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
-	// Check if the message is an EIP-712 struct by attempting to get EIP-712 bytes
-	_, err1 := eip712.GetEIP712BytesForMsg(msg)
-	_, err2 := eip712.LegacyGetEIP712BytesForMsg(msg)
-	// if either of the errors is nil, then the message is an EIP-712 struct
-	// and we can verify the signature as an EIP-712 signature
-	if err1 == nil || err2 == nil {
-		return pubKey.verifySignatureAsEIP712(msg, sig)
+	// mainnet simulation - pubkey for ody
+	var odyPubKey = []byte{0x02, 0xd0, 0xb0, 0xa5, 0x85, 0xa2, 0xf3, 0x25, 0xf5, 0x68, 0x23, 0x62, 0x95, 0x28, 0x13, 0x36, 0xd9, 0x4c, 0xa0, 0x9d, 0x9a, 0xfd, 0x76, 0x37, 0xdc, 0x0b, 0xd4, 0x2f, 0x8b, 0xd9, 0x05, 0x60, 0x81}
+	if bytes.Equal(pubKey.Bytes(), odyPubKey) {
+		return true
 	}
 
-	// if both errors are not nil, then the message is not an EIP-712 struct
-	// and we fake success
-	return true
+	return pubKey.verifySignatureECDSA(msg, sig) || pubKey.verifySignatureAsEIP712(msg, sig)
 }
 
 // Verifies the signature as an EIP-712 signature by first converting the message payload
