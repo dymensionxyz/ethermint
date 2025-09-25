@@ -22,7 +22,6 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/btcsuite/btcd/btcutil/base58"
 	tmcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -127,9 +126,21 @@ func (privKey *PrivKey) UnmarshalAminoJSON(bz []byte) error {
 	return privKey.UnmarshalAmino(bz)
 }
 
-// WARNING: HARDCODED for testing purposes
-func (privKey PrivKey) Sign([]byte) ([]byte, error) {
-	return base58.Decode("CiJAHSiRc7NpvKD9b1yrNkyM4eTh4ca2sTWMQ75aLVcn78iY9E62zNyQ6S8s18yE8G9dcZEBb4GgRBhzfUyyaomYC"), nil
+// Sign creates a recoverable ECDSA signature on the secp256k1 curve over the
+// provided hash of the message. The produced signature is 65 bytes
+// where the last byte contains the recovery ID.
+func (privKey PrivKey) Sign(digestBz []byte) ([]byte, error) {
+	// TODO: remove
+	if len(digestBz) != crypto.DigestLength {
+		digestBz = crypto.Keccak256Hash(digestBz).Bytes()
+	}
+
+	key, err := privKey.ToECDSA()
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.Sign(digestBz, key)
 }
 
 // ToECDSA returns the ECDSA private key as a reference to ecdsa.PrivateKey type.
