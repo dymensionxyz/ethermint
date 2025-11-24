@@ -344,5 +344,5 @@ func (b *Backend) RPCMinGasPrice() *big.Int {
 		return big.NewInt(ethermint.DefaultGasPrice)
 	}
 
-	return amt.BigInt()
+	return amt.TruncateInt().BigInt()
 }
