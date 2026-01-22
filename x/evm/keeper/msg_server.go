@@ -157,12 +157,6 @@ func (k *Keeper) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams)
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if utils.IsOneOfDymensionChains(ctx) {
-		if req.Params.EnableCreate {
-			return nil, errorsmod.Wrap(govtypes.ErrInvalidProposalContent, "Enable Create is not allowed")
-		}
-	}
-
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}
